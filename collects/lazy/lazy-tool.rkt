@@ -20,11 +20,11 @@
 ;         wxme/wxme
 ;         setup/dirs
          
-         ;; this module is shared between the drscheme's namespace (so loaded here) 
+         ;; this module is shared between the drracket's namespace (so loaded here) 
          ;; and the user's namespace in the teaching languages
 ;         "private/set-result.ss"
          
-         "stepper-language-interface.ss"           
+         lang/stepper-language-interface
 ;         "debugger-language-interface.ss"
 ;         "run-teaching-program.ss"
 ;         stepper/private/shared
@@ -70,12 +70,12 @@
            ((drscheme:language:get-default-mixin)
             (drscheme:language:module-based-language->language-mixin
              (drscheme:language:simple-module-based-language->module-based-language-mixin
-              simple-module-based-language%)))))
+              drscheme:language:simple-module-based-language%)))))
         
         (drscheme:language-configuration:add-language
          (instantiate lazy-language% ()
            (one-line-summary '("Lazy Racket"))
-           (module "lazy")
+           (module '(lib "lazy/lazy.rkt"))
            (language-position `(,(string-constant experimental-languages) "Lazy Racket"))
            (language-numbers '(1000 -500))
            (stepper:supported #t)
