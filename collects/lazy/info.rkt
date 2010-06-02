@@ -17,5 +17,3 @@
 
 (define drracket-tools      '(("lazy-tool.rkt")))
 (define drracket-tool-names '("Lazy Racket"))
-;(define tool-icons '(("swindle-icon.png" "swindle")))
-;(define tool-urls  '("http://www.barzilay.org/Swindle/"))
