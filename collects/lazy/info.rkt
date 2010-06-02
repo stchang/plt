@@ -15,7 +15,7 @@
 ;(define drscheme-language-numbers '((1000 -500)))
 ;(define drscheme-language-one-line-summaries '("Lazy Racket"))
 
-(define tools      '(("lazy-tool.rkt")))
-(define tool-names '("Lazy Racket"))
+(define drracket-tools      '(("lazy-tool.rkt")))
+(define drracket-tool-names '("Lazy Racket"))
 ;(define tool-icons '(("swindle-icon.png" "swindle")))
 ;(define tool-urls  '("http://www.barzilay.org/Swindle/"))

@@ -1,46 +1,15 @@
-#lang scheme
+#lang racket
+
 (require string-constants
-;         framework
-;         (prefix-in et: errortrace/stacktrace)
-;         mzlib/pretty
-;         (prefix-in pc: mzlib/pconvert)
-;         mzlib/file
-;         mzlib/unit
-;         mzlib/class
-;         mzlib/list
-;         mzlib/struct
-;         mzlib/compile
-;         mzlib/struct
-         drscheme/tool
-;         mred
-;         framework/private/bday
-;         syntax/moddep
-;         mrlib/cache-image-snip
-;         compiler/embed
-;         wxme/wxme
-;         setup/dirs
-         
-         ;; this module is shared between the drracket's namespace (so loaded here) 
-         ;; and the user's namespace in the teaching languages
-;         "private/set-result.ss"
-         
-         lang/stepper-language-interface
-;         "debugger-language-interface.ss"
-;         "run-teaching-program.ss"
-;         stepper/private/shared
-         
-;         (only-in test-engine/scheme-gui make-formatter)
-;         (only-in test-engine/scheme-tests scheme-test-data error-handler test-format test-execute)
-;         (lib "test-engine/test-display.scm")
-         )
-  
+         drracket/tool
+         lang/stepper-language-interface)
   
   (provide tool@)
   
   (define tool@
     (unit 
-      (import drscheme:tool^)
-      (export drscheme:tool-exports^)
+      (import drracket:tool^)
+      (export drracket:tool-exports^)
 
 
       (define (stepper-settings-language %)
@@ -67,12 +36,12 @@
         
         (define lazy-language%
           (stepper-settings-language
-           ((drscheme:language:get-default-mixin)
-            (drscheme:language:module-based-language->language-mixin
-             (drscheme:language:simple-module-based-language->module-based-language-mixin
-              drscheme:language:simple-module-based-language%)))))
+           ((drracket:language:get-default-mixin)
+            (drracket:language:module-based-language->language-mixin
+             (drracket:language:simple-module-based-language->module-based-language-mixin
+              drracket:language:simple-module-based-language%)))))
         
-        (drscheme:language-configuration:add-language
+        (drracket:language-configuration:add-language
          (instantiate lazy-language% ()
            (one-line-summary '("Lazy Racket"))
            (module '(lib "lazy/lazy.rkt"))
