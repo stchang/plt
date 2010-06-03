@@ -1,6 +1,6 @@
-(module lazy racket/base
+(module lazy mzscheme
 
-  (require (for-syntax racket/base stepper/private/shared))
+  (require-for-syntax stepper/private/shared)
 
   ;; ~ = lazy (or delayed)
   ;; ! = strict (or forced)
@@ -37,7 +37,7 @@
       [(_ ~name val) (identifier? #'~name)
        (let* ([~str (symbol->string (syntax-e #'~name))]
               [str  (string->symbol (regexp-replace #rx"^[~*]" ~str ""))])
-         (with-syntax ([name (datum->syntax #'~name str #'~name)])
+         (with-syntax ([name (datum->syntax-object #'~name str #'~name)])
            #'(define ~name (let ([name val]) (mark-lazy name)))))]
       [(_ (~name . xs) body ...) (identifier? #'~name)
        #'(define* ~name (lambda xs body ...))]))
@@ -90,7 +90,7 @@
                 #'(~define ~define-values define-syntax define-syntaxes
                    define-struct require provide))])
       (define (definition? stx)
-        (ormap (lambda (id) (free-identifier=? id stx)) ids))
+        (ormap (lambda (id) (module-identifier=? id stx)) ids))
       (lambda (stx)
         (syntax-case stx ()
           ;; optimize simple cases
@@ -119,7 +119,7 @@
                                (lambda args (~begin body0 body ...)))
                              'inferred-name n)])
            (syntax/loc stx (lazy-proc lam))))]))
-  (provide (rename-out [~lambda λ]))
+  (provide (rename ~lambda λ))
   (defsubst
     (~define (f . xs) body0 body ...) (define f (~lambda xs body0 body ...))
     (~define v x) (define v x))
@@ -239,7 +239,7 @@
   (provide toplevel-forcer)
   (define toplevel-forcer (make-parameter !))
 
-  (provide (rename-out [~!%app #%app])) ; all applications are delayed
+  (provide (rename ~!%app #%app)) ; all applications are delayed
   (define-syntax (~!%app stx) ; provided as #%app
     (define (unwinder stx rec)
       (syntax-case stx (!)
@@ -257,7 +257,7 @@
       [(_ f x ...)
        (cond [(let ([f #'f])
                (and (identifier? f)
-                    (ormap (lambda (s) (free-identifier=? f s))
+                    (ormap (lambda (s) (module-identifier=? f s))
                            strict-names)))
               ;; strict function => special forms => use plain application
               (syntax/loc stx (f x ...))]
@@ -275,10 +275,10 @@
   (defsubst (~!*apply f . xs) (~ (!*apply f . xs)))
   (defsubst (~!apply  f . xs) (~ (!apply  f . xs)))
 
-  (provide (rename-out [!apply apply])) ; can only be used through #%app => delayed
+  (provide (rename !apply apply)) ; can only be used through #%app => delayed
 
   ;; do the same special treatment for toplevel variable expressions
-  (provide (rename-out [!top #%top]))
+  (provide (rename !top #%top))
   (define-syntax (!top stx)
     (syntax-case stx ()
       [(_ . id) (if (toplevel?) #'(! (#%top . id)) #'(#%top . id))]))
@@ -295,9 +295,9 @@
 
   (define* *if
     (case-lambda [(e1 e2 e3) (if (! e1) e2 e3)]
-                 [(e1 e2   ) (if (! e1) e2 (void)  )]))
+                 [(e1 e2   ) (if (! e1) e2   )]))
   (defsubst (~if e1 e2 e3) (~ (if (! e1) e2 e3))
-            (~if e1 e2   ) (~ (if (! e1) e2 (void)  ))
+            (~if e1 e2   ) (~ (if (! e1) e2   ))
             ~if *if)
 
   (define* (*and . xs)
@@ -493,7 +493,7 @@
        (with-syntax ([?name (let* ([x (symbol->string (syntax-e #'?~name))]
                                    [x (regexp-replace #rx"^~" x "")]
                                    [x (string->symbol x)])
-                              (datum->syntax #'?~name x #'?~name))])
+                              (datum->syntax-object #'?~name x #'?~name))])
          #'(define* ?~name
              (case-lambda
                [(?proc ?args ... ?l)
@@ -601,7 +601,7 @@
   (define* empty null)
   (define* (empty? x) (null? (! x)))
 
-  (require (only-in mzlib/list [last-pair !last-pair]))
+  (require (rename mzlib/list !last-pair last-pair))
   (define* (last-pair list) (!last-pair (!list list)))
 
   (define (do-remove name item list =)
@@ -664,7 +664,7 @@
                  (if (! (!*app pred x)) (cons x xs) xs))]
               [else (error 'filter "not a proper list: ~e" list)]))))
 
-  (require (only-in mzlib/list [sort !sort]))
+  (require (rename mzlib/list !sort sort))
   (define* (sort list less?)
     (let ([less? (! less?)])
       (!sort (!list list) (lambda (x y) (! (!*app less? x y))))))
@@ -672,7 +672,7 @@
   ;; --------------------------------------------------------------------------
   ;; mzlib/etc functionality
 
-  (require (only-in mzlib/etc boolean=? symbol=?))
+  (require (only mzlib/etc boolean=? symbol=?))
   (define* true  #t)
   (define* false #f)
 
@@ -716,11 +716,11 @@
              (map (lambda (id)
                     (let* ([str (symbol->string (syntax-e id))]
                            [~id (string->symbol (string-append "~" str))])
-                      (datum->syntax id ~id id)))
+                      (datum->syntax-object id ~id id)))
                   (syntax->list #'(id ...)))])
-         #'(provide (except-out (all-from-out racket/base) 
-                                module #%app apply #%top λ id ...)
-                    (rename-out [~id id]) ...))]))
+         #'(provide (all-from-except mzscheme module #%app apply #%top λ
+                                     id ...)
+                    (rename ~id id) ...))]))
   (renaming-provide
    lambda define let let* letrec parameterize
    values define-values let-values let*-values letrec-values make-struct-type
