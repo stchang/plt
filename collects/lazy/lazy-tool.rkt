@@ -28,6 +28,23 @@
               (init stepper:show-lambdas-as-lambdas)
               (super-new))))
       
+      ; extends class implementing module-based-language<%> to use different default-settings
+      ; ('constructor printing-style instead of 'print)
+      (define (module-based-language-extension %)
+        (class* % ()
+          (define/override (default-settings)
+            (drracket:language:make-simple-settings
+             #t
+             'constructor
+             'mixed-fraction-e
+             #f
+             #t
+             'none))
+          (define/override (default-settings? s)
+            (equal? (drracket:language:simple-settings->vector s)
+                    (drracket:language:simple-settings->vector (default-settings))))
+          (super-new)))
+      
       
       (define (phase1) (void))
       
@@ -38,12 +55,13 @@
           (stepper-settings-language
            ((drracket:language:get-default-mixin)
             (drracket:language:module-based-language->language-mixin
-             (drracket:language:simple-module-based-language->module-based-language-mixin
-              drracket:language:simple-module-based-language%)))))
+             ;(module-based-language-extension
+              (drracket:language:simple-module-based-language->module-based-language-mixin
+               drracket:language:simple-module-based-language%)))))
         
         (drracket:language-configuration:add-language
          (instantiate lazy-language% ()
-           (one-line-summary '("Lazy Racket"))
+           (one-line-summary "Lazy Racket")
            (module '(lib "lazy/lazy.rkt"))
            (language-position `(,(string-constant experimental-languages) "Lazy Racket"))
            (language-numbers '(1000 -500))
