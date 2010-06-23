@@ -1,5 +1,14 @@
 #lang setup/infotab
 
+;; lazy TODO
+;;
+;; 1) make stepper work with #lang
+;; 2) make default print-style 'constructor
+;; 3) make lambdas print fully expanded (pretty-print-depth = #f) 
+;;    and using define-style
+
+
+
 ;; STC 2010-06-01
 ;; Changing lazy to be a tools-based language so I can use 
 ;; stepper-language-interface to add a stepper button.
