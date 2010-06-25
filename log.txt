@@ -3,7 +3,7 @@
 --------------------------------------------------------------------------------
 
 - dl and install Racket Full 6/24/2010 nightly build
-- copied over lazy/info.rkt and lazy/lazy-tool.rkt so stepper button would show up
+- copied over lazy/info.rkt and lazy/lazy-tool.rkt so stepper button would show up (must run setup-plt to register changes (use -D option, it's doesnt build docs so it's quicker)
 
 Tried to step test program:
 (define (f x) (+ 1 x))
