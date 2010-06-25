@@ -3,7 +3,7 @@
 (require stepper/private/shared)
 (require test-engine/scheme-tests)
 
-(provide do-expansion do-expansion-syntax)
+(provide do-expansion do-expansion-syntax do-expansion-lazy)
 
 #;(check-expect
  (syntax->datum
@@ -21,6 +21,15 @@
   ;(syntax->datum
    (parameterize ([current-namespace (make-base-namespace)])
      (namespace-require 'lang/private/teach)
+;     (namespace-require 'lazy/lazy)
+     (expand
+      (datum->syntax #f e))))
+
+(define (do-expansion-lazy e)
+  ;(syntax->datum
+   (parameterize ([current-namespace (make-base-namespace)])
+;     (namespace-require 'lang/private/teach)
+     (namespace-require 'lazy/lazy)
      (expand
       (datum->syntax #f e))))
 

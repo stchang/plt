@@ -204,6 +204,15 @@
                                         (append skipto/cdr skipto/second))]))
 
   (define-syntax (!*app stx)
+    (define (unwinder stx rec)
+      (syntax-case stx (!)
+        [(let-values ([(_p) f] [(_y) x] ...) _body)
+         (with-syntax ([(f x ...) (rec #'(f x ...))])
+           #'(f x ...))]))
+    (define (stepper-annotate stx)
+      (let* ([stx (stepper-syntax-property stx 'stepper-hint unwinder)]
+             [stx (stepper-syntax-property stx 'stepper-skip-double-break #t)])
+        stx))
     (syntax-case stx ()
       [(_ f x ...)
        (let ([$$ (lambda (stx)
@@ -222,10 +231,11 @@
            ;; use syntax/loc for better errors etc
            (with-syntax ([lazy   (syntax/loc stx (p y     ...))]
                          [strict (syntax/loc stx (p (hidden-! y) ...))])
-             (quasisyntax/loc stx
+             (stepper-annotate
+              (quasisyntax/loc stx
                (let ([p f] [y x] ...)
-                 ;; #,($$ #`(if (lazy? p) lazy strict))
-                 (if (lazy? p) lazy strict))))))]))
+                  #,($$ #`(if (lazy? p) lazy strict)) ))))))]))
+                 ;(if (lazy? p) lazy strict))))))]))
 
   (defsubst (!app   f x ...) (!*app (hidden-! f) x ...))
   (defsubst (~!*app f x ...) (~ (!*app f x ...)))

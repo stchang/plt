@@ -1,0 +1,199 @@
+--------------------------------------------------------------------------------
+----- 6/24/2010 - HOME PC
+--------------------------------------------------------------------------------
+
+- dl and install Racket Full 6/24/2010 nightly build
+- copied over lazy/info.rkt and lazy/lazy-tool.rkt so stepper button would show up
+
+Tried to step test program:
+(define (f x) (+ 1 x))
+(f 10)
+
+Error Message:
+annotate/top-level: unexpected top-level expression: (define-values (f) (#%app lazy-proc (lambda (x) (#%app lazy (lambda () (let-values (((p) (#%app ! +)) ((temp1) (quote 1)) ((x2) x)) (if (if (#%app lazy-proc? p) (quote #t) (#%app struct-constructor-procedure? p)) (#%app p temp1 x2) (#%app p (#%app ! temp1) (#%app ! x2)))))))))
+
+Solution:
+A cond clause seems to have been removed from annotate/top-level in stepper/private/annotate.rkt (it's there on the version in my laptop)
+
+Added clause: [(define-values (ids ...) bodies) (annotate/module-top-level exp)]
+
+
+
+Error Message:
+Internal stepper error: time to resync with simple-module-based-language-convert-value
+
+Solution:
+cond clause missing in simple-module-based-language-convert-value in stepper/stepper-tool.rkt
+
+Added clause: [(print) value]
+
+(TODO: eventually, I want Lazy Racket to use the 'constructor print style as default, but I havent been able to figure out how to do that yet)
+
+
+- It works!
+
+Output: 
+(define f
+  #(struct:lazy-proc
+    #<procedure:...ate\annotate.rkt:809:52>))
+((#<procedure:parameter-procedure>)
+ (let ((p f) (temp6 10))
+   (if (if (lazy-proc? p)
+         #t
+         (struct-constructor-procedure?
+          p))
+     (p temp6)
+     (p temp6))))
+
+
+- changed print style to 'constructor
+
+Output:
+(define f
+  |...ate\annotate.rkt:809:52|)
+((parameter-procedure)
+ (let ((p f) (temp6 10))
+   (if (if (lazy-proc? p)
+         true
+         (struct-constructor-procedure?
+          p))
+     (p temp6)
+     (p temp6))))
+
+
+- uncommented stepper-skipto annotation in !*app in lazy/lazy.rkt
+
+Output:
+(define f
+  |...ts\lazy\lazy.rkt:124:48|)
+((parameter-procedure)
+ (let ((p f) (temp6 10))
+   (p temp6)))
+
+
+- trying to wrap output of ~!%app in lazy/lazy.rkt with stepper-annotate function
+ - wrapped around (toplevel?) clause, got error: 
+#%plain-app: bad syntax in: (#%plain-app (#%plain-app parameter-procedure) (let-values (((p) f) ((temp6) (quote 10))) (#%app p temp6)))
+
+ - wrapped around else clause, no effect - same as if stepper-annotate wasnt used
+
+
+Experiment:
+- added a test clause in unwinder in ~!%app in lazy/lazy.rkt to see if unwinder gets called - it worked (error gets raised)
+test clause: [_ (raise-syntax-error 'hi "testing...")]
+
+- moved test clause to be last clause in unwinder to see if first clause matches - error gets raised again, which means first clause didnt get matched
+
+
+Experiment:
+- trying to move stepper-annotate to !*app in lazy/lazy.rkt - applied stepper-annotate to quasisyntax/loc expr - pattern in unwinder still not matched
+- if I remove the raise-syntax-error clause, the error is:
+let-values: bad syntax in: (let-values (((p) f) ((temp6) (quote 10))) (#%app p temp6))
+
+Experiment:
+- trying to change the pattern in unwinder to match the expression I'm working with (removed stepper-skip-double-break property for now):
+(define (unwinder stx rec)
+      (syntax-case stx (!)
+        [(let-values ([(_p) f] [(_y) x] ...) _body)
+         (with-syntax ([(f x ...) (rec #'(f x ...))])
+           #'(f x ...))]))
+
+It worked! Output:
+(define f
+  |...ts\lazy\lazy.rkt:124:48|)
+((parameter-procedure) (f 10))
+->
+(define f
+  |...ts\lazy\lazy.rkt:124:48|)
+(force (f 10))
+->
+(define f
+  |...ts\lazy\lazy.rkt:124:48|)
+(define p_0 f)
+(define temp6_0 10)
+(force (p_0 temp6_0))
+->
+(define f
+  |...ts\lazy\lazy.rkt:124:48|)
+(define p_0
+  |...ts\lazy\lazy.rkt:124:48|)
+(define temp6_0 10)
+(force
+ (|...ts\lazy\lazy.rkt:124:48|
+  temp6_0))
+->
+(define f
+  |...ts\lazy\lazy.rkt:124:48|)
+(define p_0
+  |...ts\lazy\lazy.rkt:124:48|)
+(define temp6_0 10)
+(force
+ (|...ts\lazy\lazy.rkt:124:48|
+  10))
+->
+(define f
+  |...ts\lazy\lazy.rkt:124:48|)
+(define p_0
+  |...ts\lazy\lazy.rkt:124:48|)
+(define temp6_0 10)
+(force
+ (...
+  (lazy (lambda () (+ 1 10)))
+  ...))
+->
+(define f
+  |...ts\lazy\lazy.rkt:124:48|)
+(define p_0
+  |...ts\lazy\lazy.rkt:124:48|)
+(define temp6_0 10)
+(force (delay ...))
+->
+(define f
+  |...ts\lazy\lazy.rkt:124:48|)
+(define p_0
+  |...ts\lazy\lazy.rkt:124:48|)
+(define temp6_0 10)
+(define p_0 +)
+(define temp1_0 1)
+(define x2_0 10)
+(... (p_0 temp1_0 x2_0) ...)
+
+(13 steps total)
+
+
+
+- adding back stepper-skip-double-break property
+
+Output:
+(define f
+  |...ts\lazy\lazy.rkt:124:48|)
+((parameter-procedure) (f 10))
+->
+(define f
+  |...ts\lazy\lazy.rkt:124:48|)
+(force (f 10))
+->
+(define f
+  |...ts\lazy\lazy.rkt:124:48|)
+(define p_0
+  |...ts\lazy\lazy.rkt:124:48|)
+(define temp6_0 10)
+(force
+ (|...ts\lazy\lazy.rkt:124:48|
+  temp6_0))
+->
+(define f
+  |...ts\lazy\lazy.rkt:124:48|)
+(define p_0
+  |...ts\lazy\lazy.rkt:124:48|)
+(define temp6_0 10)
+(force
+ (|...ts\lazy\lazy.rkt:124:48|
+  10))
+
+(11 steps total)
+
+
+For tomorrow:
+- read stepper internal docs more carefully
+- reread lazy code and lazy srfi docs
