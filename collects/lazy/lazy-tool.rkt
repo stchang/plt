@@ -34,12 +34,12 @@
         (class* % ()
           (define/override (default-settings)
             (drracket:language:make-simple-settings
-             #t
-             'constructor
-             'mixed-fraction-e
-             #f
-             #t
-             'none))
+             #t                ; case-sensitive
+             'constructor      ; printing-style
+             'mixed-fraction-e ; fraction-style
+             #f                ; show-sharing
+             #t                ; insert-newlines
+             'none))           ; annotations
           (define/override (default-settings? s)
             (equal? (drracket:language:simple-settings->vector s)
                     (drracket:language:simple-settings->vector (default-settings))))
@@ -55,9 +55,9 @@
           (stepper-settings-language
            ((drracket:language:get-default-mixin)
             (drracket:language:module-based-language->language-mixin
-             ;(module-based-language-extension
+             (module-based-language-extension
               (drracket:language:simple-module-based-language->module-based-language-mixin
-               drracket:language:simple-module-based-language%)))))
+               drracket:language:simple-module-based-language%))))))
         
         (drracket:language-configuration:add-language
          (instantiate lazy-language% ()

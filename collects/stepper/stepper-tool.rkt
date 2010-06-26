@@ -227,8 +227,11 @@
         ;(namespace-variable-value '#%app))
         ;(foldr string-append "" (map symbol->string (namespace-mapped-symbols))))
 
+      ; end STEVE ADDED
+      
       ;; called from drracket-button.rkt, installed via the #lang htdp/bsl (& co) reader into drscheme
       (define/public (stepper-button-callback)
+        ; STEVE ADDED
         (define langg-sett (send (get-definitions-text) get-next-settings))
         (define langg (drscheme:language-configuration:language-settings-language langg-sett))
         (define sett (drscheme:language-configuration:language-settings-settings langg-sett))
@@ -249,7 +252,8 @@
               (void))
           (display (send langg get-module))
           (display (send langg get-transformer-module))
-
+          ; end STEVE ADDED
+          
         (if stepper-frame
             (send stepper-frame show #t)
             (let* ([language-level

@@ -120,9 +120,35 @@
                              'inferred-name n)])
            (syntax/loc stx (lazy-proc lam))))]))
   (provide (rename ~lambda λ))
-  (defsubst
-    (~define (f . xs) body0 body ...) (define f (~lambda xs body0 body ...))
-    (~define v x) (define v x))
+ 
+  ; STC add
+  ; duplicating some code from ~lambda macro so I can wrap inner lambda
+  ; with stepper-syntax-property(s)
+  ; leaving out inferred-name syntax-property for now
+  ; TMP NOTE: works when I leave out lazy-proc wrapper
+  ;   need to customize unwinder to get it to work with lazy-proc wrapper
+  (define-syntax (~define stx)
+    (syntax-case stx ()
+      [(_ (f . args) body0 body ...)
+       (quasisyntax/loc stx
+         (define f 
+           ;(lazy-proc
+;            #,(let ([n (syntax-local-name)])
+;                (syntax-property
+                 #,(stepper-syntax-property
+                  (stepper-syntax-property
+                   #`(lambda args (~begin body0 body ...))
+                   'stepper-define-type
+                   'shortened-proc-define)
+                  'stepper-proc-define-name
+                  #`f)))]
+;                 'inferred-name n)))))]
+      [(_ name expr) #'(define name expr)]))
+  
+  ; STC comment out
+;  (defsubst
+;    (~define (f . xs) body0 body ...) (define f (~lambda xs body0 body ...))
+;    (~define v x) (define v x))
   (defsubst
     (~let [(x v) ...] body0 body ...)
       (let ([x v] ...) (~begin body0 body ...))

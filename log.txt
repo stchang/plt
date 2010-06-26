@@ -194,6 +194,41 @@ Output:
 (11 steps total)
 
 
-For tomorrow:
-- read stepper internal docs more carefully
-- reread lazy code and lazy srfi docs
+TODO tomorrow:
+1) read stepper internal docs more carefully
+2) reread lazy code and lazy srfi docs
+
+
+--------------------------------------------------------------------------------
+----- 6/25/2010 - HOME PC
+--------------------------------------------------------------------------------
+
+- Functions defined with define (ie - (define (f x) (+ x 1)) ) in the Beginner languages are displayed the same way in the Stepper regardless of whether the Output Style in the Choose Language menu is 'constructor or 'quasiquote or 'write
+
+- extended lazy language class (which implements module-based-language<%> - in drracket/private/language.rkt) and overrode default-settings and default-settings? methods so that the default print-style was 'constructor
+ - ran setup-plt and stepper prints functions as lambdas with Lazy Racket
+ - I tried experimenting with the pretty-print-depth parameter (#f = all depths printed, instead of "...") previously to show the entire lambda but was not successful
+
+Weird behavior:
+- when I change something in lazy.rkt and restart DrRacket, fns in the stepper display as line numbers -- (define f |...ts\lazy\lazy.rkt:131:25|) -- but when I re-run setup-plt (both with undoing and not undoing the changes), fns go back to being displayed as lambdas
+
+observation:
+- There are two ways to add a property to some syntax (or other similar operations) (is this true?)
+ 1) use with-syntax
+ 2) use quasisyntax and escape when calling stepper-syntax-property, etc
+
+
+Trying to get fns defined with define (and not using lambda) to display properly in stepper:
+
+Experiment: 
+- trying to use stepper-define-type stepper-syntax property to do it (Beginner languages use this property)
+
+- doesnt seem to be working
+- it works! if I remove the lazy-proc wrapping the lambda (so if I use just lambda instead of ~lambda)
+
+Possible solutions:
+1) add case in unwind-define in stepper/private/macro-unwind.rkt for functions that use ~lambda
+2) add custom unwinder using stepper-hint like in !*app in lazy/lazy.rkt
+
+TODO tomorrow:
+1) finish implementing displaying of fns defined with define (see possible solutions above)
