@@ -28,7 +28,6 @@
 (define (do-expansion-lazy e)
   ;(syntax->datum
    (parameterize ([current-namespace (make-base-namespace)])
-;     (namespace-require 'lang/private/teach)
      (namespace-require 'lazy/lazy)
      (expand
       (datum->syntax #f e))))
