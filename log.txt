@@ -211,6 +211,7 @@ TODO tomorrow:
 
 Weird behavior:
 - when I change something in lazy.rkt and restart DrRacket, fns in the stepper display as line numbers -- (define f |...ts\lazy\lazy.rkt:131:25|) -- but when I re-run setup-plt (both with undoing and not undoing the changes), fns go back to being displayed as lambdas
+  - yes this makes sense, because the source of the syntax is in the changed file so you need to recompile to make them show up properly
 
 observation:
 - There are two ways to add a property to some syntax (or other similar operations) (is this true?)
@@ -232,3 +233,69 @@ Possible solutions:
 
 TODO tomorrow:
 1) finish implementing displaying of fns defined with define (see possible solutions above)
+
+--------------------------------------------------------------------------------
+----- 6/28/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+- module-identifier=? in mzscheme is the same as free-identifier=? in racket/base
+
+
+--------------------------------------------------------------------------------
+----- 6/29/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+- somehow, when using the custom unwinder, the body of the lambda gets quoted, but when using unwind-define in stepper/private/macro-unwind.rkt, there is no quote, even though both functions are the same and get they get the same inputs - THIS ISNT QUITE RIGHT, see below
+  - finally figured it out! The custom unwinder was using recur-on-pieces (as specified in unwind in stepper/private/macro-unwind.rkt) to recursively unwind the body of the function but unwind-define was using unwind as the recursive call
+    - I changed the recursive call in unwind in stepper/private/macro-unwind.rkt to use unwind instead of recur-on-pieces
+
+- the recur-on-pieces doesnt add the quote, it just doesnt get rid of it. the unwind fn has a syntax-case clause in fall-through that gets rid of the quote; I still dont know why adding lazy-proc adds a quote
+  - it seems like something funny is happening during annotation of lazy-proc - probably because it's a struct constructor and not a real function, so that the stepper doesnt quite know how to reconstruct it, and so that's why we get the funny results with the quote and the dots
+  something like (lazy-proc (lambda (x) (+ 1 x))) is getting annotated and reconstructed as (quote (lambda (a1) ...)) where the quote and the dots are part of the actual output
+
+- the 'stepper-define-type stepper-syntax-property seems to be lost when I add lazy-proc around the lambda
+
+
+Call Graph: stepper/private/macro-unwind.rkt::unwind
+
+stepper/private/model.rkt
+  break:reconstruct-all-completed
+  break (not skip-step, normal-break, normal-break/values)
+    - applied to results of reconstruct.rkt::reconstruct-left-side
+  break (not skip-step, result-exp-break, result-value-break)
+    - applied to results of reconstruct.rkt::reconstruct-right-side
+  break (not skip-step, double-break)
+    - applied to results of reconstruct.rkt::reconstruct-double-break
+
+          |
+          V
+
+stepper/private/macro-unwind.rkt::unwind
+
+
+
+Call Graph: stepper/private/reconstruct.rkt::reconstruct-current
+
+stepper/private/reconstruct.rkt
+  reconstruct-left-side
+  reconstruct-right-side
+  reconstruct-double-break
+
+          |
+          V
+
+stepper/private/reconstruct.rkt::reconstruct-current
+
+
+- trying now to just use stepper-skipto to skip the lazy-proc application
+  - the 'stepper-define-type stepper-syntax-property still seems to be lost when I add lazy-proc around 
+    - trying to add the stepper-define-type property around the lazy-proc instead of around the lambda (and hopefully it gets transferred over?)the lambda
+      - didnt work
+
+
+TODO tomorrow:
+ - look at stepper/private/reconstruct.rkt::recon-value
+   - this is the function that inserts the quote
+     1) it's because stepper/private/shared.rkt::closure-table-lookup returns #f
+     2) also, the dots comes from render-settings-render-to-sexp, I think?
+       - look in stepper/stepper-tool.rkt at stepper:render-to-sexp and simple-module-based-language-convert-value
