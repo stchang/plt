@@ -446,12 +446,29 @@ Experiment: dump of all exprs that get annotated by annotate.rkt:annotate (for m
 (#%app (#%app toplevel-forcer) (let-values (((p) (#%app ! (#%top . f))) ((temp6) (quote 10))) (if (if (#%app lazy-proc? p) (quote #t) (#%app struct-constructor-procedure? p)) (#%app p temp6) (#%app p (#%app ! temp6)))))
 
 
+
+
+
 Call graph for annotation of lazy racket (define (f x) (+ x 1))
 
-in stepper/private/annotate.rkt
+
+stepper/private/model.rkt:
+
+go
+     |
+     V
+
+go::step-through-expression
+(annotate break parameter is break fn in model.rkt)
+(annotated expr is then eval'ed)
+
+     |
+     V
+
+in stepper/private/annotate.rkt:
 
 annotate
-
+(break parameter is break fn in model.rkt)
      |
      V
 
@@ -476,6 +493,7 @@ annotate::annotate/inner #'(#%app lazy-proc (lambda (x) (+ x 1)))
 
 - displaying syntax->datum of top-level-rewrites for my test code seems to produce no change
   - yes of course this is true, top-level-rewrites only applies stepper-binding-type labels and other stepper-properties
+
 
 
 
@@ -677,6 +695,7 @@ in-lambda args (#%plain-app #<procedure:result-value-break> args) (#%plain-app #
 
 
 - with lazy-proc
+
 (#%app lazy-proc (lambda (x) (#%app lazy (lambda () (let-values (((p) (#%app ! +)) ((temp1) (quote 1)) ((x2) x)) (if (if (#%app lazy-proc? p) (quote #t) (#%app struct-constructor-procedure? p)) (#%app p temp1 x2) (#%app p (#%app ! temp1) (#%app ! x2))))))))
 
 (with-continuation-mark #<debug-key-struct> #<skipto-mark-struct> (#%app lazy-pr
@@ -1071,6 +1090,8 @@ temp6
 
 
 
+
+
 Structure of annotate function:
 
 annotate
@@ -1087,6 +1108,7 @@ annotate
     return-value-wrap
     normal-break/values-wrap
     top-level-annotate/inner
+
     annotate/inner
         cond skipto or skipto/discard
              skip-completely
@@ -1127,6 +1149,7 @@ annotate
             else
     annotate/top-level
     annotate/module-top-level
+
 
 
 
@@ -1416,6 +1439,7 @@ rgs)))))))))))))))))))
 ((x) (#%app lazy (lambda () (let-values (((p) (#%app ! +)) ((temp1) (quote 1)) (
 (x2) x)) (if (if (#%app lazy-proc? p) (quote #t) (#%app struct-constructor-proce
 dure? p)) (#%app p temp1 x2) (#%app p (#%app ! temp1) (#%app ! x2)))))))
+
 ((x) (begin (let-values (((arg0-1545 arg1-1546) (#%plain-app values #<*unevaluat
 ed-struct*> #<*unevaluated-struct*>))) (with-continuation-mark #<debug-key-struc
 t> (#%plain-lambda () (#%plain-app #<procedure:...rivate\marks.rkt:70:2> (#%plai
@@ -1838,3 +1862,799 @@ Experiment: dump of vals given to recon-value
 
 TODO for tomorrow: 
  - look at how lambdas are reconstructed for both lazy-proc and test-proc - start in recon-value function?
+
+
+--------------------------------------------------------------------------------
+----- 7/1/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+Experiment: dump of vars given to stepper/private/reconstruct.rkt::recon-source-expr
+
+ - using test-proc:
+lazy + x p temp1 x2 p temp1 x2 p temp6 p temp6 lazy + x p temp1 x2 p temp1 x2 p
+temp6 p temp6 lazy + x p temp1 x2 p temp1 x2 lazy + x p temp1 x2 p temp1 x2 lazy
+ + x p temp1 x2 p temp1 x2 p temp6 lazy + x p temp1 x2 p temp1 x2 lazy + x p tem
+p1 x2 p temp1 x2 lazy + x p temp1 x2 p temp1 x2 temp6 lazy + x p temp1 x2 p temp
+1 x2 lazy + x p temp1 x2 p temp1 x2 temp6 lazy + x p temp1 x2 p temp1 x2 lazy +
+x p temp1 x2 p temp1 x2 lazy + x p temp1 x2 p temp1 x2 lazy + x p temp1 x2 p tem
+p1 x2 lazy + x p temp1 x2 p temp1 x2 lazy + x p temp1 x2 p temp1 x2 lazy + x p t
+emp1 x2 p temp1 x2 lazy + x p temp1 x2 p temp1 x2 lazy + x p temp1 x2 p temp1 x2
+ lazy + x p temp1 x2 p temp1 x2 lazy + x p temp1 x2 p temp1 x2 lazy + x p temp1
+x2 p temp1 x2 p temp1 x2 lazy + x p temp1 x2 p temp1 x2 lazy + x p temp1 x2 p te
+mp1 x2 temp1 x2 lazy + x p temp1 x2 p temp1 x2 lazy + x p temp1 x2 p temp1 x2 te
+mp1 x2 lazy + x p temp1 x2 p temp1 x2 lazy + x p temp1 x2 p temp1 x2 x2 lazy + x
+ p temp1 x2 p temp1 x2 lazy + x p temp1 x2 p temp1 x2 x2 lazy + x p temp1 x2 p t
+emp1 x2 lazy + x p temp1 x2 p temp1 x2 lazy + x p temp1 x2 p temp1 x2 lazy + x p
+ temp1 x2 p temp1 x2 lazy + x p temp1 x2 p temp1 x2 lazy + x p temp1 x2 p temp1
+x2 lazy + x p temp1 x2 p temp1 x2 lazy + x p temp1 x2 p temp1 x2
+
+ - using lazy-proc:
+p temp6 p temp6 p temp6 p temp6 p temp6 temp6 temp6 lazy + x p temp1 x2 p temp1
+x2 p temp1 x2 temp1 x2 temp1 x2 x2 x2
+
+
+
+Experiment: dump of free-vars-captured after annotation in annotate/inner
+
+- with lazy-proc:
+(#<syntax:C:\Documents and Settings\Stephen Chang\My Documents\plt\sandbox\lazy-
+expand-test.rkt:1:15 +>)
+(#<syntax temp1>)
+(#<syntax x2>)
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:326:50 p>
+#<syntax temp1> #<syntax x2>)
+(#<syntax lazy> #<syntax:C:\Documents and Settings\Stephen Chang\My Documents\pl
+t\sandbox\lazy-expand-test.rkt:1:15 +>)
+(#<syntax:C:\Documents and Settings\Stephen Chang\My Documents\plt\sandbox\lazy-
+expand-test.rkt:3:1 f>)
+(#<syntax temp6>)
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:326:50 p>
+#<syntax temp6>)
+
+- with test-proc
+(#<syntax:C:\Documents and Settings\Stephen Chang\My Documents\plt\sandbox\lazy-
+expand-test.rkt:1:15 +>)
+(#<syntax temp1>)
+(#<syntax x2>)
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:326:50 p>
+#<syntax temp1> #<syntax x2>)
+(#<syntax lazy> #<syntax:C:\Documents and Settings\Stephen Chang\My Documents\pl
+t\sandbox\lazy-expand-test.rkt:1:15 +>)
+(#<syntax:C:\Documents and Settings\Stephen Chang\My Documents\plt\sandbox\lazy-
+expand-test.rkt:3:1 f>)
+(#<syntax temp6>)
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:326:50 p>
+#<syntax temp6>)
+
+
+
+Experiment: dump of annotate.rkt::top-level-rewrite labels for all variables
+
+ - with test-proc:
+#%app non-lexical test-proc non-lexical lambda non-lexical x lambda-bound #%app
+non-lexical lazy non-lexical lambda non-lexical p let-bound temp1 let-bound x2 l
+et-bound #%app non-lexical ! non-lexical + non-lexical quote non-lexical x lambd
+a-bound if non-lexical if non-lexical #%app non-lexical lazy-proc? non-lexical p
+ let-bound quote non-lexical #%app non-lexical struct-constructor-procedure? non
+-lexical p let-bound #%app non-lexical p let-bound temp1 let-bound x2 let-bound
+#%app non-lexical p let-bound #%app non-lexical ! non-lexical temp1 let-bound #%
+app non-lexical ! non-lexical x2 let-bound 
+
+ - with lazy-proc:
+#%app non-lexical lazy-proc non-lexical lambda non-lexical x lambda-bound #%app
+non-lexical lazy non-lexical lambda non-lexical p let-bound temp1 let-bound x2 l
+et-bound #%app non-lexical ! non-lexical + non-lexical quote non-lexical x lambd
+a-bound if non-lexical if non-lexical #%app non-lexical lazy-proc? non-lexical p
+ let-bound quote non-lexical #%app non-lexical struct-constructor-procedure? non
+-lexical p let-bound #%app non-lexical p let-bound temp1 let-bound x2 let-bound
+#%app non-lexical p let-bound #%app non-lexical ! non-lexical temp1 let-bound #%
+app non-lexical ! non-lexical x2 let-bound 
+
+
+
+
+
+
+
+
+TODO for tomorrow:
+ - dump stuff in annotate/inner #%plain-app case and make sure everything is same for test-proc and lazy-proc (I did this already for #%plain-lambda case)
+
+
+
+
+
+Experiment: dump of terms, annotated terms, and free varrefs for #%plain-app case in annotate/inner (outpouts are identical)
+
+- with lazy-proc:
+terms:
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:325:50 p>
+#<syntax temp1> #<syntax x2>)
+annotated terms:
+(#<syntax (with-continuation-mark #<deb...> #<syntax (with-continuation-mark #<d
+eb...> #<syntax (with-continuation-mark #<deb...>)
+free varrefs
+((#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:325:50 p>
+) (#<syntax temp1>) (#<syntax x2>))
+terms:
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:326:50 p>
+#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:295:42 (#%a
+pp ! temp1)> #<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rk
+t:295:42 (#%app ! x2)>)
+annotated terms:
+(#<syntax (with-continuation-mark #<deb...> #<syntax (with-continuation-mark #<d
+eb...> #<syntax (with-continuation-mark #<deb...>)
+free varrefs
+((#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:326:50 p>
+) (#<syntax temp1>) (#<syntax x2>))
+terms:
+(#<syntax lazy> #<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy
+.rkt:337:29 (lambda () (let-values (((p) ...>)
+annotated terms:
+(#<syntax (with-continuation-mark #<deb...> #<syntax (with-continuation-mark #<d
+eb...>)
+free varrefs
+((#<syntax lazy>) (#<syntax:C:\Documents and Settings\Stephen Chang\My Documents
+\plt\sandbox\lazy-expand-test.rkt:1:15 +> #<syntax:C:\Documents and Settings\Ste
+phen Chang\My Documents\plt\sandbox\lazy-expand-test.rkt:1:19 x>))
+terms:
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:371:32 top
+level-forcer>)
+annotated terms:
+(#<syntax (with-continuation-mark #<deb...>)
+free varrefs
+((#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:371:32 to
+plevel-forcer>))
+terms:
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:325:50 p>
+#<syntax temp6>)
+annotated terms:
+(#<syntax (with-continuation-mark #<deb...> #<syntax (with-continuation-mark #<d
+eb...>)
+free varrefs
+((#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:325:50 p>
+) (#<syntax temp6>))
+terms:
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:326:50 p>
+#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:295:42 (#%a
+pp ! temp6)>)
+annotated terms:
+(#<syntax (with-continuation-mark #<deb...> #<syntax (with-continuation-mark #<d
+eb...>)
+free varrefs
+((#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:326:50 p>
+) (#<syntax temp6>))
+terms:
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:371:31 (#%
+app toplevel-forcer)> #<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\laz
+y\lazy.rkt:335:29 (let-values (((p) (#%app ! (#...>)
+annotated terms:
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\stepper\private\annotate
+.rkt:1085:27 (let-values (((arg0-1733) (#%...> #<syntax:C:\Program Files\Racket-
+Full-5.0.0.1\collects\lazy\lazy.rkt:335:29 (let ((lifting-counter (#<pro...>)
+free varrefs
+((#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:371:32 to
+plevel-forcer>) (#<syntax:C:\Documents and Settings\Stephen Chang\My Documents\p
+lt\sandbox\lazy-expand-test.rkt:3:1 f>))
+
+
+- with test-proc
+terms:
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:325:50 p>
+#<syntax temp1> #<syntax x2>)
+annotated terms:
+(#<syntax (with-continuation-mark #<deb...> #<syntax (with-continuation-mark #<d
+eb...> #<syntax (with-continuation-mark #<deb...>)
+free varrefs
+((#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:325:50 p>
+) (#<syntax temp1>) (#<syntax x2>))
+terms:
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:326:50 p>
+#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:295:42 (#%a
+pp ! temp1)> #<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rk
+t:295:42 (#%app ! x2)>)
+annotated terms:
+(#<syntax (with-continuation-mark #<deb...> #<syntax (with-continuation-mark #<d
+eb...> #<syntax (with-continuation-mark #<deb...>)
+free varrefs
+((#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:326:50 p>
+) (#<syntax temp1>) (#<syntax x2>))
+terms:
+(#<syntax lazy> #<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy
+.rkt:337:29 (lambda () (let-values (((p) ...>)
+annotated terms:
+(#<syntax (with-continuation-mark #<deb...> #<syntax (with-continuation-mark #<d
+eb...>)
+free varrefs
+((#<syntax lazy>) (#<syntax:C:\Documents and Settings\Stephen Chang\My Documents
+\plt\sandbox\lazy-expand-test.rkt:1:15 +> #<syntax:C:\Documents and Settings\Ste
+phen Chang\My Documents\plt\sandbox\lazy-expand-test.rkt:1:19 x>))
+terms:
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:371:32 top
+level-forcer>)
+annotated terms:
+(#<syntax (with-continuation-mark #<deb...>)
+free varrefs
+((#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:371:32 to
+plevel-forcer>))
+terms:
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:325:50 p>
+#<syntax temp6>)
+annotated terms:
+(#<syntax (with-continuation-mark #<deb...> #<syntax (with-continuation-mark #<d
+eb...>)
+free varrefs
+((#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:325:50 p>
+) (#<syntax temp6>))
+terms:
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:326:50 p>
+#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:295:42 (#%a
+pp ! temp6)>)
+annotated terms:
+(#<syntax (with-continuation-mark #<deb...> #<syntax (with-continuation-mark #<d
+eb...>)
+free varrefs
+((#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:326:50 p>
+) (#<syntax temp6>))
+terms:
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:371:31 (#%
+app toplevel-forcer)> #<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\laz
+y\lazy.rkt:335:29 (let-values (((p) (#%app ! (#...>)
+annotated terms:
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\stepper\private\annotate
+.rkt:1085:27 (let-values (((arg0-1733) (#%...> #<syntax:C:\Program Files\Racket-
+Full-5.0.0.1\collects\lazy\lazy.rkt:335:29 (let ((lifting-counter (#<pro...>)
+free varrefs
+((#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:371:32 to
+plevel-forcer>) (#<syntax:C:\Documents and Settings\Stephen Chang\My Documents\p
+lt\sandbox\lazy-expand-test.rkt:3:1 f>))
+
+
+
+Experiment: dump of tail-args in #%plain-app case of annotate/inner (identical)
+
+- using test-proc
+all
+all
+all
+(#<syntax arg0-1733>)
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:329:22 p>
+#<syntax temp6> #<syntax arg0-1733> #<syntax arg1-1734>)
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:329:22 p>
+#<syntax temp6> #<syntax arg0-1733> #<syntax arg1-1734>)
+all
+
+- using lazy-proc
+all
+all
+all
+(#<syntax arg0-1733>)
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:329:22 p>
+#<syntax temp6> #<syntax arg0-1733> #<syntax arg1-1734>)
+(#<syntax:C:\Program Files\Racket-Full-5.0.0.1\collects\lazy\lazy.rkt:329:22 p>
+#<syntax temp6> #<syntax arg0-1733> #<syntax arg1-1734>)
+all
+
+
+
+Tentative conclusion - annotated programs are the same whether using lazy-proc or test-proc; reconstruction seems different though
+
+TODO: find where reconstruction differs
+
+
+
+reconstruction call graph
+
+
+files in stepper/private
+
+model.rkt::go::break
+
+     |
+     V
+
+reconstruct.rkt::
+reconstruct-left-side (normal-break, normal-break/values)
+reconstruct-right-side (result-exp-break, result-value-break)
+reconstruct-double-break (double-break)
+
+     |
+     V
+
+reconstruct-current
+
+
+     |
+     V
+
+(left-side)
+recon-value
+reconstruct-current::recon
+
+(right-side)
+recon-value or recon-source-expr
+reconstruct-current::recon
+
+(double-break)
+recon-source-expr
+reconstruct-current::recon
+
+     |
+     V
+
+reconstruct-current::recon calls either
+  reconstruct-top-level or
+  reconstruct-current::recon-inner
+
+Structure of stepper/private/reconstruct.rkt
+
+recon-value
+skip-step?
+skip-redex-step?
+recon-source-expr
+- calls skipto/auto with 'discard and the following transformer fn
+    recur
+    let-recur
+    recon-basic
+    recon-let/rec
+    recon-lambda-clause
+    kernel-syntax-case
+        (#%plain-lambda . clause-stx)
+        (case-lambda . clauses-stx)
+        (if test then else)
+        (it test then)
+        (begin . bodies)
+        (begin0 . bodies)
+        (let-values . rest)
+        (letrec-values . rest)
+        (set! var rhs)
+        (quote body)
+        (with-continuation-mark . rest)
+        (#%plain-app . terms)
+        var-stx
+        (#%top . var)
+reconstruct-completed
+reconstruct-top-level
+reconstruct-left-side
+reconstruct-right-side
+reconstruct-double-break
+reconstruct-current
+    recon-inner
+        recon-source-current-marks
+        iota
+        recon-let
+        kernel-syntax-case
+            id
+            (#%top . id)
+            (#%plain-app . terms)
+            (if test then else)
+            (if test then)
+            (begin . terms)
+            (begin0 body)
+            (begin0 first-body . rest-bodies)
+            (let-values . rest)
+            (letrec-values . rest)
+            (set! var rhs)
+    recon
+
+
+
+Experiment: dumping closure-records in recon-value in reconstruct.rkt
+
+ - using lazy-proc
+ - using test-proc
+ - everything seems to be a closure-record (no #f's)
+
+Experiment: dumping base-names of closure-records in recon-value in reconstruct.rkt
+ - weird, nothing printed from the true branch of if closure-records, even though in the previous experiment, everythings was showing as a closure-record
+ - trying to print something in the false branch of if closure-records (the rendered)
+    - it seems like where test-proc has 1, lazy-proc has lazy.rkt:206:19 (which is the start of the (lambda ...) expr
+
+the false branch, for lazy-proc:
+
+...ts\lazy\lazy.rkt:206:19
+parameter-procedure
+10
+...ts\lazy\lazy.rkt:206:19
+force
+10
+...ts\lazy\lazy.rkt:206:19
+...ts\lazy\lazy.rkt:206:19
+...ts\lazy\lazy.rkt:206:19
+10
+force
+...ts\lazy\lazy.rkt:206:19
+...ts\lazy\lazy.rkt:206:19
+10
+...ts\lazy\lazy.rkt:206:19
+force
+10
+...ts\lazy\lazy.rkt:206:19
+...ts\lazy\lazy.rkt:206:19
+10
+...ts\lazy\lazy.rkt:206:19
+force
+...ts\lazy\lazy.rkt:206:19
+...ts\lazy\lazy.rkt:206:19
+10
+10
+...ts\lazy\lazy.rkt:206:19
+force
+...ts\lazy\lazy.rkt:206:19
+...ts\lazy\lazy.rkt:206:19
+10
+...ts\lazy\lazy.rkt:206:19
+10
+force
+...ts\lazy\lazy.rkt:206:19
+...ts\lazy\lazy.rkt:206:19
+10
+1
+10
+...ts\lazy\lazy.rkt:206:19
+10
+force
+...ts\lazy\lazy.rkt:206:19
+...ts\lazy\lazy.rkt:206:19
+10
+(delay ...)
+force
++
+...ts\lazy\lazy.rkt:206:19
+...ts\lazy\lazy.rkt:206:19
+10
++
+1
+10
+force
+(delay ...)
+...ts\lazy\lazy.rkt:206:19
+...ts\lazy\lazy.rkt:206:19
+10
++
+1
+10
++
+force
+(delay ...)
+1
+...ts\lazy\lazy.rkt:206:19
+...ts\lazy\lazy.rkt:206:19
+10
++
+1
+10
++
+force
+(delay ...)
+...ts\lazy\lazy.rkt:206:19
+...ts\lazy\lazy.rkt:206:19
+10
++
+1
+10
+1
++
+force
+(delay ...)
+10
+...ts\lazy\lazy.rkt:206:19
+...ts\lazy\lazy.rkt:206:19
+10
++
+1
+10
++
+1
+force
+(delay ...)
+...ts\lazy\lazy.rkt:206:19
+...ts\lazy\lazy.rkt:206:19
+10
++
+1
+10
+10
++
+1
+force
+(delay ...)
+...ts\lazy\lazy.rkt:206:19
+...ts\lazy\lazy.rkt:206:19
+10
++
+1
+10
++
+1
+10
+force
+(delay ...)
+...ts\lazy\lazy.rkt:206:19
+...ts\lazy\lazy.rkt:206:19
+10
++
+1
+10
+11
+force
+(delay ...)
+...ts\lazy\lazy.rkt:206:19
+...ts\lazy\lazy.rkt:206:19
+10
++
+1
+10
+11
+
+the false branch of if closure-record in recon-value, for test-proc
+
+1
+parameter-procedure
+10
+1
+force
+10
+1
+1
+1
+10
+force
+1
+1
+10
+1
+force
+10
+1
+1
+10
+1
+force
+1
+1
+10
+10
+1
+force
+1
+1
+10
+1
+10
+force
+1
+1
+10
+1
+10
+force
++
+1
+1
+10
++
+1
+10
+force
+(delay ...)
+1
+1
+10
++
+1
+10
++
+force
+(delay ...)
+1
+1
+1
+10
++
+1
+10
++
+force
+(delay ...)
+1
+1
+10
++
+1
+10
+1
++
+force
+(delay ...)
+10
+1
+1
+10
++
+1
+10
++
+1
+force
+(delay ...)
+1
+1
+10
++
+1
+10
+10
++
+1
+force
+(delay ...)
+1
+1
+10
++
+1
+10
++
+1
+10
+force
+(delay ...)
+1
+1
+10
++
+1
+10
+11
+force
+(delay ...)
+1
+1
+10
++
+1
+10
+11
+
+
+
+Continuation Marks creation call graph:
+
+stepper/private/marks.rkt::
+
+make-debug-info
+
+     |
+     V
+
+make-full-mark
+
+
+     |
+     V
+
+make-make-full-mark-varargs
+
+     |
+     V
+
+make-full-mark-struct
+(define-struct full-mark-struct (source label bindings values))
+
+
+--------------------------------------------------------------------------------
+----- 7/2/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+Experiment: all keys added to closure table
+
+- using lazy-proc:
+#<procedure:...ts\lazy\lazy.rkt:207:19>
+#<procedure:...ts\lazy\lazy.rkt:339:29>
+
+- using test-proc
+#<procedure:...ts\lazy\lazy.rkt:207:19>
+#<procedure:...ts\lazy\lazy.rkt:339:29>
+
+
+
+
+lookup-binding call graph:
+
+stepper/private/
+
+reconstruct.rkt::(various functions)
+
+     |
+     V
+
+marks.rkt::
+
+lookup-binding.rkt
+
+     |
+     V
+
+lookup-first-binding
+
+     |
+     V
+
+lookup-all-bindings
+(for all marks, returns list of binding-value pairs where binding matches specified binding)
+     |
+     V
+
+binding-matches
+(for one mark, returns list of binding-value pairs where binding matches specified binding)
+     |
+     V
+
+mark-bindings
+(returns list of binding-value pairs)
+     |
+     V
+
+full-mark-struct-bindings
+full-mark-struct-values	
+
+
+
+--------------------------------------------------------------------------------
+----- 7/3/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+
+Call Graph - making a mark:
+
+stepper/private/annotate.rkt::annotate:annotate/inner::
+make-debug-info-normal (called by normal-bundle, if-abstraction, varref-abstraction, annotate/inner)
+make-debug-info-app (outer-lambda-abstraction, annotate/inner)
+make-debug-info-let (let-abstraction)
+make-debug-info-fake-exp (let-abstraction)
+make-debug-info-fake-exp/tail-bound (annotate/inner
+
+     |
+     V
+
+stepper/private/marks.rkt::
+
+make-debug-info
+  source tail-bound free-vars label lifting
+
+     |
+     V
+
+make-full-mark
+  source label bindings
+(creates syntax of a thunk where body is app:
+   ( (make-make-full-mark-varargs source label bindings) 
+     (map make-mark-binding-stx bindings) )
+
+     | (when thunk is forced)           |
+     V                                  V
+
+make-make-full-mark-varargs      make-mark-binding-stx
+  source label bindings
+     |
+     V
+
+make-full-mark-struct
+  source label bindings values
+  (values is arg of lambda)
+
+
+
+- lambda and lambda wrapped with lazy-proc print as the same!
+  (see lazy-proc-print-test.rkt)
+
+- if I apply the following fn to val before giving it to closure-table-lookup (this is in recon-value in reconstruct.rkt), then the function displays properly!
+
+(lambda (val) 
+    (if (procedure? val)
+        (let ([targ (procedure-extract-target val)])
+            (if targ
+                targ
+                val))
+        val))
