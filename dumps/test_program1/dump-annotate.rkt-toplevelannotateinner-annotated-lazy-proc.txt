@@ -1,0 +1,104 @@
+(with-continuation-mark #<debug-key-struct> #<skipto-mark-struct> (#%app lazy-pr
+oc (with-continuation-mark #<debug-key-struct> (#%plain-lambda () (#%plain-app #
+<procedure:...rivate\marks.rkt:70:2> (#%plain-lambda () lazy) (#%plain-lambda ()
+ +))) (#%plain-app #<procedure:closure-storing-proc> (#%plain-lambda (x) (begin
+(let-values (((arg0-1854 arg1-1855) (#%plain-app values #<*unevaluated-struct*>
+#<*unevaluated-struct*>))) (with-continuation-mark #<debug-key-struct> (#%plain-
+lambda () (#%plain-app #<procedure:...rivate\marks.rkt:70:2> (#%plain-lambda ()
+lazy) (#%plain-lambda () +) (#%plain-lambda () x) (#%plain-lambda () arg0-1854)
+(#%plain-lambda () arg1-1855))) (begin (#%plain-app #<procedure:result-exp-break
+>) (begin (set! arg0-1854 (with-continuation-mark #<debug-key-struct> (#%plain-l
+ambda () (#%plain-app #<procedure:...rivate\marks.rkt:70:2>)) lazy)) (set! arg1-
+1855 (with-continuation-mark #<debug-key-struct> (#%plain-lambda () (#%plain-app
+ #<procedure:...rivate\marks.rkt:70:2>)) (#%plain-app #<procedure:closure-storin
+g-proc> (#%plain-lambda () (begin (let ((lifting-counter (#<procedure:binding-in
+dexer>))) (let-values (((lifter-p-0 lifter-temp1-1 lifter-x2-2 p temp1 x2 let-co
+unter) (values lifting-counter lifting-counter lifting-counter #<*unevaluated-st
+ruct*> #<*unevaluated-struct*> #<*unevaluated-struct*> 0))) (with-continuation-m
+ark #<debug-key-struct> (#%plain-lambda () (#%plain-app #<procedure:...rivate\ma
+rks.rkt:70:2> (#%plain-lambda () +) (#%plain-lambda () x) (#%plain-lambda () p)
+(#%plain-lambda () temp1) (#%plain-lambda () x2) (#%plain-lambda () let-counter)
+ (#%plain-lambda () lifter-p-0) (#%plain-lambda () lifter-temp1-1) (#%plain-lamb
+da () lifter-x2-2))) (begin (#%plain-app #<procedure:result-exp-break>) (begin (
+#%plain-app #<procedure:double-break>) (begin (set!-values (p) (with-continuatio
+n-mark #<debug-key-struct> #<skipto-mark-struct> (#%app ! (with-continuation-mar
+k #<debug-key-struct> (#%plain-lambda () (#%plain-app #<procedure:...rivate\mark
+s.rkt:70:2>)) +)))) (set! let-counter 1) (set!-values (temp1) (with-continuation
+-mark #<debug-key-struct> (#%plain-lambda () (#%plain-app #<procedure:...rivate\
+marks.rkt:70:2>)) (quote 1))) (set! let-counter 2) (set!-values (x2) (with-conti
+nuation-mark #<debug-key-struct> (#%plain-lambda () (#%plain-app #<procedure:...
+rivate\marks.rkt:70:2>)) x)) (set! let-counter 3) (#%plain-app #<procedure:exp-f
+inished-break> (#%plain-app list (#%plain-app list #<procedure:...ate\annotate.r
+kt:655:69> (#%plain-app list lifter-p-0) (#%plain-lambda () (#%plain-app list p)
+)) (#%plain-app list #<procedure:...ate\annotate.rkt:655:69> (#%plain-app list l
+ifter-temp1-1) (#%plain-lambda () (#%plain-app list temp1))) (#%plain-app list #
+<procedure:...ate\annotate.rkt:655:69> (#%plain-app list lifter-x2-2) (#%plain-l
+ambda () (#%plain-app list x2))))) (with-continuation-mark #<debug-key-struct> #
+<skipto-mark-struct> (if (if (#%app lazy-proc? p) (quote #t) (#%app struct-const
+ructor-procedure? p)) (let-values (((arg0-1854 arg1-1855 arg2-1856) (#%plain-app
+ values #<*unevaluated-struct*> #<*unevaluated-struct*> #<*unevaluated-struct*>)
+)) (with-continuation-mark #<debug-key-struct> (#%plain-lambda () (#%plain-app #
+<procedure:...rivate\marks.rkt:70:2> (#%plain-lambda () p) (#%plain-lambda () te
+mp1) (#%plain-lambda () x2) (#%plain-lambda () arg0-1854) (#%plain-lambda () arg
+1-1855) (#%plain-lambda () arg2-1856) (#%plain-lambda () lifter-p-0) (#%plain-la
+mbda () lifter-temp1-1) (#%plain-lambda () lifter-x2-2))) (begin (set! arg0-1854
+ (with-continuation-mark #<debug-key-struct> (#%plain-lambda () (#%plain-app #<p
+rocedure:...rivate\marks.rkt:70:2>)) (begin (#%plain-app #<procedure:normal-brea
+k>) (#%plain-app call-with-values (#%plain-lambda () p) (#%plain-lambda args (#%
+plain-app #<procedure:result-value-break> args) (#%plain-app #<procedure:apply>
+values args)))))) (set! arg1-1855 (with-continuation-mark #<debug-key-struct> (#
+%plain-lambda () (#%plain-app #<procedure:...rivate\marks.rkt:70:2>)) (begin (#%
+plain-app #<procedure:normal-break>) (#%plain-app call-with-values (#%plain-lamb
+da () temp1) (#%plain-lambda args (#%plain-app #<procedure:result-value-break> a
+rgs) (#%plain-app #<procedure:apply> values args)))))) (set! arg2-1856 (with-con
+tinuation-mark #<debug-key-struct> (#%plain-lambda () (#%plain-app #<procedure:.
+..rivate\marks.rkt:70:2>)) (begin (#%plain-app #<procedure:normal-break>) (#%pla
+in-app call-with-values (#%plain-lambda () x2) (#%plain-lambda args (#%plain-app
+ #<procedure:result-value-break> args) (#%plain-app #<procedure:apply> values ar
+gs)))))) (begin (#%plain-app #<procedure:normal-break>) (with-continuation-mark
+#<debug-key-struct> (#%plain-lambda () (#%plain-app #<procedure:...rivate\marks.
+rkt:70:2> (#%plain-lambda () arg0-1854) (#%plain-lambda () arg1-1855) (#%plain-l
+ambda () arg2-1856))) (if (#%plain-app #<procedure:...ivate\shared.rkt:315:7> ar
+g0-1854) (#%plain-app arg0-1854 arg1-1855 arg2-1856) (#%plain-app call-with-valu
+es (#%plain-lambda () (#%plain-app arg0-1854 arg1-1855 arg2-1856)) (#%plain-lamb
+da args (#%plain-app #<procedure:result-value-break> args) (#%plain-app #<proced
+ure:apply> values args))))))))) (let-values (((arg0-1854 arg1-1855 arg2-1856) (#
+%plain-app values #<*unevaluated-struct*> #<*unevaluated-struct*> #<*unevaluated
+-struct*>))) (with-continuation-mark #<debug-key-struct> (#%plain-lambda () (#%p
+lain-app #<procedure:...rivate\marks.rkt:70:2> (#%plain-lambda () p) (#%plain-la
+mbda () temp1) (#%plain-lambda () x2) (#%plain-lambda () arg0-1854) (#%plain-lam
+bda () arg1-1855) (#%plain-lambda () arg2-1856) (#%plain-lambda () lifter-p-0) (
+#%plain-lambda () lifter-temp1-1) (#%plain-lambda () lifter-x2-2))) (begin (set!
+ arg0-1854 (with-continuation-mark #<debug-key-struct> (#%plain-lambda () (#%pla
+in-app #<procedure:...rivate\marks.rkt:70:2>)) (begin (#%plain-app #<procedure:n
+ormal-break>) (#%plain-app call-with-values (#%plain-lambda () p) (#%plain-lambd
+a args (#%plain-app #<procedure:result-value-break> args) (#%plain-app #<procedu
+re:apply> values args)))))) (set! arg1-1855 (with-continuation-mark #<debug-key-
+struct> #<skipto-mark-struct> (#%app ! (with-continuation-mark #<debug-key-struc
+t> (#%plain-lambda () (#%plain-app #<procedure:...rivate\marks.rkt:70:2>)) (begi
+n (#%plain-app #<procedure:normal-break>) (#%plain-app call-with-values (#%plain
+-lambda () temp1) (#%plain-lambda args (#%plain-app #<procedure:result-value-bre
+ak> args) (#%plain-app #<procedure:apply> values args)))))))) (set! arg2-1856 (w
+ith-continuation-mark #<debug-key-struct> #<skipto-mark-struct> (#%app ! (with-c
+ontinuation-mark #<debug-key-struct> (#%plain-lambda () (#%plain-app #<procedure
+:...rivate\marks.rkt:70:2>)) (begin (#%plain-app #<procedure:normal-break>) (#%p
+lain-app call-with-values (#%plain-lambda () x2) (#%plain-lambda args (#%plain-a
+pp #<procedure:result-value-break> args) (#%plain-app #<procedure:apply> values
+args)))))))) (begin (#%plain-app #<procedure:normal-break>) (with-continuation-m
+ark #<debug-key-struct> (#%plain-lambda () (#%plain-app #<procedure:...rivate\ma
+rks.rkt:70:2> (#%plain-lambda () arg0-1854) (#%plain-lambda () arg1-1855) (#%pla
+in-lambda () arg2-1856))) (if (#%plain-app #<procedure:...ivate\shared.rkt:315:7
+> arg0-1854) (#%plain-app arg0-1854 arg1-1855 arg2-1856) (#%plain-app call-with-
+values (#%plain-lambda () (#%plain-app arg0-1854 arg1-1855 arg2-1856)) (#%plain-
+lambda args (#%plain-app #<procedure:result-value-break> args) (#%plain-app #<pr
+ocedure:apply> values args))))))))))))))))))) (#%plain-lambda () (#%plain-app #<
+procedure:...rivate\marks.rkt:70:2> (#%plain-lambda () +) (#%plain-lambda () x))
+)))) (begin (#%plain-app #<procedure:normal-break>) (with-continuation-mark #<de
+bug-key-struct> (#%plain-lambda () (#%plain-app #<procedure:...rivate\marks.rkt:
+70:2> (#%plain-lambda () arg0-1854) (#%plain-lambda () arg1-1855))) (if (#%plain
+-app #<procedure:...ivate\shared.rkt:315:7> arg0-1854) (#%plain-app arg0-1854 ar
+g1-1855) (#%plain-app call-with-values (#%plain-lambda () (#%plain-app arg0-1854
+ arg1-1855)) (#%plain-lambda args (#%plain-app #<procedure:result-value-break> a
+rgs) (#%plain-app #<procedure:apply> values args)))))))))))) (#%plain-lambda ()
+(#%plain-app #<procedure:...rivate\marks.rkt:70:2> (#%plain-lambda () lazy) (#%p
+lain-lambda () +)))))))

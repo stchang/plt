@@ -1,0 +1,656 @@
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:parameter-procedure>
+closure record: #<procedure:closure-record>
+closure record false
+parameter-procedure
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:force>
+closure record: #<procedure:closure-record>
+closure record false
+force
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:force>
+closure record: #<procedure:closure-record>
+closure record false
+force
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:force>
+closure record: #<procedure:closure-record>
+closure record false
+force
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:force>
+closure record: #<procedure:closure-record>
+closure record false
+force
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:force>
+closure record: #<procedure:closure-record>
+closure record false
+force
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:force>
+closure record: #<procedure:closure-record>
+closure record false
+force
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:force>
+closure record: #<procedure:closure-record>
+closure record false
+force
+val: #<procedure:+>
+closure record: #<procedure:closure-record>
+closure record false
++
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:+>
+closure record: #<procedure:closure-record>
+closure record false
++
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:force>
+closure record: #<procedure:closure-record>
+closure record false
+force
+val: #<promise:!running!...ts\lazy\lazy.rkt:337:29>
+closure record: #<procedure:closure-record>
+closure record false
+(delay ...)
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:+>
+closure record: #<procedure:closure-record>
+closure record false
++
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:+>
+closure record: #<procedure:closure-record>
+closure record false
++
+val: #<procedure:force>
+closure record: #<procedure:closure-record>
+closure record false
+force
+val: #<promise:!running!...ts\lazy\lazy.rkt:337:29>
+closure record: #<procedure:closure-record>
+closure record false
+(delay ...)
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:+>
+closure record: #<procedure:closure-record>
+closure record false
++
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:+>
+closure record: #<procedure:closure-record>
+closure record false
++
+val: #<procedure:force>
+closure record: #<procedure:closure-record>
+closure record false
+force
+val: #<promise:!running!...ts\lazy\lazy.rkt:337:29>
+closure record: #<procedure:closure-record>
+closure record false
+(delay ...)
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:+>
+closure record: #<procedure:closure-record>
+closure record false
++
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:+>
+closure record: #<procedure:closure-record>
+closure record false
++
+val: #<procedure:force>
+closure record: #<procedure:closure-record>
+closure record false
+force
+val: #<promise:!running!...ts\lazy\lazy.rkt:337:29>
+closure record: #<procedure:closure-record>
+closure record false
+(delay ...)
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:+>
+closure record: #<procedure:closure-record>
+closure record false
++
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:+>
+closure record: #<procedure:closure-record>
+closure record false
++
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:force>
+closure record: #<procedure:closure-record>
+closure record false
+force
+val: #<promise:!running!...ts\lazy\lazy.rkt:337:29>
+closure record: #<procedure:closure-record>
+closure record false
+(delay ...)
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:+>
+closure record: #<procedure:closure-record>
+closure record false
++
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:+>
+closure record: #<procedure:closure-record>
+closure record false
++
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:force>
+closure record: #<procedure:closure-record>
+closure record false
+force
+val: #<promise:!running!...ts\lazy\lazy.rkt:337:29>
+closure record: #<procedure:closure-record>
+closure record false
+(delay ...)
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:+>
+closure record: #<procedure:closure-record>
+closure record false
++
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:+>
+closure record: #<procedure:closure-record>
+closure record false
++
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:force>
+closure record: #<procedure:closure-record>
+closure record false
+force
+val: #<promise:!running!...ts\lazy\lazy.rkt:337:29>
+closure record: #<procedure:closure-record>
+closure record false
+(delay ...)
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:+>
+closure record: #<procedure:closure-record>
+closure record false
++
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: 11
+closure record: #<procedure:closure-record>
+closure record false
+11
+val: #<procedure:force>
+closure record: #<procedure:closure-record>
+closure record false
+force
+val: #<promise:!running!...ts\lazy\lazy.rkt:337:29>
+closure record: #<procedure:closure-record>
+closure record false
+(delay ...)
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: #<procedure:...ts\lazy\lazy.rkt:206:19>
+closure record: #<procedure:closure-record>
+closure-record not false
+base name: #f
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: #<procedure:+>
+closure record: #<procedure:closure-record>
+closure record false
++
+val: 1
+closure record: #<procedure:closure-record>
+closure record false
+1
+val: 10
+closure record: #<procedure:closure-record>
+closure record false
+10
+val: 11
+closure record: #<procedure:closure-record>
+closure record false
+11

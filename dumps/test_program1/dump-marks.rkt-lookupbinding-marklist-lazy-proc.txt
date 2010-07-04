@@ -1,0 +1,19 @@
+(source: (#%app toplevel-forcer)
+label: not-yet-called
+bindings:
+ arg0-1854 : #<procedure:parameter-procedure>
+ source: (#%app (#%app toplevel-forcer) (let-values (((p) (#%app ! (#%top . f)))
+ ((temp6) (quote 10))) (if (if (#%app lazy-proc? p) (quote #t) (#%app struct-con
+structor-procedure? p)) (#%app p temp6) (#%app p (#%app ! temp6)))))
+label: not-yet-called
+bindings:
+ toplevel-forcer : #<procedure:parameter-procedure>
+ f : #<procedure:...ts\lazy\lazy.rkt:208:19>
+ arg0-1854 : #<*unevaluated-struct*>
+ arg1-1855 : #<*unevaluated-struct*>
+ source: (#%app (#%app toplevel-forcer) (let-values (((p) (#%app ! (#%top . f)))
+ ((temp6) (quote 10))) (if (if (#%app lazy-proc? p) (quote #t) (#%app struct-con
+structor-procedure? p)) (#%app p temp6) (#%app p (#%app ! temp6)))))
+label: top-level
+bindings:
+)
