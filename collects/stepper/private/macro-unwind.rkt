@@ -82,7 +82,8 @@
      (transfer-info
       (let ([hint (stepper-syntax-property stx 'stepper-hint)])
         (if (procedure? hint)
-            (hint stx (lambda (stx) (recur-on-pieces stx settings)))
+            ; STC: recursive call used to be recur-on-pieces instead of unwind
+            (hint stx (lambda (stx) (unwind stx settings)))
             (let ([process (case hint
                              [(comes-from-cond)  unwind-cond]
                              [(comes-from-and)   (unwind-and/or 'and)]
