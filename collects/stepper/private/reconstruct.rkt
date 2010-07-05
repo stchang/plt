@@ -112,7 +112,15 @@
     (opt-lambda (val render-settings [assigned-name #f])
       (if (hash-ref finished-xml-box-table val (lambda () #f))
           (stepper-syntax-property #`(quote #,val) 'stepper-xml-value-hint 'from-xml-box)
-          (let ([closure-record (closure-table-lookup val (lambda () #f))])
+          (let* ([extract-if-struct ; extracts closure from struct procedure (ie - lazy-proc in lazy racket)
+                  (lambda (val) 
+                    (if (procedure? val)
+                        (let ([targ (procedure-extract-target val)])
+                          (if targ
+                              targ
+                              val))
+                        val))]
+                [closure-record (closure-table-lookup (extract-if-struct val) (lambda () #f))])
             (if closure-record
                 (let ([mark (closure-record-mark closure-record)]
                       [base-name (closure-record-name closure-record)])
