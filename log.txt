@@ -1200,3 +1200,27 @@ some various notes:
 - download and install Racket Full 5.0.0.6 7/5/2010 build
  - note cant have "info" in any files with .rkt extension? - I had "copy of info.rkt" and it was messing things up so that stepper button wasnt showing up?
  - actually I think the problem was that the copied info.rkt file had a previous date and wasnt getting compiled - need to delete info compiled files (.zo and .dep) to get stepper button to show up
+ 
+ - copied over info.rkt and lazy-tool.rkt to lazy/ and deleted info.zo and info.dep compiled files
+ - ran setup-plt -D
+ - copied over define-values case in annotate/top-level in annotate.rkt
+ - copied over change to ~define and !*app in lazy.rkt
+ - copied change to recon-value in reconstruct.rkt so struct wrapped procedures are extracted
+
+
+
+Summary of changes to displaying fns defined with define in lazy racket:
+ - changed displaying of this program (define (f x) (+ x 1))
+
+from:
+
+(define f (lambda (a1) ...))
+
+to:
+
+(define (f x)
+  (lazy (lambda () (+ 1 x))))
+
+- notes about this
+ - dont actually need custom unwinder in ~define
+ - therefore, dont need to change unwind in macro-unwind.rkt to use unwind instead of recur-on-pieces
