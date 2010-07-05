@@ -146,6 +146,8 @@
                        unwound-body #f
                      [;(lambda arglist lam-body ...)
                       (#%plain-lambda arglist (lazy (lambda () lam-body ...)))
+                      (and (eq? (syntax-object->datum #'lazy) 'lazy)
+                           (eq? (syntax-object->datum #'lambda) 'lambda))
                       (case define-type
                         [(shortened-proc-define)
                          (let ([proc-define-name
