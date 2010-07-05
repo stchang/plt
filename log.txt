@@ -1224,3 +1224,43 @@ to:
 - notes about this
  - dont actually need custom unwinder in ~define
  - therefore, dont need to change unwind in macro-unwind.rkt to use unwind instead of recur-on-pieces
+
+
+Test program expansion:
+
+running:
+
+mzc --expand "\Documents and Settings\Stephen Chang\My Documents\plt\sandbox\lazy-expand-test.rkt"
+
+
+on: 
+(module test lazy  
+  (define (f x) (+ 1 x))
+  (f 10)
+)
+
+gives:
+
+(module test lazy
+  (#%plain-module-begin
+   (#%require (for-syntax scheme/mzscheme))
+   (define-values
+    (f)
+    (#%app
+     lazy-proc
+     (lambda (x)
+       (#%app
+        lazy
+        (lambda ()
+          (let-values (((p) (#%app ! +)) ((temp1) '1) ((x2) x))
+            (if (if (#%app lazy-proc? p)
+                  '#t
+                  (#%app struct-constructor-procedure? p))
+              (#%app p temp1 x2)
+              (#%app p (#%app ! temp1) (#%app ! x2)))))))))
+   (#%app
+    (#%app toplevel-forcer)
+    (let-values (((p) (#%app ! f)) ((temp3) '10))
+      (if (if (#%app lazy-proc? p) '#t (#%app struct-constructor-procedure? p))
+        (#%app p temp3)
+        (#%app p (#%app ! temp3)))))))

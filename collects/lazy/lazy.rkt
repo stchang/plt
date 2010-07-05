@@ -128,21 +128,77 @@
   
   ;; STC add
   (define-syntax (~define stx)
+    (define (unwind-define stx unwind-recur)
+      (kernel-syntax-case stx #f
+        [(define-values (name . others) body)
+         (if (null? (syntax-e #'others))
+             ;; this is supported:
+             (let* ([printed-name
+                     (or (stepper-syntax-property #`name 'stepper-lifted-name)
+                         (stepper-syntax-property #'name 'stepper-orig-name)
+                         #'name)]
+                    [unwound-body (unwind-recur #'body)]
+                    ;; see notes in internal-docs.txt
+                    [define-type (stepper-syntax-property
+                                  unwound-body 'stepper-define-type)])
+               (if define-type
+                   (kernel-syntax-case
+                       unwound-body #f
+                     [;(lambda arglist lam-body ...)
+                      (#%plain-lambda arglist (lazy (lambda () lam-body ...)))
+                      (case define-type
+                        [(shortened-proc-define)
+                         (let ([proc-define-name
+                                (stepper-syntax-property
+                                 unwound-body
+                                 'stepper-proc-define-name)])
+                           (if (or (free-identifier=? proc-define-name
+                                                      #'name)
+                                   (and (stepper-syntax-property #'name
+                                                                 'stepper-orig-name)
+                                        (free-identifier=?
+                                         proc-define-name
+                                         (stepper-syntax-property
+                                          #'name 'stepper-orig-name))))
+                               #`(define (#,printed-name . arglist)
+                                   lam-body ...)
+                               #`(define #,printed-name
+                                   #,unwound-body)))]
+                        [(lambda-define)
+                         #`(define #,printed-name #,unwound-body)]
+                        [else (error 'unwind-define
+                                     "unknown value for syntax property 'stepper-define-type: ~e"
+                                     define-type)])]
+                     [else (error 'unwind-define
+                                  "expr with stepper-define-type is not a lambda: ~e"
+                                  (syntax-object->datum unwound-body))])
+                   #`(define #,printed-name #,unwound-body)))
+             ;; this is there just to see the unsupported stuff go by...
+             #`(define-values (name . others) #,(unwind-recur #'body))
+             )]
+        [else (error 'unwind-define
+                     "expression is not a define-values: ~e"
+                     (syntax-object->datum stx))]))
+    (define (stepper-annotate-attach-unwind-fn stx)
+      (let* ([stx (stepper-syntax-property stx 'stepper-hint unwind-define)])
+        ;[stx (stepper-syntax-property stx 'stepper-skip-double-break #t)])
+        stx))
     ; duplicated some stuff from ~lambda so I could add stepper-properties
     (syntax-case stx ()
       [(_ (f . args) body0 body ...)
+       (stepper-annotate-attach-unwind-fn
         (quasisyntax/loc stx
           (define f 
-            #,(stepper-syntax-property
-               #`(lazy-proc
-                  #,(syntax-property
-                     (stepper-syntax-property
-                      (stepper-syntax-property
-                       #'(lambda args (~begin body0 body ...))
-                       'stepper-define-type 'shortened-proc-define)
-                      'stepper-proc-define-name #`f)
-                     'inferred-name #`f))
-               'stepper-skipto (append skipto/cdr skipto/second))))]
+;            #,(stepper-syntax-property
+            (lazy-proc
+             #,(syntax-property
+                (stepper-syntax-property
+                 (stepper-syntax-property
+                  #'(lambda args (~begin body0 body ...))
+                  'stepper-define-type 'shortened-proc-define)
+                 'stepper-proc-define-name #`f)
+                'inferred-name #`f)) )))]
+ ;              'stepper-skipto (append skipto/cdr skipto/second))))]
       [(_ name expr) #'(define name expr)]))
 
   ;; STC comment out
