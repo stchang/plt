@@ -1188,3 +1188,4 @@ make-full-mark-struct
 
 some various notes:
 - equal-hash-code generates hash code for hash table entries
+- struct procedures (ie - lambdas wrapped with lazy-proc) return #f when given to struct? - this seems counterintuitive
