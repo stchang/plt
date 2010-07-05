@@ -13,8 +13,7 @@
          lang/stepper-language-interface
          scheme/pretty
          "xml-sig.ss"
-         "drracket-button.ss"
-         drracket/private/module-language) ;; get the stepper-button-callback private-member-name
+         "drracket-button.ss") ;; get the stepper-button-callback private-member-name
 
 (import drscheme:tool^ xml^ view-controller^)
 (export drscheme:tool-exports^ stepper-frame^)
@@ -181,9 +180,7 @@
         (let* ([lang-settings
                 (send (get-definitions-text) get-next-settings)]
                [lang (drscheme:language-configuration:language-settings-language lang-settings)]
-               [settings (drscheme:language-configuration:language-settings-settings lang-settings)]
-               [tmp (display (send lang get-module))]
-               [tmp (display (send lang marshall-settings settings))])
+               [settings (drscheme:language-configuration:language-settings-settings lang-settings)])
           (drscheme:eval:expand-program
            (drscheme:language:make-text/pos
             (get-definitions-text)
@@ -216,44 +213,8 @@
              [stretchable-width #f]
              [stretchable-height #f]))
       
-      
-      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; STEVE ADDED
-      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-      ;;;;;;;;;;;;;;;;;;;;;;;
-      ;;;;;;;;;;;;;;;
-      ;;;;;;;;;;
-      ;;;;
-      ;(define (get-namespace-strings)
-        ;(namespace-variable-value '#%app))
-        ;(foldr string-append "" (map symbol->string (namespace-mapped-symbols))))
-
-      ; end STEVE ADDED
-      
       ;; called from drracket-button.rkt, installed via the #lang htdp/bsl (& co) reader into drscheme
       (define/public (stepper-button-callback)
-        ; STEVE ADDED
-        (define langg-sett (send (get-definitions-text) get-next-settings))
-        (define langg (drscheme:language-configuration:language-settings-language langg-sett))
-        (define sett (drscheme:language-configuration:language-settings-settings langg-sett))
-        (begin
-          ;(display (get-namespace-strings))
-          ;(display (send (get-definitions-text) get-text))
-;          (display (send (drscheme:language-configuration:language-settings-language 
-;                          (send (get-definitions-text) get-next-settings)) get-users-language-name (get-definitions-text)))
-;          (display (send langg get-language-name))
-;          (display (string-constant module-language-name))
-          (display (string=? (send langg get-language-name)
-                             (string-constant module-language-name)))
-          (if (string=? (send langg get-language-name)
-                        (string-constant module-language-name))
-              (set-field! module langg `(lib ,"lang/htdp-beginner.ss"))
-                          ;(string-append (send langg get-users-language-name (get-definitions-text)) "/lang/reader.rkt")))
-              ;              (send langg set-module (send langg get-users-language-name (get-definitions-text)))
-              (void))
-          (display (send langg get-module))
-          (display (send langg get-transformer-module))
-          ; end STEVE ADDED
-          
         (if stepper-frame
             (send stepper-frame show #t)
             (let* ([language-level
@@ -269,7 +230,7 @@
                   (message-box
                    (string-constant stepper-name)
                    (format (string-constant stepper-language-level-message)
-                           language-level-name)))))))
+                           language-level-name))))))
       
       (define stepper-button
         (new switchable-button% 
@@ -369,7 +330,6 @@
 ;; simple-module-based-language-convert-value : TST STYLE boolean -> TST
 (define (simple-module-based-language-convert-value value settings)
   (case (drscheme:language:simple-settings-printing-style settings)
-    [(print) value]
     [(write) value]
     [(constructor)
      (parameterize

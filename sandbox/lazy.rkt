@@ -4,14 +4,16 @@
 (require "stepper-properties.rkt")
 
 ;(define (f x) (+ 1 x))
-#;(car ; (lambda ...)
- (cdr
- (syntax-e 
-  (cdr ; (lazy-proc (lambda ...))
-   (syntax-e 
+;(cdr (cdr ;; lambda body (#%app lazy (lambda () ...))
+;(syntax-e
+;(car ; (lambda (x) ...)
+; (cdr
+; (syntax-e 
+;  (cdr ; (lazy-proc (lambda ...))
+;   (syntax-e 
     (third ; (#%app lazy-proc (lambda ...))
      (syntax-e 
-      (do-expansion-lazy '(define (f x) (+ x 1))))))))))
+      (do-expansion-lazy '(define (f x) (+ x 1)))))
 
 
 #;(syntax->datum (do-expansion-lazy
@@ -27,7 +29,7 @@
 (define free-vars-captured #f)
 ;(skipto/auto
 ;(second (syntax-e (cdr (syntax-e 
-(update
+#;(update
   (append skipto/cdr skipto/second)
   (third ; (#%app lazy-proc (lambda ...))
   (syntax-e 

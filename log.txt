@@ -3,7 +3,7 @@
 --------------------------------------------------------------------------------
 
 - dl and install Racket Full 6/24/2010 nightly build
-- copied over lazy/info.rkt and lazy/lazy-tool.rkt so stepper button would show up (must run setup-plt to register changes (use -D option, it's doesnt build docs so it's quicker)
+- copied over lazy/info.rkt and lazy/lazy-tool.rkt so stepper button would show up (must run setup-plt to register changes (use -D option, it's doesnt build docs so it's quicker))
 
 Tried to step test program:
 (define (f x) (+ 1 x))
@@ -14,6 +14,7 @@ annotate/top-level: unexpected top-level expression: (define-values (f) (#%app l
 
 Solution:
 A cond clause seems to have been removed from annotate/top-level in stepper/private/annotate.rkt (it's there on the version in my laptop)
+ - no, this was added by me
 
 Added clause: [(define-values (ids ...) bodies) (annotate/module-top-level exp)]
 
@@ -1189,3 +1190,13 @@ make-full-mark-struct
 some various notes:
 - equal-hash-code generates hash code for hash table entries
 - struct procedures (ie - lambdas wrapped with lazy-proc) return #f when given to struct? - this seems counterintuitive
+
+
+
+--------------------------------------------------------------------------------
+----- 7/5/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+- download and install Racket Full 5.0.0.6 7/5/2010 build
+ - note cant have "info" in any files with .rkt extension? - I had "copy of info.rkt" and it was messing things up so that stepper button wasnt showing up?
+ - actually I think the problem was that the copied info.rkt file had a previous date and wasnt getting compiled - need to delete info compiled files (.zo and .dep) to get stepper button to show up

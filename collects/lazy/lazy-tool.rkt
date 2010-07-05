@@ -34,15 +34,18 @@
         (class* % ()
           (define/override (default-settings)
             (drracket:language:make-simple-settings
-             #t                ; case-sensitive
-             'constructor      ; printing-style
-             'mixed-fraction-e ; fraction-style
-             #f                ; show-sharing
-             #t                ; insert-newlines
-             'none))           ; annotations
+             #t
+             'constructor
+             'mixed-fraction-e
+             #f
+             #t
+             'none))
           (define/override (default-settings? s)
-            (equal? (drracket:language:simple-settings->vector s)
-                    (drracket:language:simple-settings->vector (default-settings))))
+            (and (super default-settings? s)
+                 (eq? (drracket:language:simple-settings-printing-style s)
+                      'constructor)))
+;            (equal? (drracket:language:simple-settings->vector s)
+;                    (drracket:language:simple-settings->vector (default-settings))))
           (super-new)))
       
       
