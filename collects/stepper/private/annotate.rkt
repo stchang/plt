@@ -1118,6 +1118,7 @@
                         (#%plain-lambda () . rest2)
                         (#%plain-lambda () . rest3)))
          exp]
+        [(define-values (ids ...) bodies) (annotate/module-top-level exp)]
         [else
          (error `annotate/top-level "unexpected top-level expression: ~a\n"
                 (syntax->datum exp))
