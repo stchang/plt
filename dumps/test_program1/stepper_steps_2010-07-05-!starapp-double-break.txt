@@ -1,0 +1,188 @@
+same as stepper_steps_2010-07-05.txt, except insert double-break property in !*app in lazy.rkt
+
+11 steps
+
+0
+(define (f x) (+ 1 x))
+((parameter-procedure) (f 10))
+->
+(define (f x) (+ 1 x))
+(force (f 10))
+
+
+1
+(define (f x) (+ 1 x))
+(define p_0
+  (lambda (x)
+    (lazy (lambda () (+ 1 x)))))
+(define temp6_0 10)
+(force (p_0 temp6_0))
+->
+(define (f x) (+ 1 x))
+(define p_0
+  (lambda (x)
+    (lazy (lambda () (+ 1 x)))))
+(define temp6_0 10)
+(force
+ ((lambda (x)
+    (lazy (lambda () (+ 1 x))))
+  temp6_0))
+
+
+
+2
+(define (f x) (+ 1 x))
+(define p_0
+  (lambda (x)
+    (lazy (lambda () (+ 1 x)))))
+(define temp6_0 10)
+(force
+ ((lambda (x)
+    (lazy (lambda () (+ 1 x))))
+  temp6_0))
+->
+(define (f x) (+ 1 x))
+(define p_0
+  (lambda (x)
+    (lazy (lambda () (+ 1 x)))))
+(define temp6_0 10)
+(force
+ ((lambda (x)
+    (lazy (lambda () (+ 1 x))))
+  10))
+
+
+3
+(define (f x) (+ 1 x))
+(define p_0
+  (lambda (x)
+    (lazy (lambda () (+ 1 x)))))
+(define temp6_0 10)
+(force
+ ((lambda (x)
+    (lazy (lambda () (+ 1 x))))
+  10))
+->
+(define (f x) (+ 1 x))
+(define p_0
+  (lambda (x)
+    (lazy (lambda () (+ 1 x)))))
+(define temp6_0 10)
+(force
+ (...
+  (lazy (lambda () (+ 1 10)))
+  ...))
+
+
+4
+...
+->
+(define (f x) (+ 1 x))
+(define p_0
+  (lambda (x)
+    (lazy (lambda () (+ 1 x)))))
+(define temp6_0 10)
+(force (delay ...))
+
+
+5
+(define (f x) (+ 1 x))
+(define p_0
+  (lambda (x)
+    (lazy (lambda () (+ 1 x)))))
+(define temp6_0 10)
+(force (delay ...))
+->
+(define (f x) (+ 1 x))
+(define p_0
+  (lambda (x)
+    (lazy (lambda () (+ 1 x)))))
+(define temp6_0 10)
+(define p_0 +)
+(define temp1_0 1)
+(define x2_0 10)
+(... (+ temp1_0 x2_0) ...)
+
+
+6
+(define (f x) (+ 1 x))
+(define p_0
+  (lambda (x)
+    (lazy (lambda () (+ 1 x)))))
+(define temp6_0 10)
+(define p_0 +)
+(define temp1_0 1)
+(define x2_0 10)
+(... (+ temp1_0 x2_0) ...)
+->
+(define (f x) (+ 1 x))
+(define p_0
+  (lambda (x)
+    (lazy (lambda () (+ 1 x)))))
+(define temp6_0 10)
+(define p_0 +)
+(define temp1_0 1)
+(define x2_0 10)
+(... (+ 1 x2_0) ...)
+
+
+7
+(define (f x) (+ 1 x))
+(define p_0
+  (lambda (x)
+    (lazy (lambda () (+ 1 x)))))
+(define temp6_0 10)
+(define p_0 +)
+(define temp1_0 1)
+(define x2_0 10)
+(... (+ 1 x2_0) ...)
+->
+(define (f x) (+ 1 x))
+(define p_0
+  (lambda (x)
+    (lazy (lambda () (+ 1 x)))))
+(define temp6_0 10)
+(define p_0 +)
+(define temp1_0 1)
+(define x2_0 10)
+(... (+ 1 10) ...)
+
+
+8
+(define (f x) (+ 1 x))
+(define p_0
+  (lambda (x)
+    (lazy (lambda () (+ 1 x)))))
+(define temp6_0 10)
+(define p_0 +)
+(define temp1_0 1)
+(define x2_0 10)
+(... (+ 1 10) ...)
+->
+(define (f x) (+ 1 x))
+(define p_0
+  (lambda (x)
+    (lazy (lambda () (+ 1 x)))))
+(define temp6_0 10)
+(define p_0 +)
+(define temp1_0 1)
+(define x2_0 10)
+(... 11 ...)
+
+
+9
+...
+->
+(define (f x) (+ 1 x))
+(define p_0
+  (lambda (x)
+    (lazy (lambda () (+ 1 x)))))
+(define temp6_0 10)
+(define p_0 +)
+(define temp1_0 1)
+(define x2_0 10)
+11
+
+
+10
+All of the definitions have been successfully evaluated.
