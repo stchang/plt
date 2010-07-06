@@ -1292,8 +1292,11 @@ expands to:
  - reset-special-values is called in break in model.rkt as part of the "iter" lambda parameter to program-expander (break is local fn in go in model.rkt and program-expander is parameter to go)
  - reset-special-values sets two global variables: special-list-value and special-cons-value
 
-Solution: added extra case to find-special-value (in reconstruct.rkt) to handle lazy-racket case and the annotation worked!
+Solution: added extra case to find-special-value (in reconstruct.rkt) to handle lazy-racket case and the annotation worked!!!
  - I needed to get rid of the double-break annotation in !*app, otherwise the first step would not show up at all
+
+
+
 
 Call Graph: Stepper
 
