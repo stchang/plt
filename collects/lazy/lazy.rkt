@@ -358,7 +358,9 @@
               (syntax/loc stx (f x ...))]
              [(toplevel?)
               ;; toplevel expressions are always forced
-              (syntax/loc stx ((toplevel-forcer) (!app f x ...)))]
+              (stepper-syntax-property
+              (syntax/loc stx ((toplevel-forcer) (!app f x ...)))
+              'stepper-skipto (append skipto/cdr skipto/second))]
              [else (syntax/loc stx (~!app f x ...))])]))
 
   (define (!*apply f . xs)

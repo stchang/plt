@@ -1264,3 +1264,84 @@ gives:
       (if (if (#%app lazy-proc? p) '#t (#%app struct-constructor-procedure? p))
         (#%app p temp3)
         (#%app p (#%app ! temp3)))))))
+
+
+Stepper steps: see stepper_steps_2010-07-05.txt for test-program1
+
+
+TODO tomorrow: learn more about what stepper-skipto and skipto/auto are doing
+
+--------------------------------------------------------------------------------
+----- 7/6/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+- stepper-recertify in annotate.rkt calls syntax-recertify, which copies certificates from old syntax to a new target syntax
+
+
+ToDo ToTry: expand beginner program with local - annotation of local may give hints on how to hide defines that are the result of lets in lazy racket?
+
+- tried to annotate the toplevel case in ~!%app in lazy.rkt with 'stepper-skipto (append skipto/cdr skipto/second), but I got an error in find-special-value in reconstruct.rkt
+ - hit the error case because the operand of the app wasnt another app
+ - find-special-value is called by reset-special-values with name = 'list and valid-args = '(3)
+ - somehow this expression (in find-special-value in reconstruct.rkt):
+(expand (cons name valid-args)) = (expand (cons 'list '(3)))
+expands to: 
+(#%app (#%app toplevel-forcer) (let-values (((p) (#%app ! list)) ((temp3) (quote 3))) (if (if (#%app lazy-proc? p) (quote #t) (#%app struct-constructor-procedure? p)) (#%app p temp3) (#%app p (#%app ! temp3)))))
+    - ok I guess this makes sense, it's the lazy expansion of (list 3)
+
+ - reset-special-values is called in break in model.rkt as part of the "iter" lambda parameter to program-expander (break is local fn in go in model.rkt and program-expander is parameter to go)
+ - reset-special-values sets two global variables: special-list-value and special-cons-value
+
+Solution: added extra case to find-special-value (in reconstruct.rkt) to handle lazy-racket case and the annotation worked!
+ - I needed to get rid of the double-break annotation in !*app, otherwise the first step would not show up at all
+
+Call Graph: Stepper
+
+stepper/
+
+stepper-tool.rkt::stepper-unit-frame-mixin::stepper-button-callback
+
+     |
+     V
+
+view-controller.rkt::go
+ - called with current frame and stepper-tool.rkt::stepper-unit-frame-mixin::program-expander params
+
+     |
+     V
+
+private/model.rkt::go
+ - called with view-controller.rkt::go::program-expander-prime as param, which just wraps init param of stepper-tool.rkt::stepper-unit-frame-mixin::program-expander with custodian (iter param is not changed)
+
+     |
+     V
+
+view-controller.rkt::go::program-expander-prime
+
+     |
+     V
+
+stepper-tool.rkt::stepper-unit-frame-mixin::program-expander
+
+
+
+
+Control Flow: iter parameter of stepper-tool.rkt::stepper-unit-frame-mixin::program-expander:
+(created by stepper/private/model.rkt::go)
+
+(lambda (expanded continue-thunk)
+     (r:reset-special-values)
+     (if (eof-object? expanded)
+         (begin
+           (receive-result (make-finished-stepping)))
+         (step-through-expression expanded continue-thunk)))
+
+- follows call graph above until given as param to:
+
+drscheme:eval:expand-program
+
+from racket help:
+
+The first argument to iter is the expanded program (represented as syntax) or eof. The iter argument is called for each expression in the expanded program and once more with eof, unless an error is raised during expansion. It is called from the user’s thread. If an exception is raised during expansion of the user’s program, iter is not called. Consider setting the exception-handler during init  to handle this situation.
+
+The second argument to iter is a thunk that continues expanding the rest of the contents of the definitions window. If the first argument to iter was eof, this argument is just the primitive void.

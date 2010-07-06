@@ -107,7 +107,6 @@
   ; prints the name attached to the procedure, unless we're on the right-hand-side
   ; of a let, or unless there _is_ no name.
   
-  (require (only-in racket/bool false?))
   (define recon-value
     (opt-lambda (val render-settings [assigned-name #f])
       (if (hash-ref finished-xml-box-table val (lambda () #f))
@@ -120,10 +119,10 @@
                               targ
                               val))
                         val))]
-                [closure-record (closure-table-lookup (extract-if-struct val) (lambda () #f))])
+                 [closure-record (closure-table-lookup (extract-if-struct val) (lambda () #f))])     
             (if closure-record
-                (let ([mark (closure-record-mark closure-record)]
-                      [base-name (closure-record-name closure-record)])
+                (let* ([mark (closure-record-mark closure-record)]
+                       [base-name (closure-record-name closure-record)])
                   (if base-name
                       (let* ([lifted-index (closure-record-lifted-index closure-record)]
                              [name (if lifted-index
@@ -133,7 +132,7 @@
                             (recon-source-expr (mark-source mark) (list mark) null null render-settings)
                             #`#,name))
                       (recon-source-expr (mark-source mark) (list mark) null null render-settings)))
-                (let ([rendered ((render-settings-render-to-sexp render-settings) val)])
+                (let* ([rendered ((render-settings-render-to-sexp render-settings) val)])
                   (if (symbol? rendered)
                       #`#,rendered
                       #`(quote #,rendered))))))))
@@ -234,8 +233,11 @@
            [just-the-fn (kernel:kernel-syntax-case stepper-safe-expanded #f
                           [(#%plain-app fn . rest)
                            #`fn]
-                          [else (error 'find-special-name "couldn't find expanded name for ~a" name)])])      
-      (eval (syntax-recertify just-the-fn expanded-application (current-code-inspector) #f))))
+                          [(let-values . rest) #f] ; so lazy racket doesnt give error
+                          [else (error 'find-special-name "couldn't find expanded name for ~a" name)])])
+      (if just-the-fn
+          (eval (syntax-recertify just-the-fn expanded-application (current-code-inspector) #f))
+          #f))) ; so lazy racket doesnt give error
 
   ;; these are delayed so that they use the userspace expander.  I'm sure
   ;; there's a more robust & elegant way to do this.
