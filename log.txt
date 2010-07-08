@@ -1348,3 +1348,25 @@ from racket help:
 The first argument to iter is the expanded program (represented as syntax) or eof. The iter argument is called for each expression in the expanded program and once more with eof, unless an error is raised during expansion. It is called from the user’s thread. If an exception is raised during expansion of the user’s program, iter is not called. Consider setting the exception-handler during init  to handle this situation.
 
 The second argument to iter is a thunk that continues expanding the rest of the contents of the definitions window. If the first argument to iter was eof, this argument is just the primitive void.
+
+
+--------------------------------------------------------------------------------
+----- 7/7/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+Next Task:
+
+!*app in lazy.rkt introduces a let, but lets evaluate to a series of defines. In the lazy stepper, I want to hide these defines
+
+ie - (let ([x ...] [y ...] ...) body) steps to (define x ...) (define y ...) ... body
+
+- I think I will need to add a case to top-level-rewrite in annotate.rkt so identify when the defines come from a lazy racket introduced let, because it's not possible to annotate macros not in lazy racket (for a somewhat similar example, see cond in the beginner language and how it's handled in top-level-rewrite - it needs to check 'origin syntax-property and then uses 'comes-from-cond stepper-hint)
+
+Where are the series of defines coming from?
+ - unwind-define converts a define-values to a define (for non-lambda rhs)
+ - they must be coming from the eval of the let?
+
+
+TODO tomorrow:
+ - figure out exactly what happens (ie - sequence of fn calls - from annotation to reconstruction) when the stepper "takes a step"
+ - is there any way for the stepper to preserve stepper properties across a step?

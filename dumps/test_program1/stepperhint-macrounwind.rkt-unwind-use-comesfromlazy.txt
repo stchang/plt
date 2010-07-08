@@ -1,0 +1,3080 @@
+- dumping 'stepper-hint stepper syntax property of all stx paramters to unwind in macro-unwind.rkt
+- trying to figure out how to hide defines that get generated from let introduced in !*app in lazy.rkt
+- replaced normal unwind-app fn attached to !*app in lazy.rkt with comes-from-lazy hint
+
+
+
+stx in unwind: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #<procedure:unwind-define>
+
+stx in unwind: #%plain-lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (let-values (((p) f) ((temp6) (quote 10))) (#%app p temp6))
+hint: comes-from-lazy
+
+stx in unwind: f
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (#%app p temp6)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp6
+hint: #f
+
+stx in unwind: (define-values (p) f)
+hint: #f
+
+stx in unwind: f
+hint: #f
+
+stx in unwind: (define-values (temp6) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (#%app p temp6)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp6
+hint: #f
+
+stx in unwind: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #<procedure:unwind-define>
+
+stx in unwind: #%plain-lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (temp6) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (#%plain-app p temp6)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp6
+hint: #f
+
+stx in unwind: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #<procedure:unwind-define>
+
+stx in unwind: #%plain-lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (temp6) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (#%plain-app (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (
+let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))) temp6)
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: temp6
+hint: #f
+
+stx in unwind: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #<procedure:unwind-define>
+
+stx in unwind: #%plain-lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (temp6) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (#%plain-app (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (
+let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))) temp6)
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: temp6
+hint: #f
+
+stx in unwind: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #<procedure:unwind-define>
+
+stx in unwind: #%plain-lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (temp6) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (#%plain-app (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (
+let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))) (quote
+10))
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #<procedure:unwind-define>
+
+stx in unwind: #%plain-lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (temp6) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (#%plain-app (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (
+let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))) (quote
+10))
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #<procedure:unwind-define>
+
+stx in unwind: #%plain-lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (temp6) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (#%plain-app ... (#%app lazy (#%plain-lambda () (let-values (((p)
+ +) ((temp1) (quote 1)) ((x2) (quote 10))) (#%app p temp1 x2)))) ...)
+hint: #f
+
+stx in unwind: ...
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) (quote 10))) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ (quote 10))) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) (quote 10))) (
+#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) (quote 10))) (#%ap
+p p temp1 x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: ...
+hint: #f
+
+stx in unwind: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #<procedure:unwind-define>
+
+stx in unwind: #%plain-lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (temp6) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (quote (delay ...))
+hint: #f
+
+stx in unwind: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #<procedure:unwind-define>
+
+stx in unwind: #%plain-lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (temp6) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) (quote 10))) (#%ap
+p p temp1 x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #<procedure:unwind-define>
+
+stx in unwind: #%plain-lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (temp6) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) (quote 10))) (#%ap
+p p temp1 x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (p) +)
+hint: #f
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (define-values (temp1) (quote 1))
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: (define-values (x2) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #<procedure:unwind-define>
+
+stx in unwind: #%plain-lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (temp6) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (define-values (p) +)
+hint: #f
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (define-values (temp1) (quote 1))
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: (define-values (x2) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (#%plain-app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #<procedure:unwind-define>
+
+stx in unwind: #%plain-lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (temp6) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (define-values (p) +)
+hint: #f
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (define-values (temp1) (quote 1))
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: (define-values (x2) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (#%plain-app + temp1 x2)
+hint: #f
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #<procedure:unwind-define>
+
+stx in unwind: #%plain-lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (temp6) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (define-values (p) +)
+hint: #f
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (define-values (temp1) (quote 1))
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: (define-values (x2) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (#%plain-app + temp1 x2)
+hint: #f
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #<procedure:unwind-define>
+
+stx in unwind: #%plain-lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (temp6) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (define-values (p) +)
+hint: #f
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (define-values (temp1) (quote 1))
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: (define-values (x2) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (#%plain-app + (quote 1) x2)
+hint: #f
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #<procedure:unwind-define>
+
+stx in unwind: #%plain-lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (temp6) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (define-values (p) +)
+hint: #f
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (define-values (temp1) (quote 1))
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: (define-values (x2) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (#%plain-app + (quote 1) x2)
+hint: #f
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #<procedure:unwind-define>
+
+stx in unwind: #%plain-lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (temp6) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (define-values (p) +)
+hint: #f
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (define-values (temp1) (quote 1))
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: (define-values (x2) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (#%plain-app + (quote 1) (quote 10))
+hint: #f
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #<procedure:unwind-define>
+
+stx in unwind: #%plain-lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (temp6) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (define-values (p) +)
+hint: #f
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (define-values (temp1) (quote 1))
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: (define-values (x2) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (#%plain-app + (quote 1) (quote 10))
+hint: #f
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #<procedure:unwind-define>
+
+stx in unwind: #%plain-lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambd
+a () (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hint: #f
+
+stx in unwind: (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: ((x) (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+ (quote 1)) ((x2) x)) (#%app p temp1 x2)))))
+hint: #f
+
+stx in unwind: (x)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1) (quo
+te 1)) ((x2) x)) (#%app p temp1 x2))))
+hint: #f
+
+stx in unwind: lazy
+hint: #f
+
+stx in unwind: (#%plain-lambda () (let-values (((p) +) ((temp1) (quote 1)) ((x2)
+ x)) (#%app p temp1 x2)))
+hint: #f
+
+stx in unwind: lambda
+hint: #f
+
+stx in unwind: (() (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p t
+emp1 x2)))
+hint: #f
+
+stx in unwind: ()
+hint: #f
+
+stx in unwind: (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1
+ x2))
+hint: comes-from-lazy
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: x
+hint: #f
+
+stx in unwind: (#%app p temp1 x2)
+hint: #f
+
+stx in unwind: p
+hint: #f
+
+stx in unwind: temp1
+hint: #f
+
+stx in unwind: x2
+hint: #f
+
+stx in unwind: (define-values (temp6) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (define-values (p) +)
+hint: #f
+
+stx in unwind: +
+hint: #f
+
+stx in unwind: (define-values (temp1) (quote 1))
+hint: #f
+
+stx in unwind: (quote 1)
+hint: #f
+
+stx in unwind: (define-values (x2) (quote 10))
+hint: #f
+
+stx in unwind: (quote 10)
+hint: #f
+
+stx in unwind: (quote 11)
+hint: #f

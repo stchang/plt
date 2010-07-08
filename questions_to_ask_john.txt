@@ -1,0 +1,8 @@
+1) what is the significance of the special values (list 3) and (cons 3 empty) in reset-special-values and find-special-value in reconstruct.rkt
+
+
+2) what does double-break do? (used in let statements?)
+
+
+3) is there any way for the stepper to save stepper properties across a step?
+for example, a let statement steps to a series of defines and I want to know when the defines come from a particular let (ie - the let introduced by !*app in lazy.rkt) so I can hide them

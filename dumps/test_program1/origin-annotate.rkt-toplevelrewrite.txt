@@ -1,0 +1,385 @@
+- dumping 'origin syntax property of all stx paramters to top-level-rewrite in annotate.rkt
+- trying to figure out how to hide defines that get generated from let introduced in !*app in lazy.rkt
+
+
+stx: (#%app lazy-proc (lambda (x) (#%app lazy (lambda () (let-values (((p) (#%ap
+p ! +)) ((temp1) (quote 1)) ((x2) x)) (if (if (#%app lazy-proc? p) (quote #t) (#
+%app struct-constructor-procedure? p)) (#%app p temp1 x2) (#%app p (#%app ! temp
+1) (#%app ! x2))))))))
+origin: #f
+
+stx: #%app
+origin: #f
+
+stx: (lazy-proc (lambda (x) (#%app lazy (lambda () (let-values (((p) (#%app ! +)
+) ((temp1) (quote 1)) ((x2) x)) (if (if (#%app lazy-proc? p) (quote #t) (#%app s
+truct-constructor-procedure? p)) (#%app p temp1 x2) (#%app p (#%app ! temp1) (#%
+app ! x2))))))))
+origin: #f
+
+stx: lazy-proc
+origin: #f
+
+stx: (lambda (x) (#%app lazy (lambda () (let-values (((p) (#%app ! +)) ((temp1)
+(quote 1)) ((x2) x)) (if (if (#%app lazy-proc? p) (quote #t) (#%app struct-const
+ructor-procedure? p)) (#%app p temp1 x2) (#%app p (#%app ! temp1) (#%app ! x2)))
+))))
+origin: #f
+
+stx: lambda
+origin: #f
+
+stx: (x)
+origin: #f
+
+stx: x
+origin: #f
+
+stx: ((#%app lazy (lambda () (let-values (((p) (#%app ! +)) ((temp1) (quote 1))
+((x2) x)) (if (if (#%app lazy-proc? p) (quote #t) (#%app struct-constructor-proc
+edure? p)) (#%app p temp1 x2) (#%app p (#%app ! temp1) (#%app ! x2)))))))
+origin: #f
+
+stx: (#%app lazy (lambda () (let-values (((p) (#%app ! +)) ((temp1) (quote 1)) (
+(x2) x)) (if (if (#%app lazy-proc? p) (quote #t) (#%app struct-constructor-proce
+dure? p)) (#%app p temp1 x2) (#%app p (#%app ! temp1) (#%app ! x2))))))
+origin: (#<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.rkt:32
+7:30 ~> #<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.rkt:364
+:36 ~!app> #<syntax #%app> #<syntax:C:\Program Files\Racket-Full-5.0.0.6\collect
+s\lazy\lazy.rkt:199:34 ~begin>)
+
+stx: #%app
+origin: #f
+
+stx: (lazy (lambda () (let-values (((p) (#%app ! +)) ((temp1) (quote 1)) ((x2) x
+)) (if (if (#%app lazy-proc? p) (quote #t) (#%app struct-constructor-procedure?
+p)) (#%app p temp1 x2) (#%app p (#%app ! temp1) (#%app ! x2))))))
+origin: #f
+
+stx: lazy
+origin: #f
+
+stx: (lambda () (let-values (((p) (#%app ! +)) ((temp1) (quote 1)) ((x2) x)) (if
+ (if (#%app lazy-proc? p) (quote #t) (#%app struct-constructor-procedure? p)) (#
+%app p temp1 x2) (#%app p (#%app ! temp1) (#%app ! x2)))))
+origin: #f
+
+stx: lambda
+origin: #f
+
+stx: ()
+origin: #f
+
+stx: ((let-values (((p) (#%app ! +)) ((temp1) (quote 1)) ((x2) x)) (if (if (#%ap
+p lazy-proc? p) (quote #t) (#%app struct-constructor-procedure? p)) (#%app p tem
+p1 x2) (#%app p (#%app ! temp1) (#%app ! x2)))))
+origin: #f
+
+stx: (let-values (((p) (#%app ! +)) ((temp1) (quote 1)) ((x2) x)) (if (if (#%app
+ lazy-proc? p) (quote #t) (#%app struct-constructor-procedure? p)) (#%app p temp
+1 x2) (#%app p (#%app ! temp1) (#%app ! x2))))
+origin: (#<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.rkt:32
+1:17 let> #<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.rkt:3
+25:30 !*app> #<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.rk
+t:327:33 !app>)
+
+stx: p
+origin: #f
+
+stx: temp1
+origin: #f
+
+stx: x2
+origin: #f
+
+stx: (#%app ! +)
+origin: (#<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.rkt:32
+5:37 hidden-!>)
+
+stx: #%app
+origin: #f
+
+stx: (! +)
+origin: #f
+
+stx: !
+origin: #f
+
+stx: +
+origin: #f
+
+stx: (quote 1)
+origin: (#<syntax #%datum>)
+
+stx: quote
+origin: #f
+
+stx: 1
+origin: #f
+
+stx: x
+origin: #f
+
+stx: (if (if (#%app lazy-proc? p) (quote #t) (#%app struct-constructor-procedure
+? p)) (#%app p temp1 x2) (#%app p (#%app ! temp1) (#%app ! x2)))
+origin: (#<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.rkt:32
+2:27 if>)
+
+stx: if
+origin: #f
+
+stx: (if (#%app lazy-proc? p) (quote #t) (#%app struct-constructor-procedure? p)
+)
+origin: ((#<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.rkt:3
+22:31 lazy?>) #<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.r
+kt:70:23 if> #<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.rk
+t:322:31 lazy?>)
+
+stx: if
+origin: #f
+
+stx: (#%app lazy-proc? p)
+origin: #f
+
+stx: #%app
+origin: #f
+
+stx: (lazy-proc? p)
+origin: #f
+
+stx: lazy-proc?
+origin: #f
+
+stx: p
+origin: #f
+
+stx: (quote #t)
+origin: (#<syntax #%datum>)
+
+stx: quote
+origin: #f
+
+stx: #t
+origin: #f
+
+stx: (#%app struct-constructor-procedure? p)
+origin: #f
+
+stx: #%app
+origin: #f
+
+stx: (struct-constructor-procedure? p)
+origin: #f
+
+stx: struct-constructor-procedure?
+origin: #f
+
+stx: p
+origin: #f
+
+stx: (#%app p temp1 x2)
+origin: #f
+
+stx: #%app
+origin: #f
+
+stx: (p temp1 x2)
+origin: #f
+
+stx: p
+origin: #f
+
+stx: temp1
+origin: #f
+
+stx: x2
+origin: #f
+
+stx: (#%app p (#%app ! temp1) (#%app ! x2))
+origin: #f
+
+stx: #%app
+origin: #f
+
+stx: (p (#%app ! temp1) (#%app ! x2))
+origin: #f
+
+stx: p
+origin: #f
+
+stx: (#%app ! temp1)
+origin: (#<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.rkt:31
+8:53 hidden-!>)
+
+stx: #%app
+origin: #f
+
+stx: (! temp1)
+origin: #f
+
+stx: !
+origin: #f
+
+stx: temp1
+origin: #f
+
+stx: (#%app ! x2)
+origin: (#<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.rkt:31
+8:53 hidden-!>)
+
+stx: #%app
+origin: #f
+
+stx: (! x2)
+origin: #f
+
+stx: !
+origin: #f
+
+stx: x2
+origin: #f
+
+stx: (let-values (((p) (#%app ! (#%top . f))) ((temp6) (quote 10))) (if (if (#%a
+pp lazy-proc? p) (quote #t) (#%app struct-constructor-procedure? p)) (#%app p te
+mp6) (#%app p (#%app ! temp6))))
+origin: (#<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.rkt:32
+1:17 let> #<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.rkt:3
+25:30 !*app> #<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.rk
+t:362:51 !app>)
+
+stx: p
+origin: #f
+
+stx: temp6
+origin: #f
+
+stx: (#%app ! (#%top . f))
+origin: (#<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.rkt:32
+5:37 hidden-!>)
+
+stx: #%app
+origin: #f
+
+stx: (! (#%top . f))
+origin: #f
+
+stx: !
+origin: #f
+
+stx: (#%top . f)
+origin: (#<syntax #%top>)
+
+stx: #%top
+origin: #f
+
+stx: f
+origin: #f
+
+stx: (quote 10)
+origin: (#<syntax #%datum>)
+
+stx: quote
+origin: #f
+
+stx: 10
+origin: #f
+
+stx: (if (if (#%app lazy-proc? p) (quote #t) (#%app struct-constructor-procedure
+? p)) (#%app p temp6) (#%app p (#%app ! temp6)))
+origin: (#<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.rkt:32
+2:27 if>)
+
+stx: if
+origin: #f
+
+stx: (if (#%app lazy-proc? p) (quote #t) (#%app struct-constructor-procedure? p)
+)
+origin: ((#<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.rkt:3
+22:31 lazy?>) #<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.r
+kt:70:23 if> #<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.rk
+t:322:31 lazy?>)
+
+stx: if
+origin: #f
+
+stx: (#%app lazy-proc? p)
+origin: #f
+
+stx: #%app
+origin: #f
+
+stx: (lazy-proc? p)
+origin: #f
+
+stx: lazy-proc?
+origin: #f
+
+stx: p
+origin: #f
+
+stx: (quote #t)
+origin: (#<syntax #%datum>)
+
+stx: quote
+origin: #f
+
+stx: #t
+origin: #f
+
+stx: (#%app struct-constructor-procedure? p)
+origin: #f
+
+stx: #%app
+origin: #f
+
+stx: (struct-constructor-procedure? p)
+origin: #f
+
+stx: struct-constructor-procedure?
+origin: #f
+
+stx: p
+origin: #f
+
+stx: (#%app p temp6)
+origin: #f
+
+stx: #%app
+origin: #f
+
+stx: (p temp6)
+origin: #f
+
+stx: p
+origin: #f
+
+stx: temp6
+origin: #f
+
+stx: (#%app p (#%app ! temp6))
+origin: #f
+
+stx: #%app
+origin: #f
+
+stx: (p (#%app ! temp6))
+origin: #f
+
+stx: p
+origin: #f
+
+stx: (#%app ! temp6)
+origin: (#<syntax:C:\Program Files\Racket-Full-5.0.0.6\collects\lazy\lazy.rkt:31
+8:53 hidden-!>)
+
+stx: #%app
+origin: #f
+
+stx: (! temp6)
+origin: #f
+
+stx: !
+origin: #f
+
+stx: temp6
+origin: #f
