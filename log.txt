@@ -1370,3 +1370,90 @@ Where are the series of defines coming from?
 TODO tomorrow:
  - figure out exactly what happens (ie - sequence of fn calls - from annotation to reconstruction) when the stepper "takes a step"
  - is there any way for the stepper to preserve stepper properties across a step?
+
+
+--------------------------------------------------------------------------------
+----- 7/8/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+
+Call Graph: what happens when stepper takes a step
+
+files in stepper/
+
+- private/model.rkt::go calls program-expander in stepper-tool.rkt with init and iter fns
+
+- stepper-tool.rkt::stepper-unit-frame-mixin::program-expander calls drracket:eval:expand-program with iter
+
+- iter is invoked once per (expanded) expression in def window
+  - for test program, iter is called twice, once for f fn def and once for app of f
+
+- iter calls private/model.rkt::go::step-through-expression with each expanded expr
+
+- step-through-expression annotates given expr, evals it, and then evals the thunk that was given by drracket:eval:expand-program (to get to the other exprs in the def window)
+
+expr #1
+
+- the annotated f def looks like:
+    (begin <annotated f fn def>
+           (exp-finished-break (list (list (lambda () exp) 
+                                           #f 
+                                           (lambda () (list f))))))
+   where exp is the unannotated expanded def of f
+
+- annotate.rkt::annotate::exp-finished-break calls model.rkt::go::break with params:
+    mark-set = #f
+    break-find = 'exp-finished-break
+    returned-value-list = (list (list (lambda () exp) #f (lambda () (list f))))
+
+- when break-find is 'exp-finished-break, break applies add-to-finished to each element of returned-value-list
+
+- add-to-finished appends (list (list (lambda () exp) #f (lambda () (list f)))) to the end of finished-exps, where
+    exp-thunk = (lambda () exp)
+    index = #f
+    getter = (lambda () (list f))
+
+- finished-exps used by model.rkt::go::break::reconstruct-all-completed
+   - forces source thunk
+   - checks if thunk has stepper-hide-completed property
+   - if not, calls reconstruct.rkt::reconstruct-completed withed the forced source exp
+   - depending on result of reconstruct-completed, calls macro-unwind.rkt::unwind
+
+- reconstruct-all-completed used by model.rkt::go::break
+
+
+expr #2
+- annotated (f 10) first calls annotate.rkt::annotate::double-break, which calls break with current-continuation-marks and break-kind = 'double-break
+  - there is a double break beause the expanded expr is a let-values and double-breaks always occur at the beginning of a let evaluation
+
+- in the double-break case of break:
+  - call reconstruct-all-completed (but finished-exps is still empty here???)
+    - ok i think it's just here in case there's something, so we can append to it
+  - call reconstruct.rkt::reconstruct-double-break with the mark-list, which calls reconstruct-current with break-kind = 'double-break
+  - in the double-break case of reconstruct-current:
+    - call recon-source-expr with car of mark-list, both with and without bindings (assuming car of mark-list is let) from let
+      - when recon-source-expr is called with bindings, add stepper-lifted-name property to those bindings???
+    - call recon with both versions the recon'ed car of mark-list (and rest of mark-list) and return as list of two elements
+      - the first param of recon accumulates the marks recon'ed so far
+      - recon just iterates over the rest of the (unreconstructed) mark-list, calling either reconstruct-top-level or reconstruct-current::recon-inner, depending on the label in the mark
+  - unwind elements of 2 element returned list and use first as lhs and second as rhs
+  - make append unwound elements to previous finished-exp and create make-before-after-result and give to receive-result, which is parameter of model.rkt::go (2nd param)
+    - the fn given by view-controller.rkt::go is view-controller.rkt::go::hand-off
+
+
+- expr #2 then sets from variables (see comments in annotate.rkt::annotate::annotate/inner::let-abstraction)
+
+- then calls exp-finished-break with some variables
+
+- the rest of the expression is annotated using with-continuation mark where the body of the wcm has the structure:
+
+(begin (normal-break) 
+       (result-value-break <some-variable>))
+
+
+TODO tomorrow:
+ - figure out how a let gets transformed into a series of defines
+ - check out what happens in break when break-kind is 'normal-break and when break-kind is 'result-value-break
+ - want to somehow annotate after a step
+   - idea: annotate "left side" and transfer to "right side"
+   - see double-break case in model.rkt::go::break
