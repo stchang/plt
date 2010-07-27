@@ -3,6 +3,20 @@
 
 2) what does double-break do? (used in let statements?)
 
+2a) what are the differences between all the break types
+
 
 3) is there any way for the stepper to save stepper properties across a step?
 for example, a let statement steps to a series of defines and I want to know when the defines come from a particular let (ie - the let introduced by !*app in lazy.rkt) so I can hide them
+
+
+4) what is the "held" list?
+A) to show the "before step (?) (this is from the comments in model.rkt)
+
+
+5) how exactly does a break work? (how does the break fn in model.rkt::go work?)
+
+5a) what is a pre-break? (result-exp-break)
+A) in annotate/inner, pre-break? is initially #f, but gets set to #t in tail-recur and lambda-body-recur; use wcm-pre-break-wrap instead of wcm-wrap if pre-break? = #t
+
+

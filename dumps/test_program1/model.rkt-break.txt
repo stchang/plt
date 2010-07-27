@@ -1,0 +1,266 @@
+-----result-exp-break, result-value-break-----
+right side:
+  (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-val
+ues (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+skipped step
+-----expr-finished-break-----
+adding:
+  (define-values (f) (#%app lazy-proc (lambda (x) (#%app lazy (lambda () (let-va
+lues (((p) (#%app ! +)) ((temp1) (quote 1)) ((x2) x)) (if (if (#%app lazy-proc?
+p) (quote #t) (#%app struct-constructor-procedure? p)) (#%app p temp1 x2) (#%app
+ p (#%app ! temp1) (#%app ! x2)))))))))
+-----expr-finished-break-----
+adding:
+  ((p) (#%app ! (#%top . f)))
+adding:
+  ((temp6) (quote 10))
+-----normal-break, normal-break/values-----
+left side:
+  (#%plain-app p temp6)
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp6) (quote 10))
+-----result-exp-break, result-value-break-----
+right side:
+  (#%plain-app (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))) temp6)
+held
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp6) (quote 10))
+-----normal-break, normal-break/values-----
+left side:
+  (#%plain-app (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))) temp6)
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp6) (quote 10))
+-----result-exp-break, result-value-break-----
+right side:
+  (#%plain-app (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))) (quote 10))
+held
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp6) (quote 10))
+-----normal-break, normal-break/values-----
+left side:
+  (#%plain-app (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))) (quote 10))
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp6) (quote 10))
+-----result-exp-break, result-value-break-----
+right side:
+  (#%plain-app ... (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+(quote 1)) ((x2) (quote 10))) (#%app p temp1 x2)))) ...)
+held
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp6) (quote 10))
+-----result-exp-break, result-value-break-----
+right side:
+  (#%plain-app ... (quote (delay ...)) ...)
+skipped step
+-----result-exp-break, result-value-break-----
+right side:
+  (quote (delay ...))
+no sexp
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp6) (quote 10))
+-----result-exp-break, result-value-break-----
+right side:
+  (let-values (((p) +) ((temp1) (quote 1)) ((x2) (quote 10))) (#%app p temp1 x2)
+)
+no sexp
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp6) (quote 10))
+-----expr-finished-break-----
+adding:
+  ((p) (#%app ! +))
+adding:
+  ((temp1) (quote 1))
+adding:
+  ((x2) x)
+-----normal-break, normal-break/values-----
+left side:
+  (#%plain-app p temp1 x2)
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp6) (quote 10))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) +)
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp1) (quote 1))
+-----reconstruct-all-completed-----
+preunwound: (define-values (x2) (quote 10))
+-----result-exp-break, result-value-break-----
+right side:
+  (#%plain-app + temp1 x2)
+held
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp6) (quote 10))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) +)
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp1) (quote 1))
+-----reconstruct-all-completed-----
+preunwound: (define-values (x2) (quote 10))
+-----normal-break, normal-break/values-----
+left side:
+  (#%plain-app + temp1 x2)
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp6) (quote 10))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) +)
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp1) (quote 1))
+-----reconstruct-all-completed-----
+preunwound: (define-values (x2) (quote 10))
+-----result-exp-break, result-value-break-----
+right side:
+  (#%plain-app + (quote 1) x2)
+held
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp6) (quote 10))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) +)
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp1) (quote 1))
+-----reconstruct-all-completed-----
+preunwound: (define-values (x2) (quote 10))
+-----normal-break, normal-break/values-----
+left side:
+  (#%plain-app + (quote 1) x2)
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp6) (quote 10))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) +)
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp1) (quote 1))
+-----reconstruct-all-completed-----
+preunwound: (define-values (x2) (quote 10))
+-----result-exp-break, result-value-break-----
+right side:
+  (#%plain-app + (quote 1) (quote 10))
+held
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp6) (quote 10))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) +)
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp1) (quote 1))
+-----reconstruct-all-completed-----
+preunwound: (define-values (x2) (quote 10))
+-----normal-break, normal-break/values-----
+left side:
+  (#%plain-app + (quote 1) (quote 10))
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp6) (quote 10))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) +)
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp1) (quote 1))
+-----reconstruct-all-completed-----
+preunwound: (define-values (x2) (quote 10))
+-----result-exp-break, result-value-break-----
+right side:
+  (quote 11)
+held
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp6) (quote 10))
+-----reconstruct-all-completed-----
+preunwound: (define-values (p) +)
+-----reconstruct-all-completed-----
+preunwound: (define-values (temp1) (quote 1))
+-----reconstruct-all-completed-----
+preunwound: (define-values (x2) (quote 10))

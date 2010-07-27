@@ -1457,3 +1457,199 @@ TODO tomorrow:
  - want to somehow annotate after a step
    - idea: annotate "left side" and transfer to "right side"
    - see double-break case in model.rkt::go::break
+
+
+
+--------------------------------------------------------------------------------
+----- 7/26/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+
+- difference between a "values" break and a regular break (ie - result-exp-break vs result-value-break, and normal-break vs normal-break/values) is the "values" break passes an additional "vals-list" param to break
+  - the "vals-list" param is the result of evaluating the exp around which the break is wrapped
+
+BREAK TYPE (FN NAME)  | WRAP FN NAME
+----------------------------------------------------
+normal-break          | break-wrap*
+normal-break/values   | normal-break/values-wrap**
+result-exp-break      | pre-break-wrap*
+result-value-break    | return-value-wrap**
+expr-finished-break / | make-define-struct-break***
+exp-finished-break    |
+double-break          | double-break-wrap*
+
+* = (begin (break-fn) exp)
+** = (call-with-values 
+       (lambda () exp)
+       (lambda (args)
+         (break-fn args)
+         (values args)))
+*** = returns thunk with call to break and 'expr-finished-break break type (marks = #f)
+
+wcm-wrap in marks.rkt:
+(define (wcm-wrap marks expr)
+  (wcm debug-key marks expr))
+
+wcm-pre-break-wrap in annotate.rkt:
+ - like wcm-wrap except wraps pre-break-wrap around exp
+
+outer-wcm-wrap in annotate.rkt::annotate/inner:
+ - gets set to wcm-pre-break-wrap if pre-break? = #t
+ - gets set to wcm-wrap           if pre-break? = #f
+
+wcm-break-wrap in annotate.rkt::annotate/inner:
+ - like wcm-wrap except uses outer-wcm-wrap and wraps break-wrap around exp
+
+
+
+- pre-break? in annotate/inner is #t in tail-recur and lambda-body-recur
+
+
+
+--------- When are each of the break types used (in annotate/inner)? ----------
+normal-break
+- used by break-wrap, wcm-break-wrap
+- used in #%plain-app case
+- used in begin0 case
+- used in varref-abstraction, var-stx case
+
+
+normal-break/values
+- used by normal-break/values-wrap
+- used in let-abstraction, let-values, letrec-values case
+
+
+result-exp-break
+- used by pre-break-wrap, wcm-pre-break-wrap, and sometimes wcm-break-wrap (when pre-break = #t)
+- used in let-abstraction (if outermost? = #f, ie - if not first expr in body)
+- used in begin0 case (if not first-time?, ie - not first expr in begin)
+wcm-break-wrap used in:
+- used in varref-abstraction, in varref-break-wrap and top-level-varref-break-wrap
+- used in begin0 case
+outer-wcm-wrap used in (always as outer wrap):
+- let-abstraction
+- if-abstraction
+- varref-abstraction, varref-no-break-wrap
+- set! case
+- #%plain-app case
+
+
+
+result-value-break
+- used by return-value-wrap
+- wrapped around the var in varref-break-wrap
+- used in set! case
+- used in let-body of #%plain-app case
+
+
+expr-finished-break
+- used by exp-finished-break, make-define-struct-break
+- used in annotate/module-top-level when there is a stepper-define-struct-hint property
+- used in let-abstraction
+- used in maybe-final-val-wrap, when there is 'stepper-use-val-as-final property
+- in define-values case in annotate/module-top-level
+
+
+double-break
+- used by-double-break-wrap
+- used in let-abstraction
+
+
+
+--------- What does model.rkt::go::break do? ----------
+
+- what does reconstruct-all-completed do?
+for each expr in finished-exps:
+1) forces thunk
+2) calls reconstruct.rkt::reconstruct-completed
+3) unwinds
+-) skips expr if it has stepper-hide-completed property
+
+
+- held-exp-list contains lhs exprs
+  - gets init to the-no-sexp
+
+
+
+- then it depends on BREAK TYPE:
+
+--- normal-break, normal-break/values ---
+1) set held-finished-list to result of reconstruct-all-completed
+2) call reconstruct.rkt::reconstruct-left-side with mark list and returned-value-list
+3) lifts result
+4) unwind
+5) stores result in held-exp-list
+
+
+
+--- result-exp-break, result-value-break ---
+1) create thunk for rhs:
+  a) call reconstruct.rkt::reconstruct-right-side with mark list and returned-value-list
+  b) lifts result
+  c) unwind
+2a) if held-exp-list is skipped step, reset it to the-no-sexp
+2b) if held-exp-list is the-no-sexp, call send-result with before-after-result where before is result of reconstruct-all-completed, and after is result of forcing rhs thunk
+2c) if held-exp-list is some held exps:
+  a) add held-exps to end of held-finished-list and use as lhs
+  b) add result of forcing rhs thunk to result of reconstruct-all-completed and use as rhs
+  c) send result (resets held-exp-list to the-no-sexp)
+
+
+
+--- double-break ---
+- held-exp-list should be the-no-sexp
+1) call reconstruct.rkt::reconstruct-double-break with mark list to get pair of exprs
+2) lift 1st of pair and unwind and use as lhs
+3) lift 2nd of pair and unwind and use as rhs
+4) add lhs to end of reconstruct-all-completed and rhs to end of reconstruct-all-completed and send result
+
+
+
+--- expr-finished-break ---
+for each expr in returned-value-list:
+1) add to finished-exps
+
+
+
+
+- reconstruct-left-side, -right-side, and -double-break call reconstruct.rkt::reconstruct-current with either 'left-side, 'right-side, or 'double-break as the "break kind" (in addition to the mark-list and return-value-list)
+
+
+---------- what does reconstruct-current do? ---------
+
+- recon-inner
+- recon
+
+--- left-side ---
+1) if return-value-list exists (break was normal-break/values)
+  a) call recon-value on 1st element of return-value-list (there should be only 1 value)
+  b) otherwise use nothing-so-far as the result
+2) call recon with that result and mark list
+
+
+--- right-side ---
+1) if return-value-list exists (break was result-value-break)
+  a) call recon-value on 1st element of return-value-list (there should be only 1 value)
+  b) otherwise call recon-source-expr with the first expr in mark list and entire mark list
+2) mark that result as highlight
+3) call recon with that result and rest of mark list
+
+
+
+--- double-break ---
+1) call recon-source-expr with first expr in mark list (should be let) (and entire mark list)
+2) mark result as highlight
+3) call recon with result and rest of mark list
+
+4) call recon-source-expr with first expr in mark list (should be let) (and entire mark list) and vars from let
+5) mark result as highlight
+6) call recon with result and rest of mark list
+
+7) return two results as pair
+
+
+
+
+TODO tomorrow: 
+- add more fine-grained descriptions of when each break type is used
+- check what recon-value, recon (in reconstruct-current) and recon-source-expr do?
