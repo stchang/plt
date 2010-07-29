@@ -1,0 +1,288 @@
+BREAK TYPE = normal-break
+_skip_
+car marklist = (#%app lazy-proc (lambda (x) (#%app lazy (lambda () (let-values (
+((p) (#%app ! +)) ((temp1) (quote 1)) ((x2) x)) (if (if (#%app lazy-proc? p) (qu
+ote #t) (#%app struct-constructor-procedure? p)) (#%app p temp1 x2) (#%app p (#%
+app ! temp1) (#%app ! x2))))))))
+BREAK TYPE = result-value-break
+-----result-exp-break, result-value-break-----
+right side:
+  (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-val
+ues (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+held = skipped step
+BREAK TYPE = expr-finished-break
+-----expr-finished-break-----
+add to finished:
+  source:(define-values (f) (#%app lazy-proc (lambda (x) (#%app lazy (lambda ()
+(let-values (((p) (#%app ! +)) ((temp1) (quote 1)) ((x2) x)) (if (if (#%app lazy
+-proc? p) (quote #t) (#%app struct-constructor-procedure? p)) (#%app p temp1 x2)
+ (#%app p (#%app ! temp1) (#%app ! x2)))))))))
+  index:#f
+  getter:(#<procedure:...ts\lazy\lazy.rkt:199:20>)
+BREAK TYPE = double-break
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+-----double-break-----:
+left (before)
+  (let-values (((p) f) ((temp6) (quote 10))) (#%app p temp6))
+right (before)
+  (let-values (((p) f) ((temp6) (quote 10))) (#%app p temp6))
+left side:
+  (f 10)
+right side:
+  (define p_0 f)
+right side:
+  (define temp6_0 10)
+right side:
+  (p_0 temp6_0)
+stepper hint(l): #<procedure:unwind-app>
+stepper hint(r): #f
+stepper hint(r): #f
+stepper hint(r): #f
+BREAK TYPE = expr-finished-break
+-----expr-finished-break-----
+add to finished:
+  source:((p) (#%app ! (#%top . f)))
+  index:(0)
+  getter:(#<procedure:...ts\lazy\lazy.rkt:199:20>)
+add to finished:
+  source:((temp6) (quote 10))
+  index:(0)
+  getter:(10)
+BREAK TYPE = normal-break
+-----normal-break, normal-break/values-----
+left side:
+  (#%plain-app p temp6)
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hidden: ((p) (#%app ! (#%top . f)))
+hidden: ((temp6) (quote 10))
+BREAK TYPE = result-value-break
+-----result-exp-break, result-value-break-----
+right side:
+  (#%plain-app (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))) temp6)
+held exists
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hidden: ((p) (#%app ! (#%top . f)))
+hidden: ((temp6) (quote 10))
+BREAK TYPE = normal-break
+-----normal-break, normal-break/values-----
+left side:
+  (#%plain-app (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))) temp6)
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hidden: ((p) (#%app ! (#%top . f)))
+hidden: ((temp6) (quote 10))
+BREAK TYPE = result-value-break
+-----result-exp-break, result-value-break-----
+right side:
+  (#%plain-app (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))) (quote 10))
+held exists
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hidden: ((p) (#%app ! (#%top . f)))
+hidden: ((temp6) (quote 10))
+BREAK TYPE = normal-break
+-----normal-break, normal-break/values-----
+left side:
+  (#%plain-app (#%plain-lambda (x) (#%app lazy (#%plain-lambda () (let-values ((
+(p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))) (quote 10))
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hidden: ((p) (#%app ! (#%top . f)))
+hidden: ((temp6) (quote 10))
+BREAK TYPE = result-exp-break
+-----result-exp-break, result-value-break-----
+right side:
+  (#%plain-app ... (#%app lazy (#%plain-lambda () (let-values (((p) +) ((temp1)
+(quote 1)) ((x2) (quote 10))) (#%app p temp1 x2)))) ...)
+held exists
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hidden: ((p) (#%app ! (#%top . f)))
+hidden: ((temp6) (quote 10))
+BREAK TYPE = normal-break
+_skip_
+car marklist = (#%app lazy (lambda () (let-values (((p) (#%app ! +)) ((temp1) (q
+uote 1)) ((x2) x)) (if (if (#%app lazy-proc? p) (quote #t) (#%app struct-constru
+ctor-procedure? p)) (#%app p temp1 x2) (#%app p (#%app ! temp1) (#%app ! x2)))))
+)
+BREAK TYPE = result-value-break
+-----result-exp-break, result-value-break-----
+right side:
+  (#%plain-app ... (quote (delay ...)) ...)
+held = skipped step
+BREAK TYPE = result-value-break
+-----result-exp-break, result-value-break-----
+right side:
+  (quote (delay ...))
+held = no sexp
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hidden: ((p) (#%app ! (#%top . f)))
+hidden: ((temp6) (quote 10))
+BREAK TYPE = result-exp-break
+-----result-exp-break, result-value-break-----
+right side:
+  (let-values (((p) +) ((temp1) (quote 1)) ((x2) (quote 10))) (#%app p temp1 x2)
+)
+held = no sexp
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hidden: ((p) (#%app ! (#%top . f)))
+hidden: ((temp6) (quote 10))
+BREAK TYPE = double-break
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hidden: ((p) (#%app ! (#%top . f)))
+hidden: ((temp6) (quote 10))
+-----double-break-----:
+left (before)
+  (let-values (((p) +) ((temp1) (quote 1)) ((x2) (quote 10))) (#%app p temp1 x2)
+)
+right (before)
+  (let-values (((p) +) ((temp1) (quote 1)) ((x2) (quote 10))) (#%app p temp1 x2)
+)
+left side:
+  (+ 1 10)
+right side:
+  (define p_0 +)
+right side:
+  (define temp1_0 1)
+right side:
+  (define x2_0 10)
+right side:
+  (p_0 temp1_0 x2_0)
+stepper hint(l): #<procedure:unwind-app>
+stepper hint(r): #f
+stepper hint(r): #f
+stepper hint(r): #f
+stepper hint(r): #f
+BREAK TYPE = expr-finished-break
+-----expr-finished-break-----
+add to finished:
+  source:((p) (#%app ! +))
+  index:(0)
+  getter:(#<procedure:+>)
+add to finished:
+  source:((temp1) (quote 1))
+  index:(0)
+  getter:(1)
+add to finished:
+  source:((x2) x)
+  index:(0)
+  getter:(10)
+BREAK TYPE = normal-break
+-----normal-break, normal-break/values-----
+left side:
+  (#%plain-app p temp1 x2)
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hidden: ((p) (#%app ! (#%top . f)))
+hidden: ((temp6) (quote 10))
+hidden: ((p) (#%app ! +))
+hidden: ((temp1) (quote 1))
+hidden: ((x2) x)
+BREAK TYPE = result-value-break
+-----result-exp-break, result-value-break-----
+right side:
+  (#%plain-app + temp1 x2)
+held exists
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hidden: ((p) (#%app ! (#%top . f)))
+hidden: ((temp6) (quote 10))
+hidden: ((p) (#%app ! +))
+hidden: ((temp1) (quote 1))
+hidden: ((x2) x)
+BREAK TYPE = normal-break
+-----normal-break, normal-break/values-----
+left side:
+  (#%plain-app + temp1 x2)
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hidden: ((p) (#%app ! (#%top . f)))
+hidden: ((temp6) (quote 10))
+hidden: ((p) (#%app ! +))
+hidden: ((temp1) (quote 1))
+hidden: ((x2) x)
+BREAK TYPE = result-value-break
+-----result-exp-break, result-value-break-----
+right side:
+  (#%plain-app + (quote 1) x2)
+held exists
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hidden: ((p) (#%app ! (#%top . f)))
+hidden: ((temp6) (quote 10))
+hidden: ((p) (#%app ! +))
+hidden: ((temp1) (quote 1))
+hidden: ((x2) x)
+BREAK TYPE = normal-break
+-----normal-break, normal-break/values-----
+left side:
+  (#%plain-app + (quote 1) x2)
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hidden: ((p) (#%app ! (#%top . f)))
+hidden: ((temp6) (quote 10))
+hidden: ((p) (#%app ! +))
+hidden: ((temp1) (quote 1))
+hidden: ((x2) x)
+BREAK TYPE = result-value-break
+-----result-exp-break, result-value-break-----
+right side:
+  (#%plain-app + (quote 1) (quote 10))
+held exists
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hidden: ((p) (#%app ! (#%top . f)))
+hidden: ((temp6) (quote 10))
+hidden: ((p) (#%app ! +))
+hidden: ((temp1) (quote 1))
+hidden: ((x2) x)
+BREAK TYPE = normal-break
+-----normal-break, normal-break/values-----
+left side:
+  (#%plain-app + (quote 1) (quote 10))
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hidden: ((p) (#%app ! (#%top . f)))
+hidden: ((temp6) (quote 10))
+hidden: ((p) (#%app ! +))
+hidden: ((temp1) (quote 1))
+hidden: ((x2) x)
+BREAK TYPE = result-value-break
+-----result-exp-break, result-value-break-----
+right side:
+  (quote 11)
+held exists
+-----reconstruct-all-completed-----
+preunwound: (define-values (f) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
+) (let-values (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
+hidden: ((p) (#%app ! (#%top . f)))
+hidden: ((temp6) (quote 10))
+hidden: ((p) (#%app ! +))
+hidden: ((temp1) (quote 1))
+hidden: ((x2) x)

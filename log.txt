@@ -1709,7 +1709,15 @@ TODO tomorrow:
 
 - added 'comes-from-lazy case in reconstruct.rkt::hide-completed? (called by model.rkt::go::break::reconstruct-all-completed)
 
+- in, annotate.rkt::annotate/inner::let-abstraction, add 'comes-from-lazy = #t stepper-syntax-property, to let clauses in exp-finished-clauses
+  - TODO: add check to only add this property if original stx had it
+
+
+
+
+
 TODO tomorrow:
 - figure out how application gets annotated
   - I suspect it gets annotated as a sequence of partially evaluated steps, where one more subterm gets evaluated at each step
 - also look at how app gets reconstructed
+- add check in annotate.rkt::annotate/inner:let-abstraction to only add 'comes-from-lazy stepper-syntax-property if original let had the property
