@@ -4,16 +4,22 @@ right side:
 ues (((p) +) ((temp1) (quote 1)) ((x2) x)) (#%app p temp1 x2))))))
 skipped step
 -----expr-finished-break-----
-adding:
-  (define-values (f) (#%app lazy-proc (lambda (x) (#%app lazy (lambda () (let-va
-lues (((p) (#%app ! +)) ((temp1) (quote 1)) ((x2) x)) (if (if (#%app lazy-proc?
-p) (quote #t) (#%app struct-constructor-procedure? p)) (#%app p temp1 x2) (#%app
- p (#%app ! temp1) (#%app ! x2)))))))))
+add to finished:
+  source:(define-values (f) (#%app lazy-proc (lambda (x) (#%app lazy (lambda ()
+(let-values (((p) (#%app ! +)) ((temp1) (quote 1)) ((x2) x)) (if (if (#%app lazy
+-proc? p) (quote #t) (#%app struct-constructor-procedure? p)) (#%app p temp1 x2)
+ (#%app p (#%app ! temp1) (#%app ! x2)))))))))
+  index:#f
+  getter:(#<procedure:...ts\lazy\lazy.rkt:199:20>)
 -----expr-finished-break-----
-adding:
-  ((p) (#%app ! (#%top . f)))
-adding:
-  ((temp6) (quote 10))
+add to finished:
+  source:((p) (#%app ! (#%top . f)))
+  index:(0)
+  getter:(#<procedure:...ts\lazy\lazy.rkt:199:20>)
+add to finished:
+  source:((temp6) (quote 10))
+  index:(0)
+  getter:(10)
 -----normal-break, normal-break/values-----
 left side:
   (#%plain-app p temp6)
@@ -118,12 +124,18 @@ preunwound: (define-values (p) (#%plain-lambda (x) (#%app lazy (#%plain-lambda (
 -----reconstruct-all-completed-----
 preunwound: (define-values (temp6) (quote 10))
 -----expr-finished-break-----
-adding:
-  ((p) (#%app ! +))
-adding:
-  ((temp1) (quote 1))
-adding:
-  ((x2) x)
+add to finished:
+  source:((p) (#%app ! +))
+  index:(0)
+  getter:(#<procedure:+>)
+add to finished:
+  source:((temp1) (quote 1))
+  index:(0)
+  getter:(1)
+add to finished:
+  source:((x2) x)
+  index:(0)
+  getter:(10)
 -----normal-break, normal-break/values-----
 left side:
   (#%plain-app p temp1 x2)

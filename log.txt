@@ -1461,7 +1461,7 @@ TODO tomorrow:
 
 
 --------------------------------------------------------------------------------
------ 7/26/2010 - LAPTOP
+----- 7/26-27/2010 - LAPTOP
 --------------------------------------------------------------------------------
 
 
@@ -1652,4 +1652,64 @@ for each expr in returned-value-list:
 
 TODO tomorrow: 
 - add more fine-grained descriptions of when each break type is used
-- check what recon-value, recon (in reconstruct-current) and recon-source-expr do?
+- check what recon-value, recon (in reconstruct-current), recon-source-expr, and reconstruct-completed do?
+
+
+
+
+--------------------------------------------------------------------------------
+----- 7/28/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+
+- in annotate.rkt::annotate/inner::let-abstraction, shared.rkt::get-lifted-var is called once for each var bound by the let
+  - lifted vars look something like lifted-x-#, where x is the original name of the variable and # is an index that gets incremented every time get-lifted-var is called
+
+
+---------- What does reconstruct.rkt::reconstruct-completed do? ----------
+1a) turns variables and value(s) into a define
+1b) handles stepper-define-struct-hint
+1c) handles stepper-use-val-as-final
+1d) o.w. uses vals-getter
+
+
+
+---------- What does reconstruct.rkt::recon-value do? ----------
+if val is closure
+  then look it up in closure table and call recon-source-expr
+  else render it using print-convert
+
+
+
+---------- What does reconstruct.rkt::recon-source-expr do? ----------
+- uses skipto/auto
+
+
+
+
+---------- What does reconstruct.rkt::reconstruct-current::recon do? ----------
+
+
+
+
+TODO tomorrow:
+- figure out how to hide defines that get generated from let in lazy app
+- fix body of the let to not use vars bound by let
+- you've identified when a let comes from lazy racket, now wrap the defines that come from the let with stepper-skip-completely
+
+
+
+
+
+
+--------------------------------------------------------------------------------
+----- 7/29/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+
+- added 'comes-from-lazy case in reconstruct.rkt::hide-completed? (called by model.rkt::go::break::reconstruct-all-completed)
+
+TODO tomorrow:
+- figure out how application gets annotated
+  - I suspect it gets annotated as a sequence of partially evaluated steps, where one more subterm gets evaluated at each step
+- also look at how app gets reconstructed
