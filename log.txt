@@ -1710,7 +1710,8 @@ TODO tomorrow:
 - added 'comes-from-lazy case in reconstruct.rkt::hide-completed? (called by model.rkt::go::break::reconstruct-all-completed)
 
 - in, annotate.rkt::annotate/inner::let-abstraction, add 'comes-from-lazy = #t stepper-syntax-property, to let clauses in exp-finished-clauses
-  - TODO: add check to only add this property if original stx had it
+  - TODO: add check to only add this property if original stx had it 
+      - DONE 7/30/2010
 
 
 
@@ -1720,4 +1721,35 @@ TODO tomorrow:
 - figure out how application gets annotated
   - I suspect it gets annotated as a sequence of partially evaluated steps, where one more subterm gets evaluated at each step
 - also look at how app gets reconstructed
-- add check in annotate.rkt::annotate/inner:let-abstraction to only add 'comes-from-lazy stepper-syntax-property if original let had the property
+- add check in annotate.rkt::annotate/inner:let-abstraction to only add 'comes-from-lazy stepper-syntax-property if original let had the property - DONE 7/30/2010
+
+
+
+
+
+--------------------------------------------------------------------------------
+----- 7/30/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+- stepper steps are buffered in an async channel, using async-channel-put, and are retrieved using async-channel-get
+
+- the receive-result param of model.rkt::go converts the received before-and-after result and converts it to a step, and adds to the view-history async-channel, where it gets retrieved by start-listener-thread
+
+- in annotate.rkt::annotate/inner::let-abstraction, add 'comes-from-lazy property to let body (only in bodies length = 1 case)
+ - TODO: add check to add this property only if original let (stx param) has it
+    - DONE 7/30/2010
+ - TODO: add this property to bodies length > 1 case also (just add to first one?)
+
+- added steps-to-skip var in model.rkt::go, used in break to skip over a specified number of steps
+example:
+if we have the following stepper steps:
+0: a -> b
+1: b -> c
+2: c -> d
+3: d -> e
+
+and we want to skip 2 steps starting at 0, then the stepper will display:
+0: a -> e
+
+
+- in lazy.rkt::!*app, we definitely do not want the stepper-skip-double-break property. this way, we can unwind the let directly to get the application to display propertly initially

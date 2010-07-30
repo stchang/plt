@@ -586,7 +586,12 @@
                    (lambda (stx output-identifier make-init-list)
                      (with-syntax ([(_ ([(var ...) val] ...) . bodies) stx])
                        (let*-2vals
-                        ([binding-sets (map syntax->list (syntax->list #'((var ...) ...)))]
+                        ([comes-from-lazy? (stepper-syntax-property stx 'comes-from-lazy)]
+                         [maybe-mark-as-from-lazy 
+                          (λ (x) (if comes-from-lazy?
+                                     (stepper-syntax-property x 'comes-from-lazy #t)
+                                     x))]
+                         [binding-sets (map syntax->list (syntax->list #'((var ...) ...)))]
                          [binding-list (apply append binding-sets)]
                          [vals (syntax->list #'(val ...))]
                          [lifted-var-sets (map (lx (map get-lifted-var _)) binding-sets)]
@@ -596,7 +601,9 @@
                          [bodies-list (syntax->list #'bodies)]
                          [(annotated-body free-varrefs-body)
                           (if (= (length bodies-list) 1)
-                              (let-body-recur/single (car bodies-list) binding-list)
+                              (let-body-recur/single 
+                               (maybe-mark-as-from-lazy (car bodies-list))
+                               binding-list)
                               ;; oh dear lord, we have to unfold these like an application:
                               (let unroll-loop ([bodies-list bodies-list] [outermost? #t])
                                 (cond [(null? bodies-list)
@@ -650,8 +657,10 @@
                            
                            (with-syntax  ([(_ let-clauses . dc) stx]
                                           [((lifted-var ...) ...) lifted-var-sets])
-                             (with-syntax ([(exp-thunk ...) (map (lx (lambda () _))
-                                                                 (syntax->list #`let-clauses))])
+                             (with-syntax ([(exp-thunk ...) 
+                                            (map 
+                                             (lx (lambda () (maybe-mark-as-from-lazy _)))
+                                             (syntax->list #`let-clauses))])
                                #`(#%plain-app 
                                   list 
                                   (#%plain-app

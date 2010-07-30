@@ -316,10 +316,12 @@
            ;; use syntax/loc for better errors etc
            (with-syntax ([lazy   (syntax/loc stx (p y     ...))]
                          [strict (syntax/loc stx (p (hidden-! y) ...))])
-             (stepper-annotate-attach-unwind-fn
-              (quasisyntax/loc stx
-                (let ([p f] [y x] ...)
-                  #,($$ #'(if (lazy? p) lazy strict))))))))]))
+             (stepper-syntax-property
+              (stepper-annotate-attach-unwind-fn
+               (quasisyntax/loc stx
+                 (let ([p f] [y x] ...)
+                   #,($$ #'(if (lazy? p) lazy strict)))))
+              'comes-from-lazy #t))))]))
 ;                  (if (lazy? p) lazy strict))))))]))
 
   (defsubst (!app   f x ...) (!*app (hidden-! f) x ...))
@@ -359,7 +361,7 @@
              [(toplevel?)
               ;; toplevel expressions are always forced
               (stepper-syntax-property
-              (syntax/loc stx ((toplevel-forcer) (!app f x ...)))
+               (syntax/loc stx ((toplevel-forcer) (!app f x ...)))
               'stepper-skipto (append skipto/cdr skipto/second))]
              [else (syntax/loc stx (~!app f x ...))])]))
 

@@ -601,7 +601,9 @@
     (syntax-case stx ()
       [(define-values (v) rhs)
        (stepper-syntax-property #'v 'stepper-hide-completed)]
-      [else #f]))
+;      [else #f]))
+      [else
+       (stepper-syntax-property stx 'comes-from-lazy)]))
   
                                                                                                                 
                                        ;                     ;                                               ;  

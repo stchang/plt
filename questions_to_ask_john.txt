@@ -20,3 +20,5 @@ A) to show the "before step (?) (this is from the comments in model.rkt)
 A) in annotate/inner, pre-break? is initially #f, but gets set to #t in tail-recur and lambda-body-recur; use wcm-pre-break-wrap instead of wcm-wrap if pre-break? = #t
 
 
+
+6) How do app steps get generated?: (normal-break, result-value-break,) ..., result-exp-break

@@ -1,0 +1,64 @@
+(defines from let hidden)
+
+
+0:
+
+(define (f x) (+ 1 x))
+(f 10)
+
+=>
+
+(define (f x) (+ 1 x))
+(define p_0 f)
+(define temp6_0 10)
+(p_0 temp6_0)
+
+
+
+
+1: 
+
+(define (f x) (+ 1 x))
+(p_0 temp6_0)
+
+=>
+
+(define (f x) (+ 1 x))
+((lambda (x)
+   (lazy (lambda () (+ 1 x))))
+ temp6_0)
+
+
+
+
+2: 
+
+(define (f x) (+ 1 x))
+((lambda (x)
+   (lazy (lambda () (+ 1 x))))
+ temp6_0)
+
+
+=>
+
+(define (f x) (+ 1 x))
+((lambda (x)
+   (lazy (lambda () (+ 1 x))))
+ 10)
+
+
+
+
+3: 
+
+(define (f x) (+ 1 x))
+((lambda (x)
+   (lazy (lambda () (+ 1 x))))
+ 10)
+
+=>
+
+(define (f x) (+ 1 x))
+(...
+ (lazy (lambda () (+ 1 10)))
+ ...)
