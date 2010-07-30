@@ -1,0 +1,59 @@
+(fully hide let introduced by lazy racket)
+
+
+0:
+
+(define (f x) (+ 1 x))
+(f 10)
+
+=>
+
+(define (f x) (+ 1 x))
+(...
+ (lazy (lambda () (+ 1 10)))
+ ...)
+
+
+
+
+1:
+
+...
+
+=>
+
+(define (f x) (+ 1 x))
+(delay ...)
+
+
+
+
+2: 
+
+...
+
+=>
+
+(define (f x) (+ 1 x))
+(+ 1 10)
+
+
+
+
+3:
+
+(define (f x) (+ 1 x))
+(+ 1 10)
+
+=>
+
+(define (f x) (+ 1 x))
+11
+
+
+
+
+
+4:
+
+done

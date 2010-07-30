@@ -1,6 +1,6 @@
 dumps are from the following test program in lazy racket:
 
-(define (f x) (+ x 1))
+(define (f x) (+ 1 x))
 (f 10)
 
 - trying to fix problem where define functions were not displaying properly
