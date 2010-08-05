@@ -1764,3 +1764,14 @@ and we want to skip 2 steps starting at 0, then the stepper will display:
 TODO tommorrow:
 - implement find-highlighted-expr fn in model.rkt::go::break
 - use find-highlighted-expr instead of entire expr when checking 'comes-from-lazy
+  - there exists a find-highlight fn in lifting.rkt
+
+
+
+--------------------------------------------------------------------------------
+----- 8/4/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+TODO tommorrow:
+- body of let in a lazy app is currently annotated with 'comes-from-lazy-app-let-body property
+- document steps-to-skip system in model.rkt::go::break
