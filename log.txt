@@ -1753,3 +1753,14 @@ and we want to skip 2 steps starting at 0, then the stepper will display:
 
 
 - in lazy.rkt::!*app, we definitely do not want the stepper-skip-double-break property. this way, we can unwind the let directly to get the application to display propertly initially
+
+
+
+
+--------------------------------------------------------------------------------
+----- 8/4/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+TODO tommorrow:
+- implement find-highlighted-expr fn in model.rkt::go::break
+- use find-highlighted-expr instead of entire expr when checking 'comes-from-lazy

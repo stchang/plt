@@ -145,8 +145,9 @@
                    (kernel-syntax-case
                        unwound-body #f
                      [;(lambda arglist lam-body ...)
-                      (#%plain-lambda arglist (lazy (lambda () lam-body ...)))
-                      (and (eq? (syntax-object->datum #'lazy) 'lazy)
+;                      (#%plain-lambda arglist (lazy (lambda () lam-body ...)))
+                      (#%plain-lambda arglist lam-body ...)
+                      #;(and (eq? (syntax-object->datum #'lazy) 'lazy)
                            (eq? (syntax-object->datum #'lambda) 'lambda))
                       (case define-type
                         [(shortened-proc-define)
@@ -168,10 +169,10 @@
                                    #,unwound-body)))]
                         [(lambda-define)
                          #`(define #,printed-name #,unwound-body)]
-                        [else (error 'unwind-define
+                        [else (error 'unwind-lazy-define
                                      "unknown value for syntax property 'stepper-define-type: ~e"
                                      define-type)])]
-                     [else (error 'unwind-define
+                     [else (error 'unwind-lazy-define
                                   "expr with stepper-define-type is not a lambda: ~e"
                                   (syntax-object->datum unwound-body))])
                    #`(define #,printed-name #,unwound-body)))
@@ -326,8 +327,21 @@
 
   (defsubst (!app   f x ...) (!*app (hidden-! f) x ...))
   (defsubst (~!*app f x ...) (~ (!*app f x ...)))
-  (defsubst (~!app  f x ...) (~ (!app f x ...)))
+;  (defsubst (~!app  f x ...) (~ (!app f x ...))) ; STC comment out, re-defined below
 
+  (define-syntax (~!app stx)
+    (define (unwind-app stx unwind-recur)
+      (kernel-syntax-case* stx #f (#%app)
+        [(#%app lazy (#%plain-lambda () body))
+         (eq? (syntax-object->datum #'lazy) 'lazy)
+         (unwind-recur #'body)]
+        [else (error 'unwind-lazy-~!app "unwind ~!app error")]))
+    (syntax-case stx ()
+      [(_ f x ...)
+       (stepper-syntax-property
+        #'(~ (!app f x ...))
+        'stepper-hint unwind-app)]))
+  
   (define-for-syntax (toplevel?)
     (memq (syntax-local-context)
           '(top-level module module-begin))) ; not sure about module-begin
@@ -362,6 +376,7 @@
               ;; toplevel expressions are always forced
               (stepper-syntax-property
                (syntax/loc stx ((toplevel-forcer) (!app f x ...)))
+;               (syntax/loc stx (! (!app f x ...)))
               'stepper-skipto (append skipto/cdr skipto/second))]
              [else (syntax/loc stx (~!app f x ...))])]))
 

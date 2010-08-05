@@ -104,11 +104,48 @@
   (define held-finished-list null)
   
   
-  ;; number of steps to skip (2010-07-30: current known to be only used by lazy racket)
+  ;; number of steps to skip (2010-07-30: current only used by lazy racket stepper)
   ;; uses held-exp-list while skipping steps
-  ;; this variable is either a number or #f
-  ;; when steps-to-skip = 0, stops skipping gets set to #f
-  (define steps-to-skip #f)
+  ;; steps-to-skip is a list of integers, where each element represents steps to skip
+  ;; When the first element of the list is 0, send a "step" to be displayed
+  ;; When the list is empty, stop skipping
+  ;; There is an accompanying steps-to-skip-held-exps and steps-to-skip-held-finished list 
+  ;; (each of same length as each other and steps-to-skip) that has the 
+  ;; lhs of the skipping; the first of steps-to-skip-held-exps is also stored in held-exp-list
+  ;; and the first of steps-to-skip-held-finished is stored in held-finished-list
+  (define steps-to-skip '())
+  
+  (define steps-to-skip-held-exps '())
+  
+  (define steps-to-skip-held-finished '())
+  
+  (define (steps-to-skip?)
+    (not (empty? steps-to-skip)))
+  
+  (define (decrement-steps-to-skip)
+    (set! steps-to-skip (cons (sub1 (car steps-to-skip)) 
+                              (cdr steps-to-skip))))
+  ;; used to handle normal skipped-steps -- so they dont conflict with steps-to-skip
+  (define (increment-steps-to-skip)
+    (set! steps-to-skip (cons (add1 (car steps-to-skip))
+                              (cdr steps-to-skip))))
+  
+  (define (end-of-steps-to-skip?)
+    (zero? (car steps-to-skip)))
+  
+  (define (finish-steps-to-skip)
+    (if (and (steps-to-skip?)
+             (end-of-steps-to-skip?))
+        (begin
+          (set! steps-to-skip (cdr steps-to-skip))
+          (set! steps-to-skip-held-exps (cdr steps-to-skip-held-exps))
+          (set! steps-to-skip-held-finished (cdr steps-to-skip-held-finished))
+          (if (steps-to-skip?)
+              (begin
+                (set! held-exp-list (car steps-to-skip-held-exps))
+                (set! held-finished-list (car steps-to-skip-held-finished)))
+              (set! held-exp-list the-no-sexp))) ; reset held-finished-list here?
+        (set! held-exp-list the-no-sexp)))
   
   
   ;; highlight-mutated-expressions :
@@ -218,7 +255,9 @@
               (when (or (eq? break-kind 'normal-break)
                         ;; not sure about this...
                         (eq? break-kind 'nomal-break/values))
-                (set! held-exp-list the-skipped-step)))
+                (if (steps-to-skip?)
+                    (increment-steps-to-skip)
+                    (set! held-exp-list the-skipped-step))))
             
             (begin
               #;(fprintf (current-error-port) "and it wasn't skipped.\n")
@@ -229,14 +268,15 @@
                               returned-value-list)
                      (error 'break
                             "broken invariant: normal-break can't have returned values"))
-                   (printf "-----normal-break, normal-break/values-----\n")
-                   (printf "left side:\n  ~a\n" 
-                           (syntax->datum
-                            (r:reconstruct-left-side mark-list returned-value-list render-settings)))
-                   (if steps-to-skip
-                       (void) ; if we are in the middle skipping steps, do nothing
+                   (if (steps-to-skip?)
+                       (printf "steps to skip: ~a\n" steps-to-skip)
+                       ;(void) ; if we are in the middle skipping steps, do nothing
                               ; dont want to overwrite already held exps
                        (begin
+                         (printf "-----normal-break, normal-break/values-----\n")
+                         (printf "left side:\n  ~a\n" 
+                                 (syntax->datum
+                                  (r:reconstruct-left-side mark-list returned-value-list render-settings)))
                          (set! held-finished-list (reconstruct-all-completed))
                          (set! held-exp-list
                                (make-held
@@ -250,9 +290,11 @@
                                 (mark-list->posn-info mark-list))))))]
                 
                 [(result-exp-break result-value-break)
-                 (if (and steps-to-skip
-                          (not (zero? steps-to-skip)))
-                     (set! steps-to-skip (sub1 steps-to-skip))
+                 (if (and (steps-to-skip?)
+                          (not (end-of-steps-to-skip?)))
+                     (begin
+                       (printf "steps to skip: ~a\n" steps-to-skip)
+                       (decrement-steps-to-skip))
                      ; else steps-to-skip is 0 or #f
                  (let* ([reconstruct 
                         (lambda ()
@@ -263,11 +305,7 @@
                                  mark-list returned-value-list render-settings)
                                 #f)))]
                        [send-result (lambda (result)
-                                      (set! held-exp-list the-no-sexp)
-                                      (if (and steps-to-skip
-                                               (zero? steps-to-skip))
-                                          (set! steps-to-skip #f)
-                                          (void))
+                                      (finish-steps-to-skip)
                                       (receive-result result))]
                        [tmp0 (printf "-----result-exp-break, result-value-break-----\n")]
                        [tmp1 (printf "right side:\n  ~a\n" 
@@ -321,7 +359,8 @@
                 [(double-break)
                  ;; a double-break occurs at the beginning of a let's
                  ;; evaluation.
-                 (when (not (eq? held-exp-list the-no-sexp))
+                 (when (and (not (steps-to-skip?))
+                            (not (eq? held-exp-list the-no-sexp)))
                    (error
                     'break-reconstruction
                     "held-exp-list not empty when a double-break occurred"))
@@ -344,14 +383,22 @@
                         [tmp4 (map (λ (x) (printf "stepper hint(r): ~a\n" (stepper-syntax-property x 'stepper-hint))) right-side)])
                    (let ([posn-info (mark-list->posn-info mark-list)])
                      (if comes-from-lazy?
-                         (begin
-                           (set! steps-to-skip (length (syntax->list (car left-side))))
+                         (let ([new-held
+                                (make-held 
+                                 left-side
+                                 (r:step-was-app? mark-list) ; hardcode #t here?
+                                 posn-info)])
+                           (set! steps-to-skip 
+                                 (cons (length (syntax->list (car left-side)))
+                                       steps-to-skip))
+                           (set! steps-to-skip-held-finished
+                                 (cons new-finished-list
+                                       steps-to-skip-held-finished))
+                           (set! steps-to-skip-held-exps
+                                 (cons new-held
+                                       steps-to-skip-held-exps))
                            (set! held-finished-list new-finished-list)
-                           (set! held-exp-list
-                                 (make-held
-                                  left-side
-                                  (r:step-was-app? mark-list) ; or should i hard code #t here?
-                                  posn-info)))
+                           (set! held-exp-list new-held))
                          (receive-result
                           (make-before-after-result
                            (append new-finished-list left-side)

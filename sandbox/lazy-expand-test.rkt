@@ -1,6 +1,6 @@
 ;(module test lazy
-(define (f x) (+ 1 x))
+(define (f x) (+ x x))
 
-(f 10)
+(f (+ 1 10))
 ;)
 

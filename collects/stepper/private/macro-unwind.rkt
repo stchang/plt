@@ -46,8 +46,11 @@
 
   (define (recur-on-pieces stx settings)
      (if (pair? (syntax-e stx))
-         (datum->syntax
-          stx (syntax-pair-map (syntax-e stx) (lambda (stx) (unwind stx settings))) stx stx)
+         (let ([hint (stepper-syntax-property stx 'stepper-hint)])
+           (if (procedure? hint)
+               (hint stx (lambda (stx) (recur-on-pieces stx settings)))
+               (datum->syntax
+                stx (syntax-pair-map (syntax-e stx) (lambda (stx) (unwind stx settings))) stx stx)))
          stx))
    
    (define (fall-through stx settings)
@@ -82,8 +85,7 @@
      (transfer-info
       (let ([hint (stepper-syntax-property stx 'stepper-hint)])
         (if (procedure? hint)
-            ; STC: recursive call used to be recur-on-pieces instead of unwind
-            (hint stx (lambda (stx) (unwind stx settings)))
+            (hint stx (lambda (stx) (recur-on-pieces stx settings)))
             (let ([process (case hint
                              [(comes-from-cond)  unwind-cond]
                              [(comes-from-and)   (unwind-and/or 'and)]
