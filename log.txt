@@ -1775,3 +1775,39 @@ TODO tommorrow:
 TODO tommorrow:
 - body of let in a lazy app is currently annotated with 'comes-from-lazy-app-let-body property
 - document steps-to-skip system in model.rkt::go::break
+- print marks in all break points in model.rkt::go::break and study them
+
+
+--------------------------------------------------------------------------------
+----- 8/6/2010 - LAPTOP
+--------------------------------------------------------------------------------
+TODO: unwind-define in lazy.rkt is now same as unwind-define in stepper/private/macro-unwind.rkt, so we can just use the unwind fn in macro-unwind.rkt?
+
+TODO tomorrow:
+- in model.rkt::go::break, need to deref exp-breaks as well (right now only normal-breaks are getting derefed)
+
+
+--------------------------------------------------------------------------------
+----- 8/6/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+- IDEA: to address lazy app let issue, why not just annotate the lazy app (which is a let) as an app and throw out the let altogether?
+  - ANSWER: can't statically determine whether function is lazy? or not, so dont know which app to use
+
+
+--------------------------------------------------------------------------------
+----- 8/9/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+- in mzlib/pconvert.rkt::print-convert, for promise? case, tried to return (force expr) instead of '(delay ...) when promise has already been forced, ie - promise-forced? = true
+  - problem is that promise is being evaluated, ie - promise-running? = true and you can't force a running promise; you'll get reentrant error
+
+- changed !*app in lazy.rkt to use application instead of let - this is possible temporary only but I want to see if this is easier to annotate and reconstruct (this was John Clements's idea)
+
+- first step (ie - (f (+ 1 10)) ) gets skipped for some reason, I think it's because the function is a promise, so the first step shown is:
+
+((lambda (x) (+ x x))
+ (delay ...))
+
+TODO: figure out how to not hide this step (see above)
+TODO: skip one step when app has property 'comes-from-lazy (because of the way I unwind, the before and after in the step looks the same)

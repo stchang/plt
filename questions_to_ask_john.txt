@@ -22,3 +22,7 @@ A) in annotate/inner, pre-break? is initially #f, but gets set to #t in tail-rec
 
 
 6) How do app steps get generated?: (normal-break, result-value-break,) ..., result-exp-break
+
+
+
+7) examples where there is no normal-break (ie - due to unannotated code)
