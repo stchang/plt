@@ -1833,12 +1833,46 @@ annotate/reconstruct notes for lazy racket (lazy.rkt)
 - temporarily undoing some changes to lazy racket annotation:
  ) in reconstruct.rkt::recon-inner, undo hiding of ellipses for app with 'dont-use-ellipses property
  ) in reconstruct.rkt::skip-redex-step?, undo the fact that we dont skip a step for apps with property 'comes-from-lazy-app (ie - from ~!app in lazy.rkt)
+ ) in reconstruct.rkt::skip-redex-step?, dont skip any applications
  ) in model.rkt::break, undoing skipping of step if left and right are the same
  ) in lazy.rkt::~lambda, undo skipping of lazy-proc application
  ) in lazy.rkt::~define, undo skipping of lazy-proc application
  ) in lazy.rkt::~!%app (ie - #%app), undo skipping of (top-level-forcer) application
  ) in lazy.rkt::~!app (adds a ~ around entire app, for non-toplevel apps), dont use custom unwinder
+ ) in lazy.rkt::~!app, use ~ instead of hidden-~
  ) in lazy.rkt::!app, use ! instead of hidden-! to force operator
  ) in lazy.rkt::!*app, dont use custom unwinder
  ) in lazy.rkt::!*app, undo skipping of if
  ) in lazy.rkt::!*app, use ! instead of hidden-! to force operands
+ ) in racket/private/promise.rkt::make-delayer, dont use custom unwinder
+
+
+test program:
+(define (f x) (+ x 1))
+(f 10)
+
+
+ - application of lazy still doesnt seem to show up, but the result (a delay) does show up
+   - oops, this is because I was still using hidden-~ instead of ~
+ - application of a lazy-proc (the defined f) seems to produce ellipses (...) around the fn body after substitution
+   - experiment confirms this
+   - application of force also produces the ellipses (if the result required more reduction, ie - is not an immediate value)
+ - returning a val from a reduction with ellipses around it produces ellipses as the left step (ie - there is no normal-break)
+
+- now adding back:
+ ) in lazy.rkt, add skipping of lazy-proc application in ~lambda and ~define
+  result: removed 1 step, evaluation of f in define (the lazy-proc application)
+ ) in lazy.rkt, add back skipping of if stmt in !*app
+  result: as expected
+ ) in lazy.rkt::~!%app, add back skipping of top-level-forcer
+
+
+- got rid of ellipses due to lazy-proc: after lazy-proc? testing is done, extract procedure and use that instead of the lazy-proc struct-procedure 
+
+TODO: 
+IDEA: how to get rid of ellipses in general
+  - in recon-inner (where ellipses get generated), check top mark and if operator in app is something where we dont want ellipses (like force, !, (#%app toplevel-forcer, etc), then dont use ellipses
+  - to get rid of ellipses on lhs coming out of ellipses-generating app, when held = no sexp, check top mark, and if operator in app is something where we dont want ellipses (like force, ~, (#%app toplevel-forcer, etc), then skip the step
+  - note, oftentimes, operators that generate ellipses get hidden and the top mark may not contain the info we need to determine whether to hide ellipses; to address this, add stepper-syntax-property and use that instead of looking at the top mark
+
+TODO tomorrow: get dont-use-ellipses working
