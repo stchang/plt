@@ -1800,7 +1800,8 @@ TODO tomorrow:
 --------------------------------------------------------------------------------
 
 - in mzlib/pconvert.rkt::print-convert, for promise? case, tried to return (force expr) instead of '(delay ...) when promise has already been forced, ie - promise-forced? = true
-  - problem is that promise is being evaluated, ie - promise-running? = true and you can't force a running promise; you'll get reentrant error
+  - problem is that promise is being evaluated, ie - promise-running? = true and you can't 
+force a running promise; you'll get reentrant error
 
 - changed !*app in lazy.rkt to use application instead of let - this is possible temporary only but I want to see if this is easier to annotate and reconstruct (this was John Clements's idea)
 
@@ -1810,4 +1811,34 @@ TODO tomorrow:
  (delay ...))
 
 TODO: figure out how to not hide this step (see above)
+ - 8/10/2010 add (not (promise? fun-val)) to #%app case in reconstructk.rkt::skip-redex-step?
+
 TODO: skip one step when app has property 'comes-from-lazy (because of the way I unwind, the before and after in the step looks the same)
+
+
+
+--------------------------------------------------------------------------------
+----- 8/12/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+annotate/reconstruct notes for lazy racket (lazy.rkt)
+- when using 'stepper-skipto, you may not be able to use a custom unwinder if you dont have access to the result
+  - for example, if you use 'stepper-skipto on the application of a lazy, the result will look something like (lambda () ...) but lazy racket doesnt have access to the creation of that syntax so you cant attach a custom unwinder.
+
+
+
+--------------------------------------------------------------------------------
+----- 8/13/2010 - LAPTOP
+--------------------------------------------------------------------------------
+- temporarily undoing some changes to lazy racket annotation:
+ ) in reconstruct.rkt::recon-inner, undo hiding of ellipses for app with 'dont-use-ellipses property
+ ) in reconstruct.rkt::skip-redex-step?, undo the fact that we dont skip a step for apps with property 'comes-from-lazy-app (ie - from ~!app in lazy.rkt)
+ ) in model.rkt::break, undoing skipping of step if left and right are the same
+ ) in lazy.rkt::~lambda, undo skipping of lazy-proc application
+ ) in lazy.rkt::~define, undo skipping of lazy-proc application
+ ) in lazy.rkt::~!%app (ie - #%app), undo skipping of (top-level-forcer) application
+ ) in lazy.rkt::~!app (adds a ~ around entire app, for non-toplevel apps), dont use custom unwinder
+ ) in lazy.rkt::!app, use ! instead of hidden-! to force operator
+ ) in lazy.rkt::!*app, dont use custom unwinder
+ ) in lazy.rkt::!*app, undo skipping of if
+ ) in lazy.rkt::!*app, use ! instead of hidden-! to force operands
