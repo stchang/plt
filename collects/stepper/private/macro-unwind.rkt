@@ -72,7 +72,8 @@
         [(letrec-values . rest)
          (unwind-mz-let stx settings)]
         [(#%plain-lambda . rest)
-         (recur-on-pieces #'(lambda . rest) settings)]
+         (or (stepper-syntax-property stx 'use-inferred-name)
+             (recur-on-pieces #'(lambda . rest) settings))]
         [(set! var rhs)
          (with-syntax ([unwound-var (or (stepper-syntax-property
                                          #`var 'stepper-lifted-name)

@@ -14,6 +14,7 @@
            "shared.ss"
            "my-macros.ss"
            (for-syntax scheme/base)
+           racket/promise ; STC add
            #;(file "/Users/clements/clements/scheme-scraps/eli-debug.ss"))
 
   (provide/contract 
@@ -92,8 +93,23 @@
   
   (define (mark-as-highlight stx)
     (stepper-syntax-property stx 'stepper-highlight #t))
-                                                     ;               
-                                                     ;               
+  
+  ; STC add
+  ; extract-if-struct : any -> procedure?
+  ; Purpose: extracts closure from struct procedure (ie - lazy-proc in lazy racket)
+  (define (extract-if-struct f)
+    (if (procedure? f)
+        (let ([extracted (procedure-extract-target f)])
+          (if extracted extracted f))
+        f))
+  
+  ; struct-procedure? : any -> boolean
+  ; Purpose : indicates whether the argument is a struct-procedure
+  (define (struct-procedure? f)
+    (and (procedure? f)
+         (procedure-extract-target f)))
+ ;               
+ ;               
  ; ;;  ;;;    ;;;   ;;;   ; ;;         ;   ;   ;;;   ;  ;   ;   ;;;  
  ;;   ;   ;  ;     ;   ;  ;;  ;        ;   ;  ;   ;  ;  ;   ;  ;   ; 
  ;    ;   ;  ;     ;   ;  ;   ;         ; ;       ;  ;  ;   ;  ;   ; 
@@ -111,7 +127,7 @@
     (opt-lambda (val render-settings [assigned-name #f])
       (if (hash-ref finished-xml-box-table val (lambda () #f))
           (stepper-syntax-property #`(quote #,val) 'stepper-xml-value-hint 'from-xml-box)
-          (let* ([extract-if-struct ; extracts closure from struct procedure (ie - lazy-proc in lazy racket)
+          (let (#;[extract-if-struct ; extracts closure from struct procedure (ie - lazy-proc in lazy racket)
                   (lambda (val) 
                     (if (procedure? val)
                         (let ([targ (procedure-extract-target val)])
@@ -194,7 +210,9 @@
     
     (and (pair? mark-list)
          (let ([expr (mark-source (car mark-list))])
-           (or (stepper-syntax-property expr 'stepper-hide-reduction)
+           (or (and
+                (stepper-syntax-property expr 'stepper-hide-reduction)
+                (printf "stepper-hide-reduction property\n"))
                (kernel:kernel-syntax-case expr #f
                                           [id
                                            (identifier? expr)
@@ -208,8 +226,10 @@
                                            (varref-skip-step? #`id-stx)]
                                           [(#%plain-app . terms)
                                            ; don't halt for proper applications of constructors
-                                           (let ([fun-val (lookup-binding mark-list (get-arg-var 0))])
-                                             (and (procedure? fun-val)
+                                           (let* ([comes-from-lazy? (stepper-syntax-property expr 'comes-from-lazy-app)]
+                                                  [fun-val (lookup-binding mark-list (get-arg-var 0))])
+                                             (and #f ;(not comes-from-lazy?)
+                                                  (procedure? fun-val)
                                                   (procedure-arity-includes? 
                                                    fun-val
                                                    (length (cdr (syntax->list (syntax terms)))))
@@ -321,8 +341,12 @@
   ; rendering the lifting of a let or local to show the 'after' step, which should show the lifted names.
 
   (define/contract recon-source-expr 
-     (-> syntax? mark-list? binding-set? binding-set? render-settings? syntax?)
-     (lambda (expr mark-list dont-lookup use-lifted-names render-settings)
+;     (-> syntax? mark-list? binding-set? binding-set? render-settings? syntax?
+    (opt->* (syntax? mark-list? binding-set? binding-set? render-settings?)
+            (any/c (or/c syntax? false/c))
+            (syntax?))
+     (lambda (expr mark-list dont-lookup use-lifted-names render-settings 
+                   [current-val #f] [so-far #f])
        (skipto/auto
         expr
         'discard
@@ -331,7 +355,7 @@
               (stepper-syntax-property expr 'stepper-prim-name)
               (let* ([recur (lambda (expr) (recon-source-expr expr mark-list dont-lookup use-lifted-names render-settings))]
                      [let-recur (lambda (expr bindings)
-                                  (recon-source-expr expr mark-list (append bindings dont-lookup) use-lifted-names render-settings))]
+                                  (recon-source-expr expr mark-list (append bindings dont-lookup) use-lifted-names render-settings current-val so-far))]
                      
                      [recon-basic
                       (lambda ()
@@ -439,8 +463,13 @@
                                                 var
                                                 
                                                 (case (stepper-syntax-property var 'stepper-binding-type)
-                                                  ((lambda-bound) 
-                                                   (recon-value (lookup-binding mark-list var) render-settings))
+                                                  ((lambda-bound)
+                                                   ; STC add
+                                                   (let ([val (lookup-binding mark-list var)])
+                                                     (if (eq? val current-val)
+                                                         so-far
+                                                         (recon-value val render-settings))))
+;                                                   (recon-value (lookup-binding mark-list var) render-settings))
                                                   ((macro-bound)
                                                    ; for the moment, let-bound vars occur only in and/or :
                                                    (recon-value (lookup-binding mark-list var) render-settings))
@@ -756,28 +785,97 @@
                                              (attach-info
                                               (match-let* 
                                                   ([sub-exprs (syntax->list (syntax terms))]
+                                                   [print-sub-exp-label (printf "*sub-exprs:\n")]
+                                                   [print-sub-exprs (map (lx (printf "  ~a\n" (syntax->datum _))) sub-exprs)]
                                                    [arg-temps (build-list (length sub-exprs) get-arg-var)]
+                                                   [print-arg-tmp-label (printf "*arg-temps:\n")]
+                                                   [print-arg-temps (map (lx (printf "  ~a\n" (syntax->datum _))) arg-temps)]
                                                    [arg-vals (map (lambda (arg-temp) 
                                                                     (lookup-binding mark-list arg-temp))
                                                                   arg-temps)]
+                                                   [print-arg-vals-label (printf "*arg-vals:\n")]
+                                                   [print-arg-vals (map (lx (printf "  ~a\n" _)) arg-vals)]
                                                    [(vector evaluated unevaluated) (split-list (lambda (x) (eq? (cadr x) *unevaluated*))
                                                                                                (zip sub-exprs arg-vals))]
-                                                   [rectified-evaluated (map (lx (recon-value _ render-settings)) (map cadr evaluated))])
+                                                   [print-eval-label (printf "*evaluated:\n")]
+                                                   [print-evaled (map (lx (printf "  ~a = ~a\n" (syntax->datum (car _)) (cadr _))) evaluated)]
+                                                   [print-ueval-label (printf "*unevaluated:\n")]
+                                                   [print-uevaled (map (lx (printf "  ~a = ~a\n" (syntax->datum (car _)) (cadr _))) unevaluated)]
+                                                   [rectified-evaluated (map (lx (recon-value _ render-settings)) (map cadr evaluated))]
+                                                   [print-rect-label (printf "*rectified:\n")]
+                                                   [print-rect (map (lx (printf "  ~a\n" (syntax->datum _))) rectified-evaluated)])
                                                 (case (mark-label (car mark-list))
                                                   ((not-yet-called)
                                                    (if (null? unevaluated)
                                                        #`(#%plain-app . #,rectified-evaluated)
+                                                       ; STC added let
+                                                       (letrec
+                                                           ([current-subterm
+                                                             (caar unevaluated)]
+                                                            [maybe-extract-binding
+                                                             (λ (e)
+                                                               (cond
+                                                                 [(identifier? e) e]
+                                                                 [(stepper-syntax-property e 'stepper-skipto) 
+                                                                  =>
+                                                                  (λ (skipto-fns) 
+                                                                    (maybe-extract-binding
+                                                                     (foldl 
+                                                                      (λ (f res) 
+                                                                        ((eval f) res)) 
+                                                                      e 
+                                                                      skipto-fns)))]))]
+                                                            [current-binding
+                                                             (maybe-extract-binding current-subterm)]
+                                                            [print-current-binding
+                                                             (printf "current binding = ~a\n" (syntax->datum current-binding))]
+                                                            [current-val
+                                                             (and
+                                                              current-binding
+                                                              (lookup-binding mark-list current-binding))]
+                                                            [print-curr-val (printf "current val = ~a\n" current-val)]
+                                                            [next-subterm
+                                                             (and (not (null? (cdr unevaluated)))
+                                                                  (caadr unevaluated))]
+                                                            [next-binding
+                                                             (and next-subterm
+                                                                  (maybe-extract-binding next-subterm))]
+                                                            [print-next-binding
+                                                             (printf "next binding = ~a\n" (and next-binding (syntax->datum next-binding)))]
+                                                            [next-val
+                                                             (and next-binding
+                                                                  (lookup-binding mark-list next-binding))]
+                                                            [print-next-val
+                                                             (printf "next val = ~a\n" next-val)]
+                                                            [print-eq
+                                                             (printf "current val = next val? = ~a\n"
+                                                                     (eq? current-val next-val))]
+                                                            [recon-temp
+                                                             (lx
+                                                              (recon-source-expr _ mark-list null null render-settings 
+                                                                                 current-val so-far))]
+                                                              )
                                                        #`(#%plain-app 
                                                           #,@rectified-evaluated
                                                           #,so-far 
-                                                          #,@(map recon-source-current-marks (cdr (map car unevaluated))))))
+                                                          ;#,@(map recon-source-current-marks (cdr (map car unevaluated)))) ) ))
+                                                          #,@(map recon-temp (cdr (map car unevaluated))))
+                                                         ) ))
                                                   ((called)
+                                                   (printf "recon-inner, app case: ~a\n" (syntax->datum (mark-source (car mark-list))))
+                                                   (let* ([mark-src (mark-source (car mark-list))]
+                                                          [dont-use-ellipses?
+                                                           (stepper-syntax-property mark-src 'dont-use-ellipses)]
+                                                          [tmp
+                                                           (printf "dont use ellipses? = ~a\n" dont-use-ellipses?)])
                                                    (stepper-syntax-property
-                                                    (if (eq? so-far nothing-so-far)
-                                                        (datum->syntax #'here `(,#'#%plain-app ...)) ; in unannotated code ... can this occur?
-                                                        (datum->syntax #'here `(,#'#%plain-app ... ,so-far ...)))
+                                                    (if #f ;dont-use-ellipses?
+                                                        so-far
+                                                        (if (eq? so-far nothing-so-far)
+                                                            (datum->syntax #'here `(,#'#%plain-app ...)) ; in unannotated code ... can this occur?
+                                                            (datum->syntax #'here `(,#'#%plain-app ... ,so-far ...))))
                                                     'stepper-args-of-call 
-                                                    rectified-evaluated))
+                                                    rectified-evaluated)))
                                                   (else
                                                    (error 'recon-inner "bad label (~v) in application mark in expr: ~a" (mark-label (car mark-list)) exp))))
                                               exp)]

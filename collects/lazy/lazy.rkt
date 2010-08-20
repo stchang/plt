@@ -79,6 +79,37 @@
   (define ~box    (lazy-proc box))
   ;; values is special, see below
 
+  
+  (define-for-syntax (stepper-hide-operator stx)
+    (stepper-syntax-property stx 'stepper-skipto (append skipto/cdr skipto/second)))
+  
+  (define-for-syntax (stepper-hide-third stx)
+    (stepper-syntax-property stx 'stepper-skipto (append skipto/cdr skipto/third)))
+  
+  (define-syntax (hidden-! stx)
+    (syntax-case stx (!)
+      #;[(_ arg) (stepper-syntax-property #'(! arg) 'stepper-skipto
+                                        (append skipto/cdr skipto/second))]
+      [(_ arg) (stepper-hide-operator #'(! arg))]))
+  
+  (define-syntax (hidden-~ stx)
+    (syntax-case stx (~)
+      [(_ arg) (stepper-hide-operator #'(~ arg))]))
+  
+  (define-for-syntax (stepper-attach-unwind-fn stx unwind-fn)
+    (stepper-syntax-property stx 'stepper-hint unwind-fn))
+  
+  (define-for-syntax (stepper-set-use-inferred-name-property stx)
+    (let* ([define-name (stepper-syntax-property stx 'stepper-proc-define-name)]
+           [tmp (printf "setting use-inferred-name prop: ~a\n" (syntax-object->datum stx))]
+           [tmp2 (printf "define-name = ~a\n" define-name)])
+      (if define-name
+          (stepper-syntax-property stx 'use-inferred-name define-name)
+          stx)))
+  
+  (define-for-syntax (stepper-set-dont-use-ellipses-property stx)
+    (stepper-syntax-property stx 'dont-use-ellipses #t))
+  
   ;; --------------------------------------------------------------------------
   ;; Implicit begin & multiple values
 
@@ -111,7 +142,7 @@
                ;; single expr
                [(expr) #`(begin #,@(reverse defs) expr)]
                [(expr ...)
-                #`(begin #,@(reverse defs) (~ (begin (! expr) ...)))]))]))))
+                #`(begin #,@(reverse defs) (~ (begin (hidden-! expr) ...) ))]))]))))
 
   ;; redefined to use lazy-proc and ~begin
   (define-syntax (~lambda stx)
@@ -122,86 +153,32 @@
                              (syntax/loc stx
                                (lambda args (~begin body0 body ...)))
                              'inferred-name n)])
-           (syntax/loc stx (lazy-proc lam))))]))
+           (stepper-hide-operator 
+            (syntax/loc stx (lazy-proc lam)))))]))
   (provide (rename ~lambda λ))
   
   
   ;; STC add
   (define-syntax (~define stx)
-    (define (unwind-define stx unwind-recur)
-      (kernel-syntax-case stx #f
-        [(define-values (name . others) body)
-         (if (null? (syntax-e #'others))
-             ;; this is supported:
-             (let* ([printed-name
-                     (or (stepper-syntax-property #`name 'stepper-lifted-name)
-                         (stepper-syntax-property #'name 'stepper-orig-name)
-                         #'name)]
-                    [unwound-body (unwind-recur #'body)]
-                    ;; see notes in internal-docs.txt
-                    [define-type (stepper-syntax-property
-                                  unwound-body 'stepper-define-type)])
-               (if define-type
-                   (kernel-syntax-case
-                       unwound-body #f
-                     [;(lambda arglist lam-body ...)
-;                      (#%plain-lambda arglist (lazy (lambda () lam-body ...)))
-                      (#%plain-lambda arglist lam-body ...)
-                      #;(and (eq? (syntax-object->datum #'lazy) 'lazy)
-                           (eq? (syntax-object->datum #'lambda) 'lambda))
-                      (case define-type
-                        [(shortened-proc-define)
-                         (let ([proc-define-name
-                                (stepper-syntax-property
-                                 unwound-body
-                                 'stepper-proc-define-name)])
-                           (if (or (free-identifier=? proc-define-name
-                                                      #'name)
-                                   (and (stepper-syntax-property #'name
-                                                                 'stepper-orig-name)
-                                        (free-identifier=?
-                                         proc-define-name
-                                         (stepper-syntax-property
-                                          #'name 'stepper-orig-name))))
-                               #`(define (#,printed-name . arglist)
-                                   lam-body ...)
-                               #`(define #,printed-name
-                                   #,unwound-body)))]
-                        [(lambda-define)
-                         #`(define #,printed-name #,unwound-body)]
-                        [else (error 'unwind-lazy-define
-                                     "unknown value for syntax property 'stepper-define-type: ~e"
-                                     define-type)])]
-                     [else (error 'unwind-lazy-define
-                                  "expr with stepper-define-type is not a lambda: ~e"
-                                  (syntax-object->datum unwound-body))])
-                   #`(define #,printed-name #,unwound-body)))
-             ;; this is there just to see the unsupported stuff go by...
-             #`(define-values (name . others) #,(unwind-recur #'body))
-             )]
-        [else (error 'unwind-define
-                     "expression is not a define-values: ~e"
-                     (syntax-object->datum stx))]))
-    (define (stepper-annotate-attach-unwind-fn stx)
-      (let* ([stx (stepper-syntax-property stx 'stepper-hint unwind-define)])
-        ;[stx (stepper-syntax-property stx 'stepper-skip-double-break #t)])
-        stx))
+    (define (attach-inferred-name stx fn-name-stx)
+      (syntax-property
+       (stepper-syntax-property
+        (stepper-syntax-property
+         stx
+         'stepper-define-type 'shortened-proc-define)
+        'stepper-proc-define-name fn-name-stx)
+       'inferred-name fn-name-stx))
     ; duplicated some stuff from ~lambda so I could add stepper-properties
     (syntax-case stx ()
       [(_ (f . args) body0 body ...)
-       (stepper-annotate-attach-unwind-fn
-        (quasisyntax/loc stx
-          (define f 
-;            #,(stepper-syntax-property
-            (lazy-proc
-             #,(syntax-property
-                (stepper-syntax-property
-                 (stepper-syntax-property
-                  #'(lambda args (~begin body0 body ...))
-                  'stepper-define-type 'shortened-proc-define)
-                 'stepper-proc-define-name #`f)
-                'inferred-name #`f)) )))]
- ;              'stepper-skipto (append skipto/cdr skipto/second))))]
+       (quasisyntax/loc stx
+         (define f 
+           #,(stepper-hide-operator
+              #`(lazy-proc
+                 #,(attach-inferred-name
+                    #'(lambda args (~begin body0 body ...))
+                    #'f)
+                 ))))]
       [(_ name expr) #'(define name expr)]))
 
   ;; STC comment out
@@ -284,21 +261,22 @@
   ;; `!apply': provided as `apply' (no need to provide `~!apply', since all
   ;;           function calls are delayed by `#%app')
 
-  (define-syntax (hidden-! stx)
-    (syntax-case stx (!)
-      [(_ arg) (stepper-syntax-property #'(! arg) 'stepper-skipto
-                                        (append skipto/cdr skipto/second))]))
 
+
+  
   (define-syntax (!*app stx)
     (define (unwind-app stx unwind-recur)
-      (syntax-case stx (!)
-        [(let-values ([(_p) f] [(_y) x] ...) _body)
+      (syntax-case stx ()
+        #;[(let-values ([(_p) f] [(_y) x] ...) _body)
          (with-syntax ([(f x ...) (unwind-recur #'(f x ...))])
-           #'(f x ...))]))
-    (define (stepper-annotate-attach-unwind-fn stx)
-      (let* ([stx (stepper-syntax-property stx 'stepper-hint unwind-app)])
-             ;[stx (stepper-syntax-property stx 'stepper-skip-double-break #t)])
-        stx))
+           #'(f x ...))]
+        [(#%plain-app (#%plain-lambda args body) f x ...)
+         (let* ([define-name (stepper-syntax-property #'f 'stepper-proc-define-name)]
+                [g (if define-name
+                       (stepper-syntax-property #'f 'use-inferred-name define-name)
+                      #'f)])
+;         (unwind-recur #`(#,g x ...)))]))
+           (unwind-recur #'(f x ...)))]))
     (syntax-case stx ()
       [(_ f x ...)
        (let ([$$ (lambda (stx)
@@ -315,15 +293,24 @@
                             skipto/first)))])
          (with-syntax ([(y ...) (generate-temporaries #'(x ...))])
            ;; use syntax/loc for better errors etc
-           (with-syntax ([lazy   (syntax/loc stx (p y     ...))]
-                         [strict (syntax/loc stx (p (hidden-! y) ...))])
-             (stepper-syntax-property
-              (stepper-annotate-attach-unwind-fn
-               (quasisyntax/loc stx
-                 (let ([p f] [y x] ...)
-                   #,($$ #'(if (lazy? p) lazy strict)))))
-              'comes-from-lazy #t))))]))
-;                  (if (lazy? p) lazy strict))))))]))
+           (with-syntax ([lazy   (quasisyntax/loc stx 
+                                    (#,(stepper-hide-operator 
+                                     #'(procedure-extract-target p))
+                                     y ...))]
+                         [strict (quasisyntax/loc stx 
+                                   (p (hidden-! y) ...))])
+;             (stepper-syntax-property
+             (stepper-attach-unwind-fn
+              (quasisyntax/loc stx 
+                ((lambda (p y ...) 
+                   #,($$ #'(if (lazy? p) lazy strict)))
+                 f x ...))
+             unwind-app)
+;               (quasisyntax/loc stx
+;                 (let ([p f] [y x] ...)
+;                   #,($$ #'(if (lazy? p) lazy strict)))))
+;              'comes-from-lazy #t)
+             )))]))
 
   (defsubst (!app   f x ...) (!*app (hidden-! f) x ...))
   (defsubst (~!*app f x ...) (~ (!*app f x ...)))
@@ -332,15 +319,26 @@
   (define-syntax (~!app stx)
     (define (unwind-app stx unwind-recur)
       (kernel-syntax-case* stx #f (#%app)
-        [(#%app lazy (#%plain-lambda () body))
+        #;[(#%app lazy (#%plain-lambda () body))
          (eq? (syntax-object->datum #'lazy) 'lazy)
          (unwind-recur #'body)]
-        [else (error 'unwind-lazy-~!app "unwind ~!app error")]))
+        #;[(#%plain-app composable-promise (#%plain-lambda () body))
+         (unwind-recur #'body)]
+        #;[(#%plain-lambda () body)
+         (unwind-recur #'body)]
+        [(#%plain-app (#%plain-lambda args body) f x ...)
+         (unwind-recur #`(f x ...))]
+        [else (error 'unwind-lazy-app "unwind ~~!app error: ~a" (syntax-object->datum stx))]))
     (syntax-case stx ()
       [(_ f x ...)
-       (stepper-syntax-property
-        #'(~ (!app f x ...))
-        'stepper-hint unwind-app)]))
+       #`(hidden-~ #,(stepper-set-dont-use-ellipses-property
+;               (stepper-syntax-property
+               (stepper-attach-unwind-fn
+                #'(!app f x ...)
+                unwind-app)
+                ))
+;                'comes-from-lazy-app #t)
+       ]))
   
   (define-for-syntax (toplevel?)
     (memq (syntax-local-context)
@@ -352,15 +350,6 @@
 
   (provide (rename ~!%app #%app)) ; all applications are delayed
   (define-syntax (~!%app stx) ; provided as #%app
-    (define (unwinder stx rec)
-      (syntax-case stx (!)
-        [(let-values ([(_p) (_app ! f)] [(_y) x] ...) _body)
-         (with-syntax ([(f x ...) (rec #'(f x ...))])
-           #'(f x ...))]))
-    (define (stepper-annotate stx)
-      (let* ([stx (stepper-syntax-property stx 'stepper-hint unwinder)]
-             [stx (stepper-syntax-property stx 'stepper-skip-double-break #t)])
-        stx))
     (syntax-case stx (~)
       ;; the usual () shorthand for null
       [(_) #'null]
@@ -374,10 +363,8 @@
               (syntax/loc stx (f x ...))]
              [(toplevel?)
               ;; toplevel expressions are always forced
-              (stepper-syntax-property
-               (syntax/loc stx ((toplevel-forcer) (!app f x ...)))
-;               (syntax/loc stx (! (!app f x ...)))
-              'stepper-skipto (append skipto/cdr skipto/second))]
+              (stepper-hide-operator
+               (syntax/loc stx ((toplevel-forcer) (!app f x ...))))]
              [else (syntax/loc stx (~!app f x ...))])]))
 
   (define (!*apply f . xs)

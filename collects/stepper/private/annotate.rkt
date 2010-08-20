@@ -262,7 +262,6 @@
 
 
 (define (annotate main-exp break show-lambdas-as-lambdas? language-level)
-  
   #;(define _ (>>> main-exp #;(syntax->datum main-exp)))
   
   (define binding-indexer
@@ -587,12 +586,21 @@
                      (with-syntax ([(_ ([(var ...) val] ...) . bodies) stx])
                        (let*-2vals
                         ([comes-from-lazy? (stepper-syntax-property stx 'comes-from-lazy)]
-                         [maybe-mark-as-from-lazy 
+                         [binding-sets (map syntax->list (syntax->list #'((var ...) ...)))]
+                         [binding-list (apply append binding-sets)])
+                        (if #f ; comes-from-lazy?
+                            (begin
+                              (printf "annotate: found lazy app (let)\n")
+                              (printf "~a\n" (syntax->datum stx))
+                              (let ([vars (datum->syntax stx binding-list)])
+                                (printf "~a\n" (syntax->datum (car (syntax-e #'bodies))))
+                                (annotate/inner #`(#%plain-app (#%plain-lambda #,vars #,(car (syntax-e #'bodies))) val ...) tail-bound pre-break? procedure-name-info)))
+;                              (annotate/inner #'(#%plain-app val ...) tail-bound pre-break? procedure-name-info))
+                            (let*-2vals
+                         ([maybe-mark-as-from-lazy 
                           (λ (x) (if comes-from-lazy?
                                      (stepper-syntax-property x 'comes-from-lazy #t)
                                      x))]
-                         [binding-sets (map syntax->list (syntax->list #'((var ...) ...)))]
-                         [binding-list (apply append binding-sets)]
                          [vals (syntax->list #'(val ...))]
                          [lifted-var-sets (map (lx (map get-lifted-var _)) binding-sets)]
                          [lifted-vars (apply append lifted-var-sets)]
@@ -624,7 +632,7 @@
                                                    (wcm-pre-break-wrap debug-info begin-form))
                                                free-vars-all))])))])
                         
-                        ((2vals (quasisyntax/loc 
+                         ((2vals (quasisyntax/loc 
                                     exp 
                                   (let ([#,counter-id (#,binding-indexer)])
                                     (#,output-identifier #,outer-initialization #,wrapped-begin))) 
@@ -676,7 +684,7 @@
                                                          (double-break-wrap
                                                           #`(begin #,@(apply append (zip set!-clauses counter-clauses))
                                                                    (#%plain-app #,exp-finished-break #,exp-finished-clauses)
-                                                                   #,annotated-body)))])))))]
+                                                                   #,annotated-body)))])))))))]
                   
                   
                   
@@ -1114,12 +1122,13 @@
   (define/contract annotate/top-level
     (syntax? . -> . syntax?)
     (lambda (exp)
-      (syntax-case exp (module #%plain-module-begin let-values dynamic-wind #%plain-lambda #%plain-app)
+      (syntax-case exp (module #%plain-module-begin let-values dynamic-wind 
+                         #%plain-lambda #%plain-app define-values)
         [(module name lang
            (#%plain-module-begin . bodies))
          #`(module name lang (#%plain-module-begin #,@(map annotate/module-top-level (syntax->list #`bodies))))]
         ; the 'require' form is used for the test harness
-        [(require module-name) exp]
+        [(require module-name) (begin (printf "REQUIRE\n") exp)]
         ; the 'dynamic-require' form is used by the actual expander 
         [(let-values ([(done-already?) . rest1])
            (#%plain-app dynamic-wind
@@ -1128,6 +1137,7 @@
                         (#%plain-lambda () . rest3)))
          exp]
         [(define-values (ids ...) bodies) (annotate/module-top-level exp)]
+        [(#%plain-app . terms) (annotate/module-top-level exp)] ; STC
         [else
          (error `annotate/top-level "unexpected top-level expression: ~a\n"
                 (syntax->datum exp))
@@ -1219,6 +1229,7 @@
              [any
               (stepper-syntax-property exp 'stepper-test-suite-hint)
               (top-level-annotate/inner (top-level-rewrite exp) exp #f)]
+             [(#%plain-app . terms) (top-level-annotate/inner (top-level-rewrite exp) exp #f)] ; STC
              [else
               (top-level-annotate/inner (top-level-rewrite exp) exp #f)
               ;; the following check can't be permitted in the presence of things like test-suite cases

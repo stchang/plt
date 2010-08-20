@@ -1869,6 +1869,12 @@ test program:
 
 - got rid of ellipses due to lazy-proc: after lazy-proc? testing is done, extract procedure and use that instead of the lazy-proc struct-procedure 
 
+- note about ellipses:
+  - there are two types: ill call them "incoming" ellipses and "outgoing" ellipses
+  - "incoming" ellipses are generated when you apply an annotated fn, like from a library, or in lazy racket, either a struct-procedure or a force; they are displayed as ellipses around the part of the fn body that is annotated
+  - "outgoing" ellipses are generated when finishing evaluation of a fn body that had incoming ellipses around it; outgoing ellipses are always on the lhs of a step
+
+
 TODO: 
 IDEA: how to get rid of ellipses in general
   - in recon-inner (where ellipses get generated), check top mark and if operator in app is something where we dont want ellipses (like force, !, (#%app toplevel-forcer, etc), then dont use ellipses
@@ -1876,3 +1882,39 @@ IDEA: how to get rid of ellipses in general
   - note, oftentimes, operators that generate ellipses get hidden and the top mark may not contain the info we need to determine whether to hide ellipses; to address this, add stepper-syntax-property and use that instead of looking at the top mark
 
 TODO tomorrow: get dont-use-ellipses working
+
+
+
+
+
+--------------------------------------------------------------------------------
+----- 8/16/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+adding back (continued from 8/13/2010)
+- get rid of ellipses due to lazy-proc by extracting procedure after test for lazy-proc? (in !*app)
+- hide all forces (use hidden-! instead of !)
+  - automatically gets rid of (incoming) ellipses due to skipping of force application
+- hide all ~ (use hidden-~)
+- to hide outgoing ellipses, add 'dont-use-ellipses property around term being delayed (in ~!app), and then add check in model.rkt::go::break, in the result-exp-break/result-value-break case, in the held = no-sexp case, dont send the step if there is a 'dont-use-ellipses property
+- add custom unwind fn to !*app
+- add custom unwind fn to ~!app
+  - it seems like this shouldnt be needed and that the custom unwinder around !*app should be enough, but I think because the term is inside a thunk, the property gets lost unless it is explicitly added here; so we pretty much have two duplicate unwind fns now
+- hide steps where lhs and rhs are identical
+
+
+
+--------------------------------------------------------------------------------
+----- 8/17/2010 - LAPTOP
+--------------------------------------------------------------------------------
+lazy.rkt stepper additions, grouped by problem description:
+
+Problem: get rid of post-application ellipses due to lazy-proc
+Solution: extract procedure after lazy-proc? testing, and hide the extraction
+
+Problem: get rid of post-application ellipses due to force
+Solution: hide the force
+
+Problem: get rid of ellipses coming out of force
+Solution: use dont-use-ellipses property around expression being delayed
+Solution addition: Sometimes, you need to keep the rhs, even if lhs is ellipses. Therefore, in model.rkt::go::break, keep around last rhs and use it as lhs when there are ellipses and dont-use-ellipses = true
