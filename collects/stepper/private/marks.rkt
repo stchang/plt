@@ -72,11 +72,11 @@
 
 ; see module top for type
 (define (make-full-mark location label bindings)
-  (printf "CREATING MARK:\n")
-  (printf "src = ~a\n" (syntax->datum location))
-  (printf "label= ~a\n" label)
-  (printf "bindings:\n")
-  (map (λ (x) (printf "  ~a\n" (syntax->datum x))) bindings)
+;  (printf "CREATING MARK:\n")
+;  (printf "src = ~a\n" (syntax->datum location))
+;  (printf "label= ~a\n" label)
+;  (printf "bindings:\n")
+;  (map (λ (x) (printf "  ~a\n" (syntax->datum x))) bindings)
   (datum->syntax #'here `(#%plain-lambda () (#%plain-app ,(make-make-full-mark-varargs location label bindings)
                                                          ,@(map make-mark-binding-stx bindings)))))
 

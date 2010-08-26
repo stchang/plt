@@ -383,8 +383,7 @@
 	      (else #f))
 	     => (lambda (traversal)
 		  (let* ([free-vars-captured #f] ; this will be set!'ed
-			 ;;[dont-care (printf "expr: ~a\nskipto: ~a\n" expr (stepper-syntax-property expr 'stepper-skipto))]
-			 ;; WARNING! I depend on the order of evaluation in application arguments here:
+                         ;; WARNING! I depend on the order of evaluation in application arguments here:
 			 [annotated (skipto/auto
 				     exp
 				     traversal
@@ -585,19 +584,9 @@
                    (lambda (stx output-identifier make-init-list)
                      (with-syntax ([(_ ([(var ...) val] ...) . bodies) stx])
                        (let*-2vals
-                        ([comes-from-lazy? (stepper-syntax-property stx 'comes-from-lazy)]
-                         [binding-sets (map syntax->list (syntax->list #'((var ...) ...)))]
-                         [binding-list (apply append binding-sets)])
-                        (if #f ; comes-from-lazy?
-                            (begin
-                              (printf "annotate: found lazy app (let)\n")
-                              (printf "~a\n" (syntax->datum stx))
-                              (let ([vars (datum->syntax stx binding-list)])
-                                (printf "~a\n" (syntax->datum (car (syntax-e #'bodies))))
-                                (annotate/inner #`(#%plain-app (#%plain-lambda #,vars #,(car (syntax-e #'bodies))) val ...) tail-bound pre-break? procedure-name-info)))
-;                              (annotate/inner #'(#%plain-app val ...) tail-bound pre-break? procedure-name-info))
-                            (let*-2vals
-                         ([maybe-mark-as-from-lazy 
+                        ([binding-sets (map syntax->list (syntax->list #'((var ...) ...)))]
+                         [binding-list (apply append binding-sets)]
+                         #;[maybe-mark-as-from-lazy 
                           (λ (x) (if comes-from-lazy?
                                      (stepper-syntax-property x 'comes-from-lazy #t)
                                      x))]
@@ -610,7 +599,8 @@
                          [(annotated-body free-varrefs-body)
                           (if (= (length bodies-list) 1)
                               (let-body-recur/single 
-                               (maybe-mark-as-from-lazy (car bodies-list))
+                               ;(maybe-mark-as-from-lazy (car bodies-list))
+                               (car bodies-list)
                                binding-list)
                               ;; oh dear lord, we have to unfold these like an application:
                               (let unroll-loop ([bodies-list bodies-list] [outermost? #t])
@@ -666,9 +656,9 @@
                            (with-syntax  ([(_ let-clauses . dc) stx]
                                           [((lifted-var ...) ...) lifted-var-sets])
                              (with-syntax ([(exp-thunk ...) 
-                                            (map 
-                                             (lx (lambda () (maybe-mark-as-from-lazy _)))
-                                             (syntax->list #`let-clauses))])
+                                            ;(map 
+                                             ;(lx (lambda () (maybe-mark-as-from-lazy _)))
+                                             (syntax->list #`let-clauses)])
                                #`(#%plain-app 
                                   list 
                                   (#%plain-app
@@ -684,7 +674,7 @@
                                                          (double-break-wrap
                                                           #`(begin #,@(apply append (zip set!-clauses counter-clauses))
                                                                    (#%plain-app #,exp-finished-break #,exp-finished-clauses)
-                                                                   #,annotated-body)))])))))))]
+                                                                   #,annotated-body)))])))))]
                   
                   
                   

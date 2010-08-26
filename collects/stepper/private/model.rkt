@@ -91,58 +91,15 @@
   (define finished-exps null)
   (define finished-defines (make-weak-hash))
   
-  #;(define (unwind-finished stx)
-    (printf "unwinding finished: ~a\n" (syntax->datum stx))
-    (syntax-case stx (! #%top #%app)
-      [(#%app ! e) (unwind-finished #'e)]
-      [(#%top . g) #'g]
-      [else
-       (if (pair? (syntax-e stx))
-           (datum->syntax
-            stx (syntax-pair-map (syntax-e stx) (lambda (stx) (unwind-finished stx))) stx stx)
-           stx)]))
-  
   (define/contract add-to-finished
     ((-> syntax?) (or/c (listof natural-number/c) false/c) (-> any)
                   . -> . void?)
     (lambda (exp-thunk lifting-indices getter)
-      #;(let ([exp (exp-thunk)])
-        (syntax-case exp ()
-          [((v) body)
-           (stepper-syntax-property exp 'comes-from-lazy)
-           (begin
-             (printf "adding to hash ~a = ~a\n" 
-                     (syntax->datum #'v) 
-                     (syntax->datum #'body))
-             (hash-set! finished-defines 
-                        (syntax->datum #'v) 
-                        #'body))]
-          [else (printf "not adding to hash: ~a\n" (syntax->datum exp))]))
       (set! finished-exps
             (append finished-exps
                     (list (list exp-thunk lifting-indices getter))))))
   
-  (define (deref-if-lazy-app stx)
-    (define (transfer-highlight from-stx to-stx)
-      (if (stepper-syntax-property from-stx 'stepper-highlight)
-          (stepper-syntax-property to-stx 'stepper-highlight #t)
-          to-stx))
-    (if (stepper-syntax-property stx 'comes-from-lazy-app-let-body)
-        (let* ([stxlst (syntax->list stx)]
-               [op (car stxlst)]
-               [args (cdr stxlst)]
-               [derefed-args 
-                (map 
-                 (λ (x) 
-                   (if (stepper-syntax-property x 'comes-from-lazy-app-let-body)
-                       (deref-if-lazy-app x)
-                       (let ([val (hash-ref finished-defines (syntax->datum x) (λ () #f))])
-                         (if val (transfer-highlight x val) x))))
-                 args)])
-             (transfer-highlight stx (datum->syntax stx (cons op derefed-args))))
-        stx))
-  
-  
+
   ;; the "held" variables are used to store the "before" step.
   (define held-exp-list the-no-sexp)
   
@@ -150,32 +107,18 @@
   
   (define held-finished-list null)
   
-  (define last-rhs the-no-sexp)
+  ; the last rhs (from either result-exp-break, result-value-break, or double-break)
+  ; for use when there is ellipses on lhs
+  (define last-rhs null)
+  (define (no-last-rhs?) (null? last-rhs))
   (define last-rhs-finished null)
   
+  ; there can be a pending rhs if we have a step where the lhs is ellipses 
+  ; and there was no previous rhs to use
+  (define pending-rhs null)
+  (define (pending-rhs?) (not (null? pending-rhs)))
+  (define pending-rhs-finished null)
   
-  ;; number of steps to skip (2010-07-30: current only used by lazy racket stepper)
-  ;; uses held-exp-list and held-finished while skipping steps
-  ;; steps-to-skip is a list of integers, where each element represents steps to skip
-  ;; When the first element of the list is 0, send a "step" to be displayed
-  ;; When the list is empty, stop skipping
-  (define steps-to-skip '())
-  
-  (define (steps-to-skip?)
-    (not (empty? steps-to-skip)))
-  
-  (define (decrement-steps-to-skip)
-    (set! steps-to-skip (cons (sub1 (car steps-to-skip)) 
-                              (cdr steps-to-skip))))
-  ;; used to handle normal skipped-steps -- so they dont conflict with steps-to-skip
-  (define (increment-steps-to-skip)
-    (set! steps-to-skip (cons (add1 (car steps-to-skip))
-                              (cdr steps-to-skip))))
-  
-  (define (end-of-steps-to-skip?)
-    (zero? (car steps-to-skip)))
-  
- 
   
   ;; highlight-mutated-expressions :
   ;;   ((listof (list/c syntax? syntax?)) (listof (list/c syntax? syntax?))
@@ -251,8 +194,8 @@
       
       (let* ([mark-list (and mark-set (extract-mark-list mark-set))]
              [tmp0 (printf "MARKLIST:\n")]
-             [tmp (and mark-set
-                       (map (λ (x) (printf "~a\n" (display-mark x))) mark-list))]
+             [tmp1 (and mark-set
+                        (map (λ (x) (printf "~a\n" (display-mark x))) mark-list))]
              [tmp2 (printf "RETURNED VALUE LIST: ~a\n" returned-value-list)])
         
         (define (reconstruct-all-completed)
@@ -297,11 +240,8 @@
               (when (or (eq? break-kind 'normal-break)
                         ;; not sure about this...
                         (eq? break-kind 'nomal-break/values))
-                (if (steps-to-skip?)
-                    (increment-steps-to-skip)
-                    (begin
-                      (printf "held set to the-skipped-step\n")
-                      (set! held-exp-list the-skipped-step)))))
+                (printf "held set to the-skipped-step\n")
+                (set! held-exp-list the-skipped-step)))
             
             (begin
               #;(fprintf (current-error-port) "and it wasn't skipped.\n")
@@ -317,66 +257,32 @@
                       (r:reconstruct-left-side mark-list returned-value-list render-settings)]
                      [print-left-side (printf "left side:\n  ~a\n" (syntax->datum left-side))]
                      [(context-records highlight) (find-highlight left-side)]
-                     [lazy-app-op? (stepper-syntax-property highlight 'lazy-app-op)]
-                     ;[tmp (printf "lazy-app-op? = ~a\n" lazy-app-op?)]
-                     ;[tmp2 (printf "terms in app: ~a\n" 
-;                                   (and lazy-app-op?
-;                                        (length (syntax->list (mark-source (cadr mark-list))))))]
-                     [left-side-derefed (deref-if-lazy-app left-side)]
-                     [left-side-derefed-unwound
+                     [left-side-unwound
                       (map (λ (exp) (unwind exp render-settings))
-;                           (maybe-lift left-side-derefed #f))]
                            (maybe-lift left-side #f))]
-                     [print-lhs-unwound (for-each (λ (x) (printf "left side unwound: ~a\n" (syntax->datum x))) left-side-derefed-unwound)]
-                     [comes-from-lazy?
-;                      (stepper-syntax-property left-side 'comes-from-lazy-app-let-body)]
-                      (stepper-syntax-property highlight 'comes-from-lazy)]
+                     [print-lhs-unwound 
+                      (for-each (λ (x) (printf "left side unwound: ~a\n" (syntax->datum x))) 
+                                left-side-unwound)]
                      [new-finished-list (reconstruct-all-completed)]
                      [posn-info (mark-list->posn-info mark-list)]
-                     [new-held (make-held
-                                left-side-derefed-unwound
-                                (r:step-was-app? mark-list)
-                                posn-info)]
-                     )
-                    (and (steps-to-skip?) 
-                         (end-of-steps-to-skip?)
-;                         lazy-app-op?
-                         comes-from-lazy?
-                         (match held-exp-list
-                           [(struct held (held-exps held-step-was-app? held-posn-info))
-                            (receive-result
-                             (make-before-after-result
-                              (append held-finished-list held-exps)
-                              (append new-finished-list left-side-derefed-unwound)
-                              'normal
-                              held-posn-info
-                              posn-info))]))
-                    
-                    (if (and (steps-to-skip?)
-;                             (not lazy-app-op?))
-                             (not comes-from-lazy?))
-                        (printf "skipping and keeping held the same\n")
-                        (begin
-                          (set! held-finished-list new-finished-list)
-                          (set! held-exp-list new-held)))
-
-                    ;; skip some steps
-;                    (and lazy-app-op?
-                    #;(and comes-from-lazy?
-                         (set! steps-to-skip 
-;                               (cons (sub1 (length (syntax->list (mark-source (cadr mark-list)))))
-                               (cons 1
-                                     steps-to-skip)))
-                    
+                     [new-held (make-held left-side-unwound
+                                          (r:step-was-app? mark-list)
+                                          posn-info)])
+                    (when (pending-rhs?)
+                      (receive-result
+                         (make-before-after-result
+                          (append pending-rhs-finished pending-rhs)
+                          (append new-finished-list left-side-unwound)
+                          'normal 
+                          posn-info
+                          posn-info))
+                      (set! pending-rhs null)
+                      (set! pending-rhs-finished null))
+                    (set! held-finished-list new-finished-list)
+                    (set! held-exp-list new-held)
                     ))]
                 
                 [(result-exp-break result-value-break)
-                 (if (and (steps-to-skip?)
-                          (not (end-of-steps-to-skip?)))
-                     (begin
-                       (printf "steps-to-skip: ~a\n" steps-to-skip)
-                       (decrement-steps-to-skip))
-                     ; else steps-to-skip is 0 or #f
                  (let* ([reconstruct 
                         (lambda ()
                           (map (lambda (exp)
@@ -407,7 +313,6 @@
                     (let* ([use-lhs-ellipses?
                             (not
                              (stepper-syntax-property 
-;                              (car (reconstruct))
                               (mark-source (car mark-list))
                               'dont-use-ellipses))]
                            [tmp (printf "use ellipses on lhs? = ~a\n" use-lhs-ellipses?)]
@@ -432,17 +337,23 @@
                                [print-left (printf "left side = ~a\n" lhs-datum)]
                                [print-right (printf "right side = ~a\n" rhs-datum)]
                                [left-equals-right? (equal? lhs-datum rhs-datum)]
-                               [print-l=r (and left-equals-right?
-                                               (printf "left and right side are identical, so skipping\n"))])
-                            (and (not left-equals-right?)
-                                 (send-result
-                                  (make-before-after-result
-                                   (append last-rhs-finished last-rhs)
-                                   (append new-finished new-rhs)
-                                   'normal
-                                   #f #f))
-                                 (set! last-rhs new-rhs)
-                                 (set! last-rhs-finished new-finished)))))]
+                               [print-l=r 
+                                (and left-equals-right?
+                                     (printf "left and right side are identical, so skipping\n"))])
+                            (when (not left-equals-right?)
+                              (if (no-last-rhs?)
+                                  (begin
+                                    (set! pending-rhs new-rhs)
+                                    (set! pending-rhs-finished new-finished))
+                                  (begin
+                                    (send-result
+                                     (make-before-after-result
+                                      (append last-rhs-finished last-rhs)
+                                      (append new-finished new-rhs)
+                                      'normal
+                                      #f #f))
+                                    (set! last-rhs new-rhs)
+                                    (set! last-rhs-finished new-finished)))))))]
                    [(struct held (held-exps held-step-was-app? held-posn-info))
                     (printf "held = exps\n")
                     (let*-values
@@ -469,36 +380,21 @@
                          [(print-right) (printf "right side = ~a\n" new-held-datum)]
                          [(left-equals-right?) (equal? held-exps-datum new-held-datum)]
                          [(print-left-right-eq) (printf "left-equals-right? = ~a\n" left-equals-right?)])
-                      (and (not left-equals-right?)  ; left and right side can be same, depending on
+                      (when (not left-equals-right?)  ; left and right side can be same, depending on
                                                      ; how unwound (happens in lazy racket)
-                           (set! last-rhs new-held)
-                           (set! last-rhs-finished new-finished)
-                           (receive-result
-                            (make-before-after-result
-                             left-exps right-exps step-kind 
-                             held-posn-info
-                             posn-info)))
-                      (if (and (steps-to-skip?)
-                               (end-of-steps-to-skip?))
-                          (begin
-                            (set! steps-to-skip (cdr steps-to-skip)) ; finish this skipping
-                            (if (steps-to-skip?) ; if there are more to skip
-                                (begin
-                                  (printf "setting as held: ~a\n" (syntax->datum (cadr right-exps)))
-                                  (set! held-exp-list 
-                                        (make-held
-                                         new-held
-                                         (r:step-was-app? mark-list)
-                                         posn-info))
-                                  (set! held-finished-list new-finished))
-                                (set! held-exp-list the-no-sexp)))
-                          (set! held-exp-list the-no-sexp)) ; if we werent skipping
-                      )])))]
+                        (set! last-rhs new-held)
+                        (set! last-rhs-finished new-finished)
+                        (receive-result
+                         (make-before-after-result
+                          left-exps right-exps step-kind 
+                          held-posn-info
+                          posn-info)))
+                      (set! held-exp-list the-no-sexp)
+                      )]))]
                 [(double-break)
                  ;; a double-break occurs at the beginning of a let's
                  ;; evaluation.
-                 (when (and (not (steps-to-skip?))
-                            (not (eq? held-exp-list the-no-sexp)))
+                 (when (not (eq? held-exp-list the-no-sexp))
                    (error
                     'break-reconstruction
                     "held-exp-list not empty when a double-break occurred"))
@@ -515,51 +411,15 @@
                    [tmp (map (λ (x) (printf "left side:\n  ~a\n" (syntax->datum x))) left-side)]
                    [tmp2 (map (λ (x) (printf "right side:\n  ~a\n" (syntax->datum x))) right-side)]
                    [(context-records highlight)
-                    (find-highlight (car reconstruct-result))]
-                   [tmp32 (printf "num terms in app: ~a\n" (length (syntax->list (unwind highlight render-settings))))]
-                   [comes-from-lazy? ;(stepper-syntax-property (car left-side) 'comes-from-lazy)]
-                    (stepper-syntax-property highlight 'comes-from-lazy)]
-                   [testing (and comes-from-lazy?
-                                 (printf "testing: ~a\n" (syntax->datum 
-                                                          (unwind
-                                                           (stepper-syntax-property
-                                                            (datum->syntax #'tmp right-side)
-                                                            'stepper-hint
-                                                            (stepper-syntax-property highlight 'test-fn))
-                                                           render-settings)
-                                                           )))]
-)
+                    (find-highlight (car reconstruct-result))])
                   (let ([posn-info (mark-list->posn-info mark-list)])
-                    (if comes-from-lazy?
-                        (let ([new-held
-                               (make-held 
-                                left-side
-                                (r:step-was-app? mark-list) ; hardcode #t here?
-                                posn-info)])
-                          (if (steps-to-skip?)
-                              (match held-exp-list
-                                [(struct held (held-exps held-step-was-app? held-posn-info))
-                                 (receive-result
-                                  (make-before-after-result
-                                   (append held-finished-list held-exps)
-                                   (append new-finished-list left-side)
-                                   'normal
-                                   held-posn-info
-                                   posn-info))])
-                              (void))
-                          (set! steps-to-skip 
-                                (cons (length (syntax->list (unwind highlight render-settings)))
-                                      steps-to-skip))
-                          (set! held-finished-list new-finished-list)
-                          (map (λ (x) (printf "setting as held: ~a\n" (syntax->datum x))) left-side)
-                          (set! held-exp-list new-held))
-                        (receive-result
-                         (make-before-after-result
-                          (append new-finished-list left-side)
-                          (append new-finished-list right-side)
-                          'normal
-                          posn-info
-                          posn-info)))))]
+                    (receive-result
+                     (make-before-after-result
+                      (append new-finished-list left-side)
+                      (append new-finished-list right-side)
+                      'normal
+                      posn-info
+                      posn-info))))]
                 
                 [(expr-finished-break)
                  (unless (not mark-list)

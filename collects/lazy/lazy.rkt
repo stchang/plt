@@ -275,8 +275,8 @@
                 [g (if define-name
                        (stepper-syntax-property #'f 'use-inferred-name define-name)
                       #'f)])
-;         (unwind-recur #`(#,g x ...)))]))
-           (unwind-recur #'(f x ...)))]))
+         (unwind-recur #`(#,g x ...)))]))
+;           (unwind-recur #'(f x ...)))]))
     (syntax-case stx ()
       [(_ f x ...)
        (let ([$$ (lambda (stx)

@@ -1918,3 +1918,38 @@ Solution: hide the force
 Problem: get rid of ellipses coming out of force
 Solution: use dont-use-ellipses property around expression being delayed
 Solution addition: Sometimes, you need to keep the rhs, even if lhs is ellipses. Therefore, in model.rkt::go::break, keep around last rhs and use it as lhs when there are ellipses and dont-use-ellipses = true
+Solution addition: if there was no previous rhs (for example, if the step is the first step), then we need to save the rhs of the ellipses step, and add an extra step during the next lhs (normal break), where the rhs of the ellipses step is the lhs and the normal break is the rhs
+
+
+
+--------------------------------------------------------------------------------
+----- 8/24/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+- outer-lambda-abstraction in annotate.rkt::annotate::annotate-inner adds annotated lambda to closure-table first, using call to closure-storing-proc
+
+- added hash table in reconstruct.rkt called partially-evaluated-promises
+  - gets initialized to make-weak-hash in reconstruct-current
+  - entries added in reconstruct-current:recon-inner, #%plain-app, not-yet-called case
+  - table accessed in recon-source-expr, var-stx case
+
+
+
+
+--------------------------------------------------------------------------------
+----- 8/25/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+- I thought I needed access to the thunk in a running promise, but it turns out I dont need it, as long as I keep track of all promises that are currently being evaluated; in this way, the first time I see a running promise, I'll know how to render the partial evaluation, and on subsequent, I can use the cached rendering of the partial evaluation
+
+TODO tomorrow:
+- in model.rkt::go::break, fix naming of "held" variables - often variables that have "held" in the name are not actually "held" variables (ie - "held" variables should be an instance of the held struct)
+  - also, may want to change things like last-rhs and pending-rhs to be instances of the held struct
+- investigate whether there's a bug when there are multiple expressions in your lazy program that produce values
+  - yes, there was a bug, needed to add finished value to finished list using exp-finished break
+  - solution was similar to that for an application in the beginner languages, which is uses call-with-values and passes the results to do-print-result; in my solution, I just pass to values
+  - in the first iteration of my solution, I didnt include toplevel-forcer, because it was not annotated, so i was adding an unforced promise to the finished list; I fixed this by removing the skipto on the toplevel-forcer, and instead, handle it directly in annotate/module-top-level
+
+
+- do-print-results, used in beginner app, prints values according to the current-parameter
+- stepper-recertify, transfers certificates from one syntax to another

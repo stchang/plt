@@ -1,10 +1,15 @@
 ;(module test lazy
- (define (f x) (+ x x))
-(f (+ 1 10))
+; eli's example
+;(define (f x) (second (list (/ 9 0) (+ (+ x x) x) (car '()))))
+
+(define (f x) (+ x (+ x x)))
+(define (g y) (+ (+ y y) y))
+(+ (f (+ 1 2)) (g (+ 3 4)))
+(f (+ (+ 1 2) (+ 3 4)))
 ;)
 
-; (define (f x) (+ 1 x))
-; (f 10)
+ 
+ 
 #;(module test lazy
    (#%plain-module-begin
    (#%require (for-syntax scheme/mzscheme))
