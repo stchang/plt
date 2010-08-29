@@ -1118,7 +1118,7 @@
            (#%plain-module-begin . bodies))
          #`(module name lang (#%plain-module-begin #,@(map annotate/module-top-level (syntax->list #`bodies))))]
         ; the 'require' form is used for the test harness
-        [(require module-name) (begin (printf "REQUIRE\n") exp)]
+        [(require module-name) exp]
         ; the 'dynamic-require' form is used by the actual expander 
         [(let-values ([(done-already?) . rest1])
            (#%plain-app dynamic-wind
@@ -1209,17 +1209,35 @@
                     #,(stepper-recertify
                        #`(#%plain-lambda () #,(top-level-annotate/inner (top-level-rewrite #`body) exp #f))
                        lam-for-cert)
-                    (#%plain-lambda vals
-                                    (begin
-                                      (#,exp-finished-break (#%plain-app list (#%plain-app list #,(lambda () exp) #f (#%plain-lambda () vals))))
-                                      (#%plain-app
-                                       call-with-values (#%plain-lambda () vals)
-                                       print-values))))
+                    (#%plain-lambda 
+                     vals
+                     (begin
+                       (#,exp-finished-break 
+                        (#%plain-app list (#%plain-app list #,(lambda () exp) #f (#%plain-lambda () vals))))
+                       (#%plain-app
+                        call-with-values (#%plain-lambda () vals)
+                        print-values))))
                  exp))]
              [any
               (stepper-syntax-property exp 'stepper-test-suite-hint)
               (top-level-annotate/inner (top-level-rewrite exp) exp #f)]
-             [(#%plain-app . terms) (top-level-annotate/inner (top-level-rewrite exp) exp #f)] ; STC
+             [(#%plain-app (#%plain-app toplevel-forcer) operand)
+              (stepper-recertify
+               #`(#%plain-app
+                  call-with-values
+                  (#%plain-lambda 
+                   () 
+                   (#%plain-app (#%plain-app toplevel-forcer)
+                                #,(top-level-annotate/inner (top-level-rewrite #'operand) exp #f)))
+                 (#%plain-lambda 
+                  vals
+                  (begin
+                    (#,exp-finished-break
+                     (#%plain-app list (#%plain-app list #,(lambda () exp) #f (#%plain-lambda () vals))))
+                    (#%plain-app 
+                     call-with-values (#%plain-lambda () vals)
+                     values))))
+               exp)] ; STC
              [else
               (top-level-annotate/inner (top-level-rewrite exp) exp #f)
               ;; the following check can't be permitted in the presence of things like test-suite cases

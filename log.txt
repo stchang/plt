@@ -1946,10 +1946,42 @@ TODO tomorrow:
 - in model.rkt::go::break, fix naming of "held" variables - often variables that have "held" in the name are not actually "held" variables (ie - "held" variables should be an instance of the held struct)
   - also, may want to change things like last-rhs and pending-rhs to be instances of the held struct
 - investigate whether there's a bug when there are multiple expressions in your lazy program that produce values
-  - yes, there was a bug, needed to add finished value to finished list using exp-finished break
-  - solution was similar to that for an application in the beginner languages, which is uses call-with-values and passes the results to do-print-result; in my solution, I just pass to values
-  - in the first iteration of my solution, I didnt include toplevel-forcer, because it was not annotated, so i was adding an unforced promise to the finished list; I fixed this by removing the skipto on the toplevel-forcer, and instead, handle it directly in annotate/module-top-level
 
 
-- do-print-results, used in beginner app, prints values according to the current-parameter
-- stepper-recertify, transfers certificates from one syntax to another
+
+--------------------------------------------------------------------------------
+----- 8/26/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+- annotate.rkt::annotate call graph (again)
+
+(annotate main-exp break show-lambdas-as-lambdas? language-level)
+
+     |
+     V
+
+(annotate/top-level exp)
+
+     |
+     V
+
+(annotate/module-top-level exp)
+
+
+
+--------------------------------------------------------------------------------
+----- 8/27/2010 - LAPTOP
+--------------------------------------------------------------------------------
+- in reconstruct.rkt::reconstruct-current:recon-inner, #%plain-app case, maybe-extract-binding did not have case when the syntax was not a binding (ie - an identifier?)
+  - this was causing programs without bindings to fail, ie like (car (list (lambda (x) x)))
+
+
+
+TODO tomorrow:
+- figure out what to do when there is a pending rhs and we have an result-exp-break (this can happen if there is a pending rhs and the subsequent normal break has an identical expr, so the step gets skipped)
+  - DONE 8/28/2010
+- in model.rkt::break, some abstraction of code is needed
+  - DONE 8/28/2010
+- figure out how to display lambdas (and thus promises) in lists using the closure-table method instead of using the pconvert output (need some kind of recursive call in recon-value) (beginning student languages suffer from this also)
+- when pending rhs is handled, last rhs should get set
+  - DONE 8/28/2010

@@ -2,10 +2,12 @@
 ; eli's example
 ;(define (f x) (second (list (/ 9 0) (+ (+ x x) x) (car '()))))
 
-(define (f x) (+ x (+ x x)))
-(define (g y) (+ (+ y y) y))
-(+ (f (+ 1 2)) (g (+ 3 4)))
-(f (+ (+ 1 2) (+ 3 4)))
+(car (list (lambda (x) x)))
+
+;(define (f x) (+ x (+ x x)))
+;(define (g y) (+ (+ y y) y))
+;(+ (f (+ 1 2)) (g (+ 3 4)))
+;(f (+ (+ 1 2) (+ 3 4)))
 ;)
 
  

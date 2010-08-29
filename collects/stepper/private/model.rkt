@@ -99,26 +99,21 @@
             (append finished-exps
                     (list (list exp-thunk lifting-indices getter))))))
   
-
-  ;; the "held" variables are used to store the "before" step.
-  (define held-exp-list the-no-sexp)
+  
   
   (define-struct held (exps was-app? source-info))
   
+  ;; the "held" variables are used to store the "before" step.
+  (define held-exp-list the-no-sexp)
+  (define (reset-held-exp-list)
+    (set! held-exp-list the-no-sexp))
+  
   (define held-finished-list null)
   
-  ; the last rhs (from either result-exp-break, result-value-break, or double-break)
-  ; for use when there is ellipses on lhs
-  (define last-rhs null)
-  (define (no-last-rhs?) (null? last-rhs))
-  (define last-rhs-finished null)
+
   
-  ; there can be a pending rhs if we have a step where the lhs is ellipses 
-  ; and there was no previous rhs to use
-  (define pending-rhs null)
-  (define (pending-rhs?) (not (null? pending-rhs)))
-  (define pending-rhs-finished null)
-  
+
+                 
   
   ;; highlight-mutated-expressions :
   ;;   ((listof (list/c syntax? syntax?)) (listof (list/c syntax? syntax?))
@@ -198,38 +193,133 @@
                         (map (λ (x) (printf "~a\n" (display-mark x))) mark-list))]
              [tmp2 (printf "RETURNED VALUE LIST: ~a\n" returned-value-list)])
         
+        (define (compute-posn-info)
+          (mark-list->posn-info mark-list))
+        
+        (define (compute-step-was-app?)
+          (r:step-was-app? mark-list))
+        
+        (define (compute-step-kind held-step-was-app?)
+          (if (and held-step-was-app?
+                   (eq? break-kind 'result-exp-break))
+              'user-application
+              'normal))
+          
+        (define (create-held exps)
+          (make-held exps (compute-step-was-app?) (compute-posn-info)))
+        
+        ; compares the lhs and rhs of a step (lists of syntaxes)
+        ; and returns true if the underlying datums are equal
+        (define (step=? lhs rhs)
+          (let ([l=r? (equal? (map syntax->datum lhs)
+                              (map syntax->datum rhs))])
+            (when l=r?
+              (printf "left side = right side, skipping this step\n"))
+            l=r?))
+ 
+        ; the rhs of the last sent step; for use when there is ellipses on lhs
+        (define last-rhs-held null)
+        (define (no-last-rhs?) (null? last-rhs-held))
+        (define last-rhs-finished null)
+        
+        ; sends a step to the stepper, if lhs and rhs are not the same
+        (define (send-step lhs-exps lhs-finished-exps rhs-exps rhs-finished-exps
+                           step-kind lhs-posn-info rhs-posn-info)
+          (let*
+              ([printf-msg (printf "sending step . . . \n")]
+               [print-left 
+                (printf "left side = ~a\n" 
+                        (map syntax->datum lhs-exps))]
+               [print-right 
+                (printf "right side = ~a\n" 
+                        (map syntax->datum rhs-exps))]
+               [left-equals-right? (step=? lhs-exps rhs-exps)])
+            (when (not left-equals-right?)
+              (receive-result
+               (make-before-after-result
+                (append lhs-finished-exps lhs-exps)
+                (append rhs-finished-exps rhs-exps)
+                step-kind
+                lhs-posn-info rhs-posn-info))
+              (set! last-rhs-held (create-held rhs-exps))
+              (set! last-rhs-finished rhs-finished-exps))))
+        
+       
+        ; there can be a pending rhs if we have a step where the lhs is ellipses 
+        ; and there was no previous rhs to use
+        (define pending-rhs-held null)
+        (define (pending-rhs?) (not (null? pending-rhs-held)))
+        (define pending-rhs-finished null)
+        
+        (define (handle-dont-use-ellipses current-exps current-finished-exps posn-info)
+          (printf "lhs = no sexp, but not using ellipses\n")
+          ; if we dont want to use ellipses on lhs, we can either:
+          ; 1) use last rhs as lhs
+          ; 2) or, if there was no last rhs, save this rhs as pending,
+          ;    and a step will be entered on the next normal-break
+          (if (no-last-rhs?)
+              (begin
+                (printf "no last rhs, so store exps as pending\n")
+                (set! pending-rhs-held (create-held current-exps))
+                (set! pending-rhs-finished current-finished-exps))
+              (match last-rhs-held
+                [(struct held (last-rhs held-step-was-app? held-posn-info))
+                 (send-step last-rhs last-rhs-finished
+                            current-exps current-finished-exps
+                            (compute-step-kind held-step-was-app?)
+                            held-posn-info posn-info)])))
+        
+
+         (define (handle-pending-rhs current-exps current-finished-exps current-posn-info)
+          (printf "checking pending rhs . . .\n")
+          (when (pending-rhs?)
+            (match pending-rhs-held
+              [(struct held (pending-rhs held-step-was-app? held-posn-info))
+               (send-step pending-rhs pending-rhs-finished
+                          current-exps current-finished-exps
+                          'normal
+                          held-posn-info current-posn-info)])))
+        
+        
         (define (reconstruct-all-completed)
           (printf "\n    ##### reconstruct-all-completed #####\n")
           (begin0
-          (filter-map
-           (match-lambda
-             [(list source-thunk lifting-indices getter)
-              (let* ([source (source-thunk)])
-                (if (r:hide-completed? source)
-                    (begin
-                      (printf "hidden, before reconstruct: ~a\n" (syntax->datum source))
-                      (match 
-                          (r:reconstruct-completed
-                           source lifting-indices
-                           getter render-settings)
-                        [(vector exp b) 
+            (filter-map
+             (match-lambda
+               [(list source-thunk lifting-indices getter)
+                (let ([source (source-thunk)])
+                  (if (r:hide-completed? source)
+                      (begin
+                        (printf "hidden, before reconstruct: ~a\n" 
+                                (syntax->datum source))
+                        (match 
+                            (r:reconstruct-completed
+                             source lifting-indices
+                             getter render-settings)
+                          [(vector exp b) 
+                           (begin
+                             (printf "hidden, after reconstruct, preunwound: ~a\n" 
+                                     (syntax->datum exp))
+                             (printf "hidden, after reconstruct, unwound: ~a\n" 
+                                     (unwind exp render-settings)) )])
+                        #f)
+                      (match (r:reconstruct-completed
+                              source lifting-indices
+                              getter render-settings)
+                        [(vector exp #f) 
                          (begin
-                           (printf "hidden, after reconstruct, preunwound: ~a\n" (syntax->datum exp))
-                           (printf "hidden, after reconstruct, unwound: ~a\n" (unwind exp render-settings)) )])
-                      #f)
-                    (match (r:reconstruct-completed
-                            source lifting-indices
-                            getter render-settings)
-                      [(vector exp #f) (begin
-                                         (printf "preunwound: ~a\n" (syntax->datum exp))
-                                         (unwind exp render-settings)
-                                         )]
-                      [(vector exp #t) (begin
-                                         (printf "notunwound: ~a\n" (syntax->datum exp))
-                                         exp
-                                         )])))])
-           finished-exps)
-          (printf "           #####################\n\n")))
+                           (printf "preunwound: ~a\n" (syntax->datum exp))
+                           (unwind exp render-settings)
+                           )]
+                      [(vector exp #t) 
+                       (begin
+                         (printf "notunwound: ~a\n" (syntax->datum exp))
+                         exp
+                         )])))])
+             finished-exps)
+            (printf "           #####################\n\n")))
+        
+
         
         #;(>>> break-kind)
         #;(fprintf (current-error-port) "break called with break-kind: ~a ..." break-kind)
@@ -253,35 +343,22 @@
                      (error 'break
                             "broken invariant: normal-break can't have returned values"))
                    (let*-2vals
-                    ([left-side
+                    ([lhs-reconstructed
                       (r:reconstruct-left-side mark-list returned-value-list render-settings)]
-                     [print-left-side (printf "left side:\n  ~a\n" (syntax->datum left-side))]
-                     [(context-records highlight) (find-highlight left-side)]
-                     [left-side-unwound
+                     [print-lhs 
+                      (printf "left side (pre-unwound):\n  ~a\n" (syntax->datum lhs-reconstructed))]
+                     [lhs-unwound
                       (map (λ (exp) (unwind exp render-settings))
-                           (maybe-lift left-side #f))]
+                           (maybe-lift lhs-reconstructed #f))]
                      [print-lhs-unwound 
-                      (for-each (λ (x) (printf "left side unwound: ~a\n" (syntax->datum x))) 
-                                left-side-unwound)]
-                     [new-finished-list (reconstruct-all-completed)]
-                     [posn-info (mark-list->posn-info mark-list)]
-                     [new-held (make-held left-side-unwound
-                                          (r:step-was-app? mark-list)
-                                          posn-info)])
-                    (when (pending-rhs?)
-                      (receive-result
-                         (make-before-after-result
-                          (append pending-rhs-finished pending-rhs)
-                          (append new-finished-list left-side-unwound)
-                          'normal 
-                          posn-info
-                          posn-info))
-                      (set! pending-rhs null)
-                      (set! pending-rhs-finished null))
-                    (set! held-finished-list new-finished-list)
-                    (set! held-exp-list new-held)
-                    ))]
-                
+                      (for-each 
+                       (λ (x) (printf "left side (unwound): ~a\n" (syntax->datum x))) 
+                       lhs-unwound)]
+                     [lhs-finished-exps (reconstruct-all-completed)])
+                    (handle-pending-rhs lhs-unwound lhs-finished-exps (compute-posn-info))
+                    (set! held-finished-list lhs-finished-exps)
+                    (set! held-exp-list (create-held lhs-unwound))))]
+
                 [(result-exp-break result-value-break)
                  (let* ([reconstruct 
                         (lambda ()
@@ -290,18 +367,12 @@
                                (maybe-lift
                                 (r:reconstruct-right-side
                                  mark-list returned-value-list render-settings)
-                                #f)))]
-                       [send-result (lambda (result)
-                                      (set! held-exp-list the-no-sexp)
-                                      (receive-result result))]
-                       [tmp1 (printf "right side:\n  ~a\n" 
-                                     (syntax->datum 
-                                      (r:reconstruct-right-side mark-list returned-value-list render-settings)))])
+                                #f)))])
                  (match held-exp-list
                    [(struct skipped-step ())
                      ;; don't render if before step was a skipped-step
                     (printf "held = skipped step\n")
-                    (set! held-exp-list the-no-sexp)]
+                    (reset-held-exp-list)]
                    [(struct no-sexp ())
                     ;; in this case, there was no "before" step, due
                     ;; to unannotated code.  In this case, we make the
@@ -317,80 +388,28 @@
                               'dont-use-ellipses))]
                            [tmp (printf "use ellipses on lhs? = ~a\n" use-lhs-ellipses?)]
                            [new-rhs (reconstruct)]
-                           [new-finished (reconstruct-all-completed)])
+                           [posn-info (compute-posn-info)]
+                           [new-finished-list (reconstruct-all-completed)])
+                      (handle-pending-rhs new-rhs new-finished-list posn-info)
                       (if use-lhs-ellipses?
-                          (begin
-                            (send-result 
-                             (make-before-after-result
-                              ;; NB: this (... ...) IS UNRELATED TO 
-                              ;; THE MACRO IDIOM OF THE SAME NAME
-                              (list #`(... ...))
-                              (append new-finished new-rhs)
-                              'normal
-                              #f #f))
-                            (set! last-rhs new-rhs)
-                            (set! last-rhs-finished new-finished))
-                          (let*
-                              ([print-msg (printf "lhs = no sexp, but not using ellipses\n")]
-                               [lhs-datum (map (λ (x) (syntax->datum x)) last-rhs)]
-                               [rhs-datum (map (λ (x) (syntax->datum x)) new-rhs)]
-                               [print-left (printf "left side = ~a\n" lhs-datum)]
-                               [print-right (printf "right side = ~a\n" rhs-datum)]
-                               [left-equals-right? (equal? lhs-datum rhs-datum)]
-                               [print-l=r 
-                                (and left-equals-right?
-                                     (printf "left and right side are identical, so skipping\n"))])
-                            (when (not left-equals-right?)
-                              (if (no-last-rhs?)
-                                  (begin
-                                    (set! pending-rhs new-rhs)
-                                    (set! pending-rhs-finished new-finished))
-                                  (begin
-                                    (send-result
-                                     (make-before-after-result
-                                      (append last-rhs-finished last-rhs)
-                                      (append new-finished new-rhs)
-                                      'normal
-                                      #f #f))
-                                    (set! last-rhs new-rhs)
-                                    (set! last-rhs-finished new-finished)))))))]
+                          ;; NB: this (... ...) IS UNRELATED TO 
+                          ;; THE MACRO IDIOM OF THE SAME NAME
+                          (send-step (list #'(... ...)) '()
+                                     new-rhs new-finished-list
+                                     'normal #f #f)
+                          (handle-dont-use-ellipses new-rhs new-finished-list posn-info))
+                      (reset-held-exp-list))]
                    [(struct held (held-exps held-step-was-app? held-posn-info))
                     (printf "held = exps\n")
-                    (let*-values
-                        ([(step-kind)
-                          (if (and held-step-was-app?
-                                   (eq? break-kind 'result-exp-break))
-                              'user-application
-                              'normal)]
-                         [(new-held) (reconstruct)]
-                         [(new-finished) (reconstruct-all-completed)]
-                         [(left-exps right-exps)
-                          ;; write this later:
-                          ;; (identify-changed
-                          ;;  (append held-finished-list held-exps)
-                          ;;  (append new-finished-list reconstructed))
-                          (values (append held-finished-list
-                                          held-exps)
-                                  (append new-finished
-                                          new-held))]
-                         [(posn-info) (mark-list->posn-info mark-list)]
-                         [(held-exps-datum) (map (λ (x) (syntax->datum x)) held-exps)]
-                         [(new-held-datum) (map (λ (x) (syntax->datum x)) new-held)]
-                         [(print-left) (printf "left side = ~a\n" held-exps-datum)]
-                         [(print-right) (printf "right side = ~a\n" new-held-datum)]
-                         [(left-equals-right?) (equal? held-exps-datum new-held-datum)]
-                         [(print-left-right-eq) (printf "left-equals-right? = ~a\n" left-equals-right?)])
-                      (when (not left-equals-right?)  ; left and right side can be same, depending on
-                                                     ; how unwound (happens in lazy racket)
-                        (set! last-rhs new-held)
-                        (set! last-rhs-finished new-finished)
-                        (receive-result
-                         (make-before-after-result
-                          left-exps right-exps step-kind 
-                          held-posn-info
-                          posn-info)))
-                      (set! held-exp-list the-no-sexp)
-                      )]))]
+                    (let ([new-rhs (reconstruct)]
+                          [posn-info (compute-posn-info)]
+                          [new-finished-list (reconstruct-all-completed)])
+                      (handle-pending-rhs new-rhs new-finished-list posn-info)
+                      (send-step held-exps held-finished-list
+                                 new-rhs new-finished-list
+                                 (compute-step-kind held-step-was-app?)
+                                 held-posn-info (compute-posn-info))
+                      (reset-held-exp-list))]))]
                 [(double-break)
                  ;; a double-break occurs at the beginning of a let's
                  ;; evaluation.
@@ -402,24 +421,18 @@
                   ([new-finished-list (reconstruct-all-completed)]
                    [reconstruct-result
                     (r:reconstruct-double-break mark-list render-settings)]
-                   [tmp99 (printf "left (before unwind):\n  ~a\n" (syntax->datum (car reconstruct-result)))]
-                   [tmp98 (printf "right (before unwind):\n  ~a\n" (syntax->datum (cadr reconstruct-result)))]
-                   [left-side (map (lambda (exp) (unwind exp render-settings))
+                   [tmp0 (printf "left (before unwind):\n  ~a\n" (syntax->datum (car reconstruct-result)))]
+                   [tmp1 (printf "right (before unwind):\n  ~a\n" (syntax->datum (cadr reconstruct-result)))]
+                   [lhs-unwound (map (lambda (exp) (unwind exp render-settings))
                                    (maybe-lift (car reconstruct-result) #f))]
-                   [right-side (map (lambda (exp) (unwind exp render-settings))
+                   [rhs-unwound (map (lambda (exp) (unwind exp render-settings))
                                     (maybe-lift (cadr reconstruct-result) #t))]
-                   [tmp (map (λ (x) (printf "left side:\n  ~a\n" (syntax->datum x))) left-side)]
-                   [tmp2 (map (λ (x) (printf "right side:\n  ~a\n" (syntax->datum x))) right-side)]
-                   [(context-records highlight)
-                    (find-highlight (car reconstruct-result))])
-                  (let ([posn-info (mark-list->posn-info mark-list)])
-                    (receive-result
-                     (make-before-after-result
-                      (append new-finished-list left-side)
-                      (append new-finished-list right-side)
-                      'normal
-                      posn-info
-                      posn-info))))]
+                   [tmp2 (map (λ (x) (printf "left side (unwound):\n  ~a\n" (syntax->datum x))) lhs-unwound)]
+                   [tmp3 (map (λ (x) (printf "right side (unwound):\n  ~a\n" (syntax->datum x))) rhs-unwound)])
+                  (send-step lhs-unwound new-finished-list
+                             rhs-unwound new-finished-list
+                             'normal
+                             posn-info posn-info))]
                 
                 [(expr-finished-break)
                  (unless (not mark-list)

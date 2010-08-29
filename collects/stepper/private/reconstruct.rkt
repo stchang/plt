@@ -168,7 +168,8 @@
               (stepper-syntax-property expr 'stepper-hide-reduction)))]
       [(result-exp-break)
        ;; skip if clauses that are the result of and/or reductions
-       (let ([and/or-clauses-consumed (stepper-syntax-property (mark-source (car mark-list)) 'stepper-and/or-clauses-consumed)])
+       (let ([and/or-clauses-consumed 
+              (stepper-syntax-property (mark-source (car mark-list)) 'stepper-and/or-clauses-consumed)])
          (and and/or-clauses-consumed
               (> and/or-clauses-consumed 0)))]
       [(normal-break normal-break/values)
@@ -215,8 +216,7 @@
                                            (varref-skip-step? #`id-stx)]
                                           [(#%plain-app . terms)
                                            ; don't halt for proper applications of constructors
-                                           (let (#;[comes-from-lazy? (stepper-syntax-property expr 'comes-from-lazy-app)]
-                                                  [fun-val (lookup-binding mark-list (get-arg-var 0))])
+                                           (let ([fun-val (lookup-binding mark-list (get-arg-var 0))])
                                              (and (procedure? fun-val)
                                                   (procedure-arity-includes? 
                                                    fun-val
@@ -680,69 +680,74 @@
                   [recon-let
                    (lambda ()
                      (with-syntax ([(label ((vars rhs) ...) . bodies) exp])
-                       (let*-2vals ([binding-sets (map syntax->list (syntax->list #'(vars ...)))]
-                                    [binding-list (apply append binding-sets)]
-                                    [glumps 
-                                     (map (lambda (binding-set rhs)
-                                            (make-let-glump
-                                             (map (lambda (binding)
-                                                    (stepper-syntax-property binding
-                                                                     'stepper-lifted-name
-                                                                     (binding-lifted-name mark-list binding)))
-                                                 binding-set)
-                                             rhs
-                                             (map (lambda (arg-binding) 
-                                                     (lookup-binding mark-list arg-binding))
-                                                  binding-set)))
-                                          binding-sets
-                                          (syntax->list #`(rhs ...)))]
-                                    [num-defns-done (lookup-binding mark-list let-counter)]
-                                    [(done-glumps not-done-glumps)
-                                     (n-split-list num-defns-done glumps)]
-                                    [recon-lifted 
-                                     (lambda (names expr)
-                                       #`(#,names #,expr))]
-                                    [before-bindings
-                                     (map
-                                      (lambda (glump)
-                                        (let* ([name-set (let-glump-name-set glump)]
-                                               [rhs-val-set (map (lambda (val)
-                                                                   (if (> (length name-set) 0)
-                                                                       (recon-value val render-settings (car name-set))
-                                                                       (recon-value val render-settings))) 
-                                                                 (let-glump-val-set glump))])
-                                          (if (= (length rhs-val-set) 1)
-                                              #`(#,name-set #,@rhs-val-set)
-                                              #`(#,name-set (values #,rhs-val-set)))))
-                                      done-glumps)]
-                                    [reconstruct-remaining-def
-                                     (lambda (glump)
-                                       (let ([rhs-source (let-glump-exp glump)]
-                                             [rhs-name-set (let-glump-name-set glump)])
-                                         (recon-lifted rhs-name-set
-                                                       (recon-source-current-marks rhs-source))))]
-                                    [after-bindings
-                                     (if (pair? not-done-glumps)
-                                         (if (eq? so-far nothing-so-far)
-                                             (map reconstruct-remaining-def not-done-glumps)
-                                             (cons (recon-lifted (let-glump-name-set (car not-done-glumps)) so-far)
-                                                   (map reconstruct-remaining-def (cdr not-done-glumps))))
-                                         null)]
-                                    [recon-bindings (append before-bindings after-bindings)]
-                                    ;; there's a terrible tangle of invariants here.  Among them:  
-                                    ;; num-defns-done = (length binding-sets) IFF the so-far has a 'stepper-offset' index
-                                    ;; that is not #f (that is, we're evaluating the body...)                                    
-                                    [so-far-offset-index (and (not (eq? so-far nothing-so-far)) 
-                                                                   (stepper-syntax-property so-far 'stepper-offset-index))]
-                                    [bodies (syntax->list (syntax bodies))]
-                                    [rectified-bodies 
-                                     (map (lambda (body offset-index)
-                                            (if (eq? offset-index so-far-offset-index)
-                                                so-far
-                                                (recon-source-expr body mark-list binding-list binding-list render-settings)))
-                                          bodies
-                                          (iota (length bodies)))])
-                         (attach-info #`(label #,recon-bindings #,@rectified-bodies) exp))))])
+                       (let*-2vals 
+                        ([binding-sets (map syntax->list (syntax->list #'(vars ...)))]
+                         [binding-list (apply append binding-sets)]
+                         [glumps 
+                          (map (lambda (binding-set rhs)
+                                 (make-let-glump
+                                  (map (lambda (binding)
+                                         (stepper-syntax-property 
+                                          binding
+                                          'stepper-lifted-name
+                                          (binding-lifted-name mark-list binding)))
+                                       binding-set)
+                                  rhs
+                                  (map (lambda (arg-binding) 
+                                         (lookup-binding mark-list arg-binding))
+                                       binding-set)))
+                               binding-sets
+                               (syntax->list #`(rhs ...)))]
+                         [num-defns-done (lookup-binding mark-list let-counter)]
+                         [(done-glumps not-done-glumps)
+                          (n-split-list num-defns-done glumps)]
+                         [recon-lifted 
+                          (lambda (names expr)
+                            #`(#,names #,expr))]
+                         [before-bindings
+                          (map
+                           (lambda (glump)
+                             (let* ([name-set (let-glump-name-set glump)]
+                                    [rhs-val-set 
+                                     (map 
+                                      (lambda (val)
+                                        (if (> (length name-set) 0)
+                                            (recon-value val render-settings (car name-set))
+                                            (recon-value val render-settings))) 
+                                      (let-glump-val-set glump))])
+                               (if (= (length rhs-val-set) 1)
+                                   #`(#,name-set #,@rhs-val-set)
+                                   #`(#,name-set (values #,rhs-val-set)))))
+                           done-glumps)]
+                         [reconstruct-remaining-def
+                          (lambda (glump)
+                            (let ([rhs-source (let-glump-exp glump)]
+                                  [rhs-name-set (let-glump-name-set glump)])
+                              (recon-lifted rhs-name-set
+                                            (recon-source-current-marks rhs-source))))]
+                         [after-bindings
+                          (if (pair? not-done-glumps)
+                              (if (eq? so-far nothing-so-far)
+                                  (map reconstruct-remaining-def not-done-glumps)
+                                  (cons (recon-lifted (let-glump-name-set (car not-done-glumps)) so-far)
+                                        (map reconstruct-remaining-def (cdr not-done-glumps))))
+                              null)]
+                         [recon-bindings (append before-bindings after-bindings)]
+                         ;; there's a terrible tangle of invariants here.  Among them:  
+                         ;; num-defns-done = (length binding-sets) IFF the so-far has a 'stepper-offset' index
+                         ;; that is not #f (that is, we're evaluating the body...)                                    
+                         [so-far-offset-index 
+                          (and (not (eq? so-far nothing-so-far)) 
+                               (stepper-syntax-property so-far 'stepper-offset-index))]
+                         [bodies (syntax->list (syntax bodies))]
+                         [rectified-bodies 
+                          (map (lambda (body offset-index)
+                                 (if (eq? offset-index so-far-offset-index)
+                                     so-far
+                                     (recon-source-expr body mark-list binding-list binding-list render-settings)))
+                               bodies
+                               (iota (length bodies)))])
+                        (attach-info #`(label #,recon-bindings #,@rectified-bodies) exp))))])
              (if (stepper-syntax-property exp 'stepper-fake-exp)
                  
                  (kernel:kernel-syntax-case exp #f
@@ -761,80 +766,83 @@
                    [else
                     (error 'recon-inner "unexpected fake-exp expression: ~a" (syntax->datum exp))])
                  
-                 (kernel:kernel-syntax-case exp #f 
-                                            ; variable references
-                                            [id
-                                             (identifier? (syntax id))
-                                             (if (eq? so-far nothing-so-far)
-                                                 (recon-source-current-marks exp)
-                                                 (error 'recon-inner "variable reference given as context: ~a" exp))]
+                 (kernel:kernel-syntax-case 
+                  exp #f 
+                  ; variable references
+                  [id
+                   (identifier? (syntax id))
+                   (if (eq? so-far nothing-so-far)
+                       (recon-source-current-marks exp)
+                       (error 'recon-inner "variable reference given as context: ~a" exp))]
                                             
-                                            [(#%top . id)
-                                             (if (eq? so-far nothing-so-far)
-                                                 (recon-source-current-marks exp)
-                                                 (error 'recon-inner "variable reference given as context: ~a" exp))]
-                                            
-                                            ; applications
-                                            [(#%plain-app . terms)
-                                             (attach-info
-                                              (match-let* 
-                                                  ([sub-exprs (syntax->list (syntax terms))]
-                                                   [arg-temps (build-list (length sub-exprs) get-arg-var)]
-                                                   [arg-vals (map (lambda (arg-temp) 
-                                                                    (lookup-binding mark-list arg-temp))
-                                                                  arg-temps)]
-                                                   [(vector evaluated unevaluated) 
-                                                    (split-list (lambda (x) (eq? (cadr x) *unevaluated*))
-                                                                (zip sub-exprs arg-vals))]
-                                                   [rectified-evaluated 
-                                                    (map (lx (recon-value _ render-settings)) 
-                                                         (map cadr evaluated))])
-                                                (case (mark-label (car mark-list))
-                                                  ((not-yet-called)
-                                                   (if (null? unevaluated)
-                                                       #`(#%plain-app . #,rectified-evaluated)
-                                                       ; STC added let
-                                                       (letrec
-                                                           ([current-subterm
-                                                             (caar unevaluated)]
-                                                            [maybe-extract-binding
-                                                             (λ (e)
-                                                               (cond
-                                                                 [(identifier? e) e]
-                                                                 [(stepper-syntax-property e 'stepper-skipto) 
-                                                                  =>
-                                                                  (λ (skipto-fns) 
-                                                                    (maybe-extract-binding
-                                                                     (foldl 
-                                                                      (λ (f res) 
-                                                                        ((eval f) res)) 
-                                                                      e 
-                                                                      skipto-fns)))]))]
-                                                            [current-binding
-                                                             (maybe-extract-binding current-subterm)]
-                                                            [current-val
-                                                             (and
-                                                              current-binding
-                                                              (lookup-binding mark-list current-binding))]
-                                                            [add-to-promise-table
-                                                             (hash-set! partially-evaluated-promises
-                                                                        current-val so-far)])
-                                                       #`(#%plain-app 
-                                                          #,@rectified-evaluated
-                                                          #,so-far 
-                                                          #,@(map recon-source-current-marks (cdr (map car unevaluated))))
-                                                          ) ))
-                                                  ((called)
-                                                   (let ([mark-src (mark-source (car mark-list))])
-                                                   (stepper-syntax-property
-                                                    (if (eq? so-far nothing-so-far)
-                                                        (datum->syntax #'here `(,#'#%plain-app ...)) ; in unannotated code ... can this occur?
-                                                        (datum->syntax #'here `(,#'#%plain-app ... ,so-far ...)))
-                                                    'stepper-args-of-call 
-                                                    rectified-evaluated)))
-                                                  (else
-                                                   (error 'recon-inner "bad label (~v) in application mark in expr: ~a" (mark-label (car mark-list)) exp))))
-                                              exp)]
+                  [(#%top . id)
+                   (if (eq? so-far nothing-so-far)
+                       (recon-source-current-marks exp)
+                       (error 'recon-inner "variable reference given as context: ~a" exp))]
+                  
+                  ; applications
+                  [(#%plain-app . terms)
+                   (attach-info
+                    (match-let* 
+                        ([sub-exprs (syntax->list (syntax terms))]
+                         [arg-temps (build-list (length sub-exprs) get-arg-var)]
+                         [arg-vals (map (lambda (arg-temp) 
+                                          (lookup-binding mark-list arg-temp))
+                                        arg-temps)]
+                         [(vector evaluated unevaluated) 
+                          (split-list (lambda (x) (eq? (cadr x) *unevaluated*))
+                                      (zip sub-exprs arg-vals))]
+                         [rectified-evaluated 
+                          (map (lx (recon-value _ render-settings)) 
+                               (map cadr evaluated))])
+                      (case (mark-label (car mark-list))
+                        ((not-yet-called)
+                         (if (null? unevaluated)
+                             #`(#%plain-app . #,rectified-evaluated)
+                             ; STC added let
+                             (letrec
+                                 ([current-subterm
+                                   (caar unevaluated)]
+                                  [maybe-extract-binding
+                                   (λ (e)
+                                     (cond
+                                       [(identifier? e) e]
+                                       [(stepper-syntax-property e 'stepper-skipto) 
+                                        =>
+                                        (λ (skipto-fns) 
+                                          (maybe-extract-binding
+                                           (foldl 
+                                            (λ (f res) 
+                                              ((eval f) res)) 
+                                            e 
+                                            skipto-fns)))]
+                                       [else #f]))]
+                                  [current-binding
+                                   (maybe-extract-binding current-subterm)]
+                                  [current-val
+                                   (and
+                                    current-binding
+                                    (lookup-binding mark-list current-binding))]
+                                  [add-to-promise-table
+                                   (when current-binding
+                                     (hash-set! partially-evaluated-promises
+                                                current-val so-far))])
+                               #`(#%plain-app 
+                                  #,@rectified-evaluated
+                                  #,so-far 
+                                  #,@(map recon-source-current-marks (cdr (map car unevaluated))))
+                               ) ))
+                        ((called)
+                         (let ([mark-src (mark-source (car mark-list))])
+                           (stepper-syntax-property
+                            (if (eq? so-far nothing-so-far)
+                                (datum->syntax #'here `(,#'#%plain-app ...)) ; in unannotated code ... can this occur?
+                                (datum->syntax #'here `(,#'#%plain-app ... ,so-far ...)))
+                            'stepper-args-of-call 
+                            rectified-evaluated)))
+                        (else
+                         (error 'recon-inner "bad label (~v) in application mark in expr: ~a" (mark-label (car mark-list)) exp))))
+                    exp)]
                                             
                                             ; define-struct 
                                             ;               

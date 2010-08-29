@@ -46,11 +46,16 @@
 
   (define (recur-on-pieces stx settings)
      (if (pair? (syntax-e stx))
-         (let ([hint (stepper-syntax-property stx 'stepper-hint)])
-           (if (procedure? hint)
-               (hint stx (lambda (stx) (recur-on-pieces stx settings)))
-               (datum->syntax
-                stx (syntax-pair-map (syntax-e stx) (lambda (stx) (unwind stx settings))) stx stx)))
+         (let ([unwind-value? 
+                (stepper-syntax-property stx 'unwind-value)]
+               [hint (stepper-syntax-property stx 'stepper-hint)])
+           (cond
+             [unwind-value? (fall-through stx settings)]
+             [(procedure? hint)
+              (hint stx (lambda (stx) (recur-on-pieces stx settings)))]
+             [else
+              (datum->syntax
+               stx (syntax-pair-map (syntax-e stx) (lambda (stx) (unwind stx settings))) stx stx)]))
          stx))
    
    (define (fall-through stx settings)

@@ -275,7 +275,9 @@
                 [g (if define-name
                        (stepper-syntax-property #'f 'use-inferred-name define-name)
                       #'f)])
-         (unwind-recur #`(#,g x ...)))]))
+         (unwind-recur #`(#,g x ...)))]
+        ; for some reason, this unwinding fn gets called on finished val, so handle it here
+        [_ (unwind-recur (stepper-syntax-property stx 'unwind-value #t))]))
 ;           (unwind-recur #'(f x ...)))]))
     (syntax-case stx ()
       [(_ f x ...)
@@ -363,8 +365,8 @@
               (syntax/loc stx (f x ...))]
              [(toplevel?)
               ;; toplevel expressions are always forced
-              (stepper-hide-operator
-               (syntax/loc stx ((toplevel-forcer) (!app f x ...))))]
+;              (stepper-hide-operator
+               (syntax/loc stx ((toplevel-forcer) (!app f x ...)))]
              [else (syntax/loc stx (~!app f x ...))])]))
 
   (define (!*apply f . xs)
