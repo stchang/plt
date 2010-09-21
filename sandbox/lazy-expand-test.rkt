@@ -1,14 +1,26 @@
 ;(module test lazy
 ; eli's example
-;(define (f x) (second (list (/ 9 0) (+ (+ x x) x) (car '()))))
+;(define (h x) (+ x (second (list (/ 9 0) (+ x x) (car '())))))
+;(h (+ 1 2))
 
-(car (list (lambda (x) x)))
+; (* 3 (second (map (lambda (n) (/ 1 n)) (list 0 1 2))))
+(! (+ 3 4))
+((lambda (x y) (* x x)) (+ 1 2) (+ 3 4))
+
+;(! (if #f 2 3))
+;(cadr (list 1 (if (+ 4 5) 2 3)))
+
+;(for-each (lambda (x) x) '(1 2 3))
+
+;(define ones (cons 1 ones))
+;(define (f x) x)
+;(f ones)
 
 ;(define (f x) (+ x (+ x x)))
 ;(define (g y) (+ (+ y y) y))
 ;(+ (f (+ 1 2)) (g (+ 3 4)))
 ;(f (+ (+ 1 2) (+ 3 4)))
-;)
+;)  
 
  
  

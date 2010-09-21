@@ -1983,5 +1983,166 @@ TODO tomorrow:
 - in model.rkt::break, some abstraction of code is needed
   - DONE 8/28/2010
 - figure out how to display lambdas (and thus promises) in lists using the closure-table method instead of using the pconvert output (need some kind of recursive call in recon-value) (beginning student languages suffer from this also)
+  - DONE 8/30/2010
+  - TODO: need to refer to render settings when creating list syntax in recursive calls, right now just using #'(list ...) for all cases
 - when pending rhs is handled, last rhs should get set
   - DONE 8/28/2010
+
+--------------------------------------------------------------------------------
+----- 8/30/2010 - LAPTOP
+--------------------------------------------------------------------------------
+BUG: pending-rhs-held and last-rhs-held getting reset on every call to break
+CAUSE: in model.rkt::go::break, accidentally put pending-rhs-held and last-rhs-held inside break fn, so they were getting reset to null on every call
+SOLUTION: move out of break fn, to go fn
+
+BUG: when there is more than 1 expr in the program, only the last one (the one being evaluated) shows up in the stepper
+CAUSE: finished value not showing up because there was no exp-finished-break; this was because, in annotate/module-top-level, there was no case to handle top level applications for lazy programs
+SOLUTION: added case in annotate/module-top-level that matches top level lazy apps, and inserted exp-finished-break
+
+
+
+CODE CHANGE: in reconstruct.rkt::skip-redex-step?, in #%plain-app case, removed skipping of list and cons application, and struct-constructors, because this functionality is already handled, more generally, by my duplicate steps check in model.rkt::go::break
+
+CODE CHANGE: set last-rhs-held variable, even when lhs = rhs
+  - this prevents us from missing a step; and if we werent going to miss a step, the last rhs should be the same as the one we are setting anyways
+  - this causes the lazy stepper to lose the variable (for fns) in an application; all applications will have the actual lambda there now
+    - this wasnt working fully anyways
+    - TODO: look into fixing this at lambda reconstruction time (ie - in recon-value), instead of the way it's done now, at unwind time using 'use-inferred-name property
+
+
+--------------------------------------------------------------------------------
+----- 9/1/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+BUG: ellipses still show up in lazy racket programs, when using list fns like cadr
+CAUSE:
+SOLUTION:
+ - add 'dont-use-ellipses property around application (body of lambda) in !*app
+ - check for ellipses in rhs and for dont-use-ellipses property in send-step fn (in model.rkt::go::break)
+
+BUG: (related to above bug) ellipses still show up in nested applications
+CAUSE: currently not recursively checking for ellipses
+SOLUTION: recursively check for ellipses in model.rkt::go:break::rhs-has-ellipses?
+
+
+
+--------------------------------------------------------------------------------
+----- 9/2/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+BUG: when there is more than 1 expr in the program, previous exprs that were strict applications dont show up after they are evaluated
+CAUSE: clause for lazy racket added to annotate/module-top-level only matches apps with toplevel-forcer
+SOLUTION: add 'comes-from-lazy property around strict top level lazy racket apps, and then check for it in annotate/module-top-level -- need to remove 'comes-from-lazy property check in reconstruct.rkt::hide-completed?
+RELATED BUG: top level constants still dont show up
+SOLUTION CHANGE: just put in an exp-finished-break for all top level exprs not already matched in annotate/module-top-level; beginner programs shouldnt be affected because they all have the call-with-values/do-print structure at top level
+  - clause needed in annotate/top-level now, just call annotate/module-top-level by default for everything -- no more error msg, TOOD: check that this doesnt break any existing tests
+
+BUG: if last step has lhs ellipses, and is only step, then there is no last-rhs to use, so last step doesnt show up
+CAUSE: all other steps were skipped
+SOLUTION: set lhs of first step with ellipses (so lhs still doesnt have ellipses), to last-rhs-held
+  - this should not affect other programs bc lhs of first ellipses step should be same as last-rhs-held anyways
+
+BUG: lazy if doesnt step correctly
+CAUSE: not annotated
+SOLUTION: rewrite lazy if to use hidden-~ and hidden-!
+  - TODO: do we still want lazy if as a function? -- may not work in stepper
+
+BUG: dont want to skip over steps with ellipses that come from force application
+CAUSE: currently, exprs with 'dont-use-ellipses property, get skipped
+SOLUTION: add new property 'remove-ellipses, that doesnt get skipped, but ellipses are removed
+  - need to also check for this property when deciding whether to remove lhs ellipses on result-exp-break
+
+
+
+--------------------------------------------------------------------------------
+----- 9/8/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+WRITING TESTS:
+- broke some existing stepper tests
+
+BUG: printing in expr-finished-break case in model.rkt::go::break broke caused error sometimes when printing getter
+CAUSE: there is no getter when expression has 'stepper-define-struct-hint property
+SOLUTION: check for 'stepper-define-struct-hint property before printing getter
+
+BUG: lam-let test fails, error: given 0 args, expected 1
+CAUSE: in annotate.rkt::annotate::annotate/inner::let-abstraction let-clauses (part of exp-finished-clauses) wasnt being wrapped in thunk - error was raised when (non)thunks were being forced (I accidentally commented out this code when I was trying something)
+SOLUTION: wrap let-clauses in thunks
+
+BUG: lam-let test generates "undefined syntax-e identifier" error
+CAUSE: my maybe-extract-binding fn is failing on eval when in the student languages -- need to parameterize eval somehow???
+SOLUTION: just dont use eval and just use case to match symbolic fn name to actual fn
+
+BUG: empty prints as (list)
+CAUSE: in recon-value, all lists are rendered as (list ...)
+SOLUTION: handle empty list separately in recon-value
+
+BUG: some printf has problems in check-expect test because a string like "C:\docu~1" gets printed and printf doesnt like the "~1"
+
+
+--------------------------------------------------------------------------------
+----- 9/15/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+BUG: some printf has problems in check-expect test because a string like "C:\docu~1" gets printed and printf doesnt like the "~1"
+CAUSE: test-engine/test-engine.scm has printf where string parameter is generated, ie - (printf (format-src dest))
+SOLUTION: remove tildes in output of path->string. Used this fn in place of path->string
+
+    (define (path->string-no-tilde path)
+      (regexp-replace* #rx"~" (path->string path) ""))
+SOLUTION2: John just changed to (printf "~a") instead of using the string directly as the printf arg
+
+--------------------------------------------------------------------------------
+----- 9/20/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+- debugging the stepper test framework:
+
+~~~~~ Summary of model:go function ~~~~~
+args:
+  program-expander
+  receive-result
+  render-settings
+  show-lambdas?
+  lang-level
+  disable-err-handling?
+
+- calls program-expander with 2 args:
+  - init: thunk that sets error display handling 
+  - iter: fn with two args: expanded and continue-thunk
+      - resets special vals 
+      - if expanded == eof, call receive-result with FINISHED token
+      - else 1) call eval-syntax with annotated version of expanded
+             2) force continue-thunk
+
+Different program-expander fns:
+*** from stepper test framework ***
+- forces init
+- 1) writes test prog to file
+  2) reads with read-syntax
+  3) expands with expand-teaching-program
+  4) expands normally
+  5) calls iter with expanded and a thunk that makes the same (???) call
+     - i think the call looks the same but the next call will read the next part of the program
+
+*** from stepper ***
+- calls iter with expanded program and thunk that repeats the same loop (I think this is the same issue as the stepper test framework program-expander, the loop probably reads the next part of the program on each iteration)
+
+
+BUG: stepper output in test framework is not the same as normal stepper
+CAUSE: racket/private/promise.rkt does not get added to namespace for some reason, so call to promise? in reconstruct.rkt::extract-if-struct returns #f for promise values (I dont know why it doesnt error)
+SOLUTION: add racket/private/promise module to namespace using namespace-attach-module:
+
+(define (run-lazy-test name)
+  (let ([ns (make-base-namespace)])
+    (namespace-attach-module (current-namespace) 'racket/private/promise ns)
+    (parameterize ([current-namespace ns])
+      (run-test name))))
+
+
+BUG: stepper output in test framework doesnt print function names correctly, like force or !
+CAUSE: ll-model for lazy language (in tests/stepper/language-level-model.rkt) was using print-convert and not stepper/stepper-tool.rkt::stepper-print-convert in its render-settings (stepper/private/model-settings.rkt)
+  - stepper-print-convert has a hack that uses the object-name of a procedure if it exists, before passing its arg off the print-convert
+SOLUTION: copy the hack so that the lazy ll-model also uses stepper-print-convert
+  - it turns out that the hack was already copied so the beginner languages could use it
+  - stepper/private/model-settings.rkt::make-fake-render-to-sexp has the hack
