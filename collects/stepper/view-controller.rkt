@@ -76,7 +76,11 @@
      (lambda ()
        (let loop ()
          (let* ([new-result (async-channel-get view-channel)]
-                [new-step (format-result new-result)])
+                [new-step (format-result new-result)]
+                ;STC add
+                [ed (step-text new-step)]
+                [step-num (length view-history)]
+                )
            (set! view-history (append view-history (list new-step)))
            (set! num-steps-available (length view-history))
            ;; this is only necessary the first time, but it's cheap:

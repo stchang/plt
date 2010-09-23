@@ -586,10 +586,6 @@
                        (let*-2vals
                         ([binding-sets (map syntax->list (syntax->list #'((var ...) ...)))]
                          [binding-list (apply append binding-sets)]
-                         #;[maybe-mark-as-from-lazy 
-                          (λ (x) (if comes-from-lazy?
-                                     (stepper-syntax-property x 'comes-from-lazy #t)
-                                     x))]
                          [vals (syntax->list #'(val ...))]
                          [lifted-var-sets (map (lx (map get-lifted-var _)) binding-sets)]
                          [lifted-vars (apply append lifted-var-sets)]
@@ -598,10 +594,7 @@
                          [bodies-list (syntax->list #'bodies)]
                          [(annotated-body free-varrefs-body)
                           (if (= (length bodies-list) 1)
-                              (let-body-recur/single 
-                               ;(maybe-mark-as-from-lazy (car bodies-list))
-                               (car bodies-list)
-                               binding-list)
+                              (let-body-recur/single (car bodies-list) binding-list)
                               ;; oh dear lord, we have to unfold these like an application:
                               (let unroll-loop ([bodies-list bodies-list] [outermost? #t])
                                 (cond [(null? bodies-list)
@@ -656,9 +649,9 @@
                            (with-syntax  ([(_ let-clauses . dc) stx]
                                           [((lifted-var ...) ...) lifted-var-sets])
                              (with-syntax ([(exp-thunk ...) 
-                                            ;(map 
-                                             ;(lx (lambda () (maybe-mark-as-from-lazy _)))
-                                             (syntax->list #`let-clauses)])
+                                            (map 
+                                             (lx (lambda () _))
+                                             (syntax->list #`let-clauses))])
                                #`(#%plain-app 
                                   list 
                                   (#%plain-app
@@ -1113,12 +1106,12 @@
     (syntax? . -> . syntax?)
     (lambda (exp)
       (syntax-case exp (module #%plain-module-begin let-values dynamic-wind 
-                         #%plain-lambda #%plain-app define-values)
+                         #%plain-lambda #%plain-app define-values #%require)
         [(module name lang
            (#%plain-module-begin . bodies))
          #`(module name lang (#%plain-module-begin #,@(map annotate/module-top-level (syntax->list #`bodies))))]
         ; the 'require' form is used for the test harness
-        [(require module-name) exp]
+        [(#%require module-name) exp] ; STC add #%require to literals list
         ; the 'dynamic-require' form is used by the actual expander 
         [(let-values ([(done-already?) . rest1])
            (#%plain-app dynamic-wind
@@ -1128,6 +1121,7 @@
          exp]
         [(define-values (ids ...) bodies) (annotate/module-top-level exp)]
         [(#%plain-app . terms) (annotate/module-top-level exp)] ; STC
+        [else (annotate/module-top-level exp)] ; STC
         [else
          (error `annotate/top-level "unexpected top-level expression: ~a\n"
                 (syntax->datum exp))
@@ -1221,7 +1215,7 @@
              [any
               (stepper-syntax-property exp 'stepper-test-suite-hint)
               (top-level-annotate/inner (top-level-rewrite exp) exp #f)]
-             [(#%plain-app (#%plain-app toplevel-forcer) operand)
+             [(#%plain-app (#%plain-app toplevel-forcer) operand) ; STC add
               (stepper-recertify
                #`(#%plain-app
                   call-with-values
@@ -1239,6 +1233,22 @@
                      values))))
                exp)] ; STC
              [else
+              (stepper-recertify
+               #`(#%plain-app
+                  call-with-values
+                  (#%plain-lambda 
+                   () 
+                   #,(top-level-annotate/inner (top-level-rewrite exp) exp #f))
+                  (#%plain-lambda 
+                   vals
+                   (begin
+                     (#,exp-finished-break
+                      (#%plain-app list (#%plain-app list #,(lambda () exp) #f (#%plain-lambda () vals))))
+                     (#%plain-app 
+                     call-with-values (#%plain-lambda () vals)
+                     values))))
+               exp)] ; STC
+             #;[else
               (top-level-annotate/inner (top-level-rewrite exp) exp #f)
               ;; the following check can't be permitted in the presence of things like test-suite cases
               ;; which produce arbitrary expressions at the top level.

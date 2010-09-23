@@ -4,8 +4,16 @@
 ;(h (+ 1 2))
 
 ; (* 3 (second (map (lambda (n) (/ 1 n)) (list 0 1 2))))
-(! (+ 3 4))
-((lambda (x y) (* x x)) (+ 1 2) (+ 3 4))
+
+;(define (f x) (+ x x))
+;(f (f (+ 1 2)))
+
+;(cadr (cons (/ 1 0) (cons (+ 1 2) '())))
+
+;(define (f x) (+ (cadr x) (car x)))
+;(f (take 2 (list (+ 1 2) (+ 3 4))))
+
+;(cdr (cons (/ 1 0) (+ 1 2)))
 
 ;(! (if #f 2 3))
 ;(cadr (list 1 (if (+ 4 5) 2 3)))

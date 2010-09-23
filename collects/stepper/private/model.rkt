@@ -105,15 +105,28 @@
   
   ;; the "held" variables are used to store the "before" step.
   (define held-exp-list the-no-sexp)
-  (define (reset-held-exp-list)
-    (set! held-exp-list the-no-sexp))
   
   (define held-finished-list null)
-  
 
+  (define (reset-held-exp-list)
+    (set! held-exp-list the-no-sexp)
+    (set! held-finished-list null))
   
-
-                 
+  ; the rhs of the last sent step; for use when there is ellipses on lhs
+  (define last-rhs-held null)
+  (define (no-last-rhs?) (null? last-rhs-held))
+  (define last-rhs-finished null)
+  
+  
+  ; there can be a pending rhs if we have a step where the lhs is ellipses 
+  ; and there was no previous rhs to use
+  (define pending-rhs-held null)
+  (define (pending-rhs?) (not (null? pending-rhs-held)))
+  (define pending-rhs-finished null)               
+  
+  (define (reset-pending-rhs)
+    (set! pending-rhs-held null)
+    (set! pending-rhs-finished null))
   
   ;; highlight-mutated-expressions :
   ;;   ((listof (list/c syntax? syntax?)) (listof (list/c syntax? syntax?))
@@ -211,45 +224,99 @@
         ; compares the lhs and rhs of a step (lists of syntaxes)
         ; and returns true if the underlying datums are equal
         (define (step=? lhs rhs)
-          (let ([l=r? (equal? (map syntax->datum lhs)
-                              (map syntax->datum rhs))])
-            (when l=r?
-              (printf "left side = right side, skipping this step\n"))
-            l=r?))
+          (equal? (map syntax->datum lhs)
+                  (map syntax->datum rhs)))
  
-        ; the rhs of the last sent step; for use when there is ellipses on lhs
-        (define last-rhs-held null)
-        (define (no-last-rhs?) (null? last-rhs-held))
-        (define last-rhs-finished null)
+
         
         ; sends a step to the stepper, if lhs and rhs are not the same
         (define (send-step lhs-exps lhs-finished-exps rhs-exps rhs-finished-exps
                            step-kind lhs-posn-info rhs-posn-info)
           (let*
-              ([printf-msg (printf "sending step . . . \n")]
+              ([printf-msg (printf "maybe sending step ... \n")]
                [print-left 
                 (printf "left side = ~a\n" 
                         (map syntax->datum lhs-exps))]
                [print-right 
                 (printf "right side = ~a\n" 
                         (map syntax->datum rhs-exps))]
-               [left-equals-right? (step=? lhs-exps rhs-exps)])
-            (when (not left-equals-right?)
-              (receive-result
-               (make-before-after-result
-                (append lhs-finished-exps lhs-exps)
-                (append rhs-finished-exps rhs-exps)
-                step-kind
-                lhs-posn-info rhs-posn-info))
-              (set! last-rhs-held (create-held rhs-exps))
-              (set! last-rhs-finished rhs-finished-exps))))
+               [left-equals-right? (step=? lhs-exps rhs-exps)]
+               [rhs-uses-ellipses? (expr-has-ellipses? (car rhs-exps))]
+               [print-rhs-uses-ellipses
+                (and rhs-uses-ellipses?
+                     (printf "rhs has ellipses\n"))]
+               [2nd-mark-is-called (and (>= (length mark-list) 2)
+                                        (eq? (mark-label (cadr mark-list)) 'called))]
+               [dont-use-ellipses? (and 2nd-mark-is-called
+                                        (stepper-syntax-property 
+                                         (mark-source (cadr mark-list))
+                                         'dont-use-ellipses))]
+               [remove-ellipses? (and 2nd-mark-is-called
+                                      (stepper-syntax-property 
+                                       (mark-source (cadr mark-list))
+                                       'remove-ellipses))])
+            (if (and rhs-uses-ellipses? dont-use-ellipses?)
+                ; dont send step
+                ; dont store last-rhs unless it's the first ellipses step
+                ; (usually, storing the last-rhs is unnecessary because it will
+                ;  be the same as what's already stored, but this is needed 
+                ;  when the ellipses step is the first step)
+                (let
+                    ([lhs-uses-ellipses? (expr-has-ellipses? (car lhs-exps))])
+                  (printf "dont-use-ellipses property = #t, skipping step\n")
+                  (if lhs-uses-ellipses?
+                      (printf "(last-rhs not set)\n")
+                      (begin
+                        (set! last-rhs-held (create-held lhs-exps))
+                        (set! last-rhs-finished lhs-finished-exps))))
+                (begin
+                  (when (and rhs-uses-ellipses? remove-ellipses?)
+                    (print "removing ellipses\n")
+                    (set! lhs-exps (map remove-ellipses lhs-exps))
+                    (set! rhs-exps (map remove-ellipses rhs-exps))
+                    (printf "left side = ~a\n" (map syntax->datum lhs-exps))
+                    (printf "right side = ~a\n" (map syntax->datum rhs-exps)))
+                  (let
+                      ([left-equals-right? (step=? lhs-exps rhs-exps)])
+                    (when (not (and left-equals-right?
+                                    (printf "lhs = rhs, so skipping\n")))
+                      (receive-result
+                       (make-before-after-result
+                        (append lhs-finished-exps lhs-exps)
+                        (append rhs-finished-exps rhs-exps)
+                        step-kind
+                        lhs-posn-info rhs-posn-info))
+                      (printf "step sent\n"))
+                    (set! last-rhs-held (create-held rhs-exps))
+                    (set! last-rhs-finished rhs-finished-exps)
+                    (printf "last-rhs set\n"))))))
         
+        (define (expr-has-ellipses? exp)
+          (syntax-case exp ()
+            [(dots1 body dots2)
+             (and (eq? (syntax->datum #'dots1) '...)
+                  (eq? (syntax->datum #'dots2) '...))
+             #t]
+            [(terms ...)
+             (let ([terms (syntax->list #'(terms ...))])
+               (ormap expr-has-ellipses? terms))]             
+            [_ #f]))
+        
+        (define (remove-ellipses exp)
+          (syntax-case exp ()
+            [(dots1 body dots2)
+             (and (eq? (syntax->datum #'dots1) '...)
+                  (eq? (syntax->datum #'dots2) '...))
+             #'body]
+            [(term . rest)
+             #;(let ([terms (syntax->list #'(terms ...))])
+               (map expr-has-ellipses? terms))
+             (let ([term-no-ellipses (remove-ellipses #'term)])
+               #`(#,term-no-ellipses #,@(remove-ellipses #'rest)))]
+            [_ exp]))
+          
        
-        ; there can be a pending rhs if we have a step where the lhs is ellipses 
-        ; and there was no previous rhs to use
-        (define pending-rhs-held null)
-        (define (pending-rhs?) (not (null? pending-rhs-held)))
-        (define pending-rhs-finished null)
+
         
         (define (handle-dont-use-ellipses current-exps current-finished-exps posn-info)
           (printf "lhs = no sexp, but not using ellipses\n")
@@ -259,7 +326,8 @@
           ;    and a step will be entered on the next normal-break
           (if (no-last-rhs?)
               (begin
-                (printf "no last rhs, so store exps as pending\n")
+                (printf "no last rhs, so store exps as pending:\n")
+                (map (λ (x) (printf "  ~a\n" (syntax->datum x))) current-exps)
                 (set! pending-rhs-held (create-held current-exps))
                 (set! pending-rhs-finished current-finished-exps))
               (match last-rhs-held
@@ -271,14 +339,16 @@
         
 
          (define (handle-pending-rhs current-exps current-finished-exps current-posn-info)
-          (printf "checking pending rhs . . .\n")
-          (when (pending-rhs?)
-            (match pending-rhs-held
-              [(struct held (pending-rhs held-step-was-app? held-posn-info))
-               (send-step pending-rhs pending-rhs-finished
-                          current-exps current-finished-exps
-                          'normal
-                          held-posn-info current-posn-info)])))
+          (printf "checking pending rhs ...\n")
+          (if (pending-rhs?)
+              (match pending-rhs-held
+                [(struct held (pending-rhs held-step-was-app? held-posn-info))
+                 (send-step pending-rhs pending-rhs-finished
+                            current-exps current-finished-exps
+                            'normal
+                            held-posn-info current-posn-info)
+                 (reset-pending-rhs)])
+              (printf "no pending rhs\n")))
         
         
         (define (reconstruct-all-completed)
@@ -383,9 +453,12 @@
                     (printf "held = no sexp\n")
                     (let* ([use-lhs-ellipses?
                             (not
-                             (stepper-syntax-property 
-                              (mark-source (car mark-list))
-                              'dont-use-ellipses))]
+                             (or (stepper-syntax-property 
+                                  (mark-source (car mark-list))
+                                  'dont-use-ellipses)
+                                 (stepper-syntax-property
+                                  (mark-source (car mark-list))
+                                  'remove-ellipses)))]
                            [tmp (printf "use ellipses on lhs? = ~a\n" use-lhs-ellipses?)]
                            [new-rhs (reconstruct)]
                            [posn-info (compute-posn-info)]
@@ -442,11 +515,16 @@
                  ;; (list/c source lifting-index getter)) this will now include
                  ;; define-struct breaks, for which the source is the source
                  ;; and the getter causes an error.
+
                  (for-each 
-                  (λ (x) (printf "add to finished:\n  source:~a\n  index:~a\n  getter:~a\n" 
-                                 (syntax->datum ((car x)))
-                                 (second x)
-                                 ((third x)))) 
+                  (λ (x) 
+                    (printf "add to finished:\n")
+                    (printf "  source: ~a\n" (syntax->datum ((car x))))
+                    (printf "  index: ~a\n" (second x))
+                    (printf "  getter: ")
+                    (if (stepper-syntax-property ((car x)) 'stepper-define-struct-hint)
+                        (printf "no getter for term with stepper-define-struct-hint property\n")
+                        (printf "~a\n" ((third x)))))
                   returned-value-list)
                  (for-each (lambda (source/index/getter)
                              (apply add-to-finished source/index/getter))
@@ -461,6 +539,15 @@
         (lambda (stx dont-care) (list stx))))
   
   (define (step-through-expression expanded expand-next-expression)
+    #;(printf "NAMESPACE BINDINGS:\n")
+    #;(for-each 
+     (λ (s) 
+       (printf 
+        "_ ~a = ~a _" 
+        s 
+        (namespace-variable-value s #t (λ () "syntax"))
+        ))
+     (namespace-mapped-symbols))
     (let* ([annotated (a:annotate expanded break show-lambdas-as-lambdas?
                                   language-level)])
       (parameterize ([test-engine:test-silence #t])

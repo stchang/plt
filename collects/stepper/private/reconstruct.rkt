@@ -106,7 +106,44 @@
           [else f]))
   
 
- ;               
+  (define (print-render-settings rs)
+    ; try 1
+    #;(define (print-field field)
+        (let ([fieldstr (symbol->string field)])
+          (printf (string-append fieldstr " = ~a\n")
+                  (eval `(,(string->symbol (string-append "render-settings-" fieldstr))
+                          ,rs) ns))))
+    ; try 2
+    #;(define-syntax (print-field stx)
+      (syntax-case stx ()
+        [(_ field) 
+         #`(printf (string-append (symbol->string field) " = ~a\n") 
+                   (#,(datum->syntax 
+                       #'here (string->symbol (string-append 
+                                               "render-settings-" 
+                                               (symbol->string (syntax->datum (cadr (syntax-e #'field)))))))
+                    rs))]))
+    ; try 3
+    (define-syntax (print-field stx)
+      (syntax-case stx ()
+        [(_ field)
+         (with-syntax ([accessor (datum->syntax #'field
+                                                (string->symbol
+                                                 (string-append
+                                                  "render-settings-"
+                                                  (symbol->string (syntax->datum #'field)))))])
+         #'(printf "~a = ~a\n" (quote field) (accessor rs)))]))
+    
+    (printf "RENDER SETTINGS:\n")
+    (print-field true-false-printed?)
+    (print-field constructor-style-printing?)
+    (print-field abbreviate-cons-as-list?)
+    (print-field render-to-sexp)
+    (print-field lifting?)
+    (print-field show-and/or-clauses-consumed?)
+    (print-field all-bindings-mutable?)
+    )
+  ;               
  ;               
  ; ;;  ;;;    ;;;   ;;;   ; ;;         ;   ;   ;;;   ;  ;   ;   ;;;  
  ;;   ;   ;  ;     ;   ;  ;;  ;        ;   ;  ;   ;  ;  ;   ;  ;   ; 
@@ -116,7 +153,10 @@
  ;    ;      ;     ;   ;  ;   ;         ;;    ;   ;  ;  ;  ;;  ;     
  ;     ;;;;   ;;;   ;;;   ;   ;          ;     ;;;;; ;   ;; ;   ;;;; 
                                                                      
-                                                                     
+  ;; NaturalNumber -> syntax    
+  (define (render-unknown-promise x)
+    #`#,(string->symbol (string-append "<unknown:" (number->string x) ">")))
+  
   ; recon-value print-converts a value.  If the value is a closure, recon-value
   ; prints the name attached to the procedure, unless we're on the right-hand-side
   ; of a let, or unless there _is_ no name.
@@ -127,23 +167,47 @@
           (stepper-syntax-property #`(quote #,val) 'stepper-xml-value-hint 'from-xml-box)
           (let ([closure-record 
                  (closure-table-lookup (extract-if-struct val) (lambda () #f))])
-            (if closure-record
-                (let* ([mark (closure-record-mark closure-record)]
-                       [base-name (closure-record-name closure-record)])
-                  (if base-name
-                      (let* ([lifted-index (closure-record-lifted-index closure-record)]
-                             [name (if lifted-index
-                                       (construct-lifted-name base-name lifted-index)
-                                       base-name)])
-                        (if (and assigned-name (free-identifier=? base-name assigned-name))
+            (cond
+              [closure-record
+               (let* ([mark (closure-record-mark closure-record)]
+                      [base-name (closure-record-name closure-record)])
+                 (if base-name
+                     (let* ([lifted-index (closure-record-lifted-index closure-record)]
+                            [name (if lifted-index
+                                      (construct-lifted-name base-name lifted-index)
+                                      base-name)])
+                       (if (and assigned-name (free-identifier=? base-name assigned-name))
                             (recon-source-expr (mark-source mark) (list mark) null null render-settings)
                             #`#,name))
-                      (recon-source-expr (mark-source mark) (list mark) null null render-settings)))
-                (let* ([rendered ((render-settings-render-to-sexp render-settings) val)])
-                  (if (symbol? rendered)
+                     (recon-source-expr (mark-source mark) (list mark) null null render-settings)))]
+              [(empty? val) #'empty] ; handle empty list separately
+              [(list? val)
+               (with-syntax ([(reconed-vals ...) 
+                              (map (lx (recon-value _ render-settings assigned-name)) val)])
+                 #'(list reconed-vals ...))]
+              [(pair? val) ; handle improper lists
+               (with-syntax ([reconed-car (recon-value (car val) render-settings assigned-name)]
+                             [reconed-cdr (recon-value (cdr val) render-settings assigned-name)])
+                 #'(cons reconed-car reconed-cdr))]
+              [(promise? val) ; must be from library code
+               (let ([unknown-promise (hash-ref unknown-promises val (λ () #f))])
+                 (if unknown-promise
+                     (begin
+                       (printf "unknown promise found: ~a\n" unknown-promise)
+                     (render-unknown-promise unknown-promise)
+                     )
+                     (begin0
+                       (render-unknown-promise next-unknown-promise)
+                       (hash-set! unknown-promises val next-unknown-promise)
+                       (set! next-unknown-promise (add1 next-unknown-promise))
+                       (printf "next unknown promise: ~a\n" next-unknown-promise))))]
+
+              [else
+               (let* ([rendered ((render-settings-render-to-sexp render-settings) val)])
+                 (if (symbol? rendered)
                       #`#,rendered
-                      #`(quote #,rendered))))))))
-    
+                      #`(quote #,rendered)))])))))
+
   (define (final-mark-list? mark-list)
     (and (not (null? mark-list)) (eq? (mark-label (car mark-list)) 'final)))
 
@@ -203,34 +267,36 @@
     (and (pair? mark-list)
          (let ([expr (mark-source (car mark-list))])
            (or (stepper-syntax-property expr 'stepper-hide-reduction)
-               (kernel:kernel-syntax-case expr #f
-                                          [id
-                                           (identifier? expr)
-                                           (case (stepper-syntax-property expr 'stepper-binding-type)
-                                             [(lambda-bound) #t]  ; don't halt for lambda-bound vars
-                                             [(let-bound)
-                                              (varref-skip-step? expr)]
-                                             [(non-lexical)
-                                              (varref-skip-step? expr)])]
-                                          [(#%top . id-stx)
-                                           (varref-skip-step? #`id-stx)]
-                                          [(#%plain-app . terms)
-                                           ; don't halt for proper applications of constructors
-                                           (let ([fun-val (lookup-binding mark-list (get-arg-var 0))])
-                                             (and (procedure? fun-val)
-                                                  (procedure-arity-includes? 
-                                                   fun-val
-                                                   (length (cdr (syntax->list (syntax terms)))))
-                                                  (or (and (render-settings-constructor-style-printing? render-settings)
-                                                           (if (render-settings-abbreviate-cons-as-list? render-settings)
-                                                               (eq? fun-val special-list-value)
-                                                               (and (eq? fun-val special-cons-value)
-                                                                    (second-arg-is-list? mark-list))))
-                                                      ;(model-settings:special-function? 'vector fun-val)
-                                                      (and (eq? fun-val void)
-                                                           (eq? (cdr (syntax->list (syntax terms))) null))
-                                                      (struct-constructor-procedure? fun-val))))]
-                                          [else #f])))))
+               (kernel:kernel-syntax-case 
+                expr #f
+                [id
+                 (identifier? expr)
+                 (case (stepper-syntax-property expr 'stepper-binding-type)
+                   [(lambda-bound) #t]  ; don't halt for lambda-bound vars
+                   [(let-bound)
+                    (varref-skip-step? expr)]
+                   [(non-lexical)
+                    (varref-skip-step? expr)])]
+                [(#%top . id-stx)
+                 (varref-skip-step? #`id-stx)]
+                [(#%plain-app . terms)
+                 ; don't halt for proper applications of constructors
+                 (let ([fun-val (lookup-binding mark-list (get-arg-var 0))])
+                   (and #f ; STC - I dont think we need this anymore because I remove redundant steps now
+                        (procedure? fun-val)
+                        (procedure-arity-includes? 
+                         fun-val
+                         (length (cdr (syntax->list (syntax terms)))))
+                        (or (and (render-settings-constructor-style-printing? render-settings)
+                                 (if (render-settings-abbreviate-cons-as-list? render-settings)
+                                     (eq? fun-val special-list-value)
+                                     (and (eq? fun-val special-cons-value)
+                                          (second-arg-is-list? mark-list))))
+                            ;(model-settings:special-function? 'vector fun-val)
+                            (and (eq? fun-val void)
+                                 (eq? (cdr (syntax->list (syntax terms))) null))
+                            (struct-constructor-procedure? fun-val))))]
+                [else #f])))))
   
   ;; find-special-value finds the value associated with the given name.  Applications of functions
   ;; like 'list' should not be shown as steps, because the before and after steps will be the same.
@@ -304,6 +370,10 @@
   ; weak hash table where keys = promises, values = syntax
   ; initialized in reconstruct-current
   (define partially-evaluated-promises null)
+  
+  ; unknown promises, generated from library (ie - non-user) code
+  (define unknown-promises (make-weak-hash))
+  (define next-unknown-promise 0)
                                                                        
                                                                                                                
  ; ;;  ;;;    ;;;   ;;;   ; ;;           ;;;   ;;;   ;   ;  ; ;;  ;;;   ;;;           ;;;  ;    ;  ; ;;;   ; ;;
@@ -622,9 +692,9 @@
     (syntax-case stx ()
       [(define-values (v) rhs)
        (stepper-syntax-property #'v 'stepper-hide-completed)]
-;      [else #f]))
-      [else
-       (stepper-syntax-property stx 'comes-from-lazy)]))
+      [else #f]))
+      #;[else
+       (stepper-syntax-property stx 'comes-from-lazy)]
   
                                                                                                                 
                                        ;                     ;                                               ;  
@@ -803,6 +873,12 @@
                              (letrec
                                  ([current-subterm
                                    (caar unevaluated)]
+                                  [get-fn
+                                   (λ (f)
+                                     (case f
+                                       [(car) car]
+                                       [(cdr) cdr]
+                                       [(syntax-e) syntax-e]))]
                                   [maybe-extract-binding
                                    (λ (e)
                                      (cond
@@ -813,7 +889,8 @@
                                           (maybe-extract-binding
                                            (foldl 
                                             (λ (f res) 
-                                              ((eval f) res)) 
+;                                              ((eval f) res)) 
+                                              ((get-fn f) res))
                                             e 
                                             skipto-fns)))]
                                        [else #f]))]
@@ -981,11 +1058,14 @@
                            (and (pair? mark-list)
                                 (syntax->datum (mark-source (car mark-list))))
                            returned-value-list))
-             
+           
+
+
+         
          (define answer
            (begin
              (set! partially-evaluated-promises (make-weak-hash))
-           (case break-kind
+             (case break-kind
              ((left-side)
               (let* ([innermost 
                       (if returned-value-list ; is it a normal-break/values?

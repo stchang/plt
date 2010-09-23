@@ -70,5 +70,5 @@
            (language-numbers '(1000 -500))
            (stepper:supported #t)
            (stepper:enable-let-lifting #t)
-           (stepper:show-lambdas-as-lambdas #t)))
+           (stepper:show-lambdas-as-lambdas #f)))
         )))
