@@ -155,7 +155,7 @@
                                                                      
   ;; NaturalNumber -> syntax    
   (define (render-unknown-promise x)
-    #`#,(string->symbol (string-append "<unknown:" (number->string x) ">")))
+    #`#,(string->symbol (string-append "<DelayedEvaluation#" (number->string x) ">")))
   
   ; recon-value print-converts a value.  If the value is a closure, recon-value
   ; prints the name attached to the procedure, unless we're on the right-hand-side
@@ -190,17 +190,19 @@
                              [reconed-cdr (recon-value (cdr val) render-settings assigned-name)])
                  #'(cons reconed-car reconed-cdr))]
               [(promise? val) ; must be from library code
-               (let ([unknown-promise (hash-ref unknown-promises val (λ () #f))])
-                 (if unknown-promise
-                     (begin
-                       (printf "unknown promise found: ~a\n" unknown-promise)
-                     (render-unknown-promise unknown-promise)
-                     )
-                     (begin0
-                       (render-unknown-promise next-unknown-promise)
-                       (hash-set! unknown-promises val next-unknown-promise)
-                       (set! next-unknown-promise (add1 next-unknown-promise))
-                       (printf "next unknown promise: ~a\n" next-unknown-promise))))]
+               (if (promise-forced? val)
+                   (recon-value (force val) render-settings)
+                   (let ([unknown-promise (hash-ref unknown-promises val (λ () #f))])
+                     (if unknown-promise
+                         (begin
+                           (printf "unknown promise found: ~a\n" unknown-promise)
+                           (render-unknown-promise unknown-promise)
+                           )
+                         (begin0
+                           (render-unknown-promise next-unknown-promise)
+                           (hash-set! unknown-promises val next-unknown-promise)
+                           (set! next-unknown-promise (add1 next-unknown-promise))
+                           (printf "next unknown promise: ~a\n" next-unknown-promise)))))]
 
               [else
                (let* ([rendered ((render-settings-render-to-sexp render-settings) val)])
@@ -232,10 +234,11 @@
               (stepper-syntax-property expr 'stepper-hide-reduction)))]
       [(result-exp-break)
        ;; skip if clauses that are the result of and/or reductions
-       (let ([and/or-clauses-consumed 
-              (stepper-syntax-property (mark-source (car mark-list)) 'stepper-and/or-clauses-consumed)])
-         (and and/or-clauses-consumed
-              (> and/or-clauses-consumed 0)))]
+       (or (let ([and/or-clauses-consumed 
+                  (stepper-syntax-property (mark-source (car mark-list)) 'stepper-and/or-clauses-consumed)])
+             (and and/or-clauses-consumed
+                  (> and/or-clauses-consumed 0)))
+           (skip-lazy-redex-step? mark-list render-settings))]
       [(normal-break normal-break/values)
        (skip-redex-step? mark-list render-settings)]
       [(double-break)
@@ -247,6 +250,57 @@
         (not (render-settings-lifting? render-settings)))]
       [(expr-finished-break define-struct-break late-let-break) #f]))
   
+  (define (constructor-app? fn args mark-list render-settings)
+    ; don't halt for proper applications of constructors
+    (and (identifier? fn) ; handle cases like (#%top . f)
+     (let* ([fun-val (lookup-binding mark-list fn)]
+           [tmp (printf "CONSTRUCTOR-APP? ~a\n" fun-val)])
+      (and (procedure? fun-val)
+           (procedure-arity-includes? 
+            fun-val
+            (length args))
+           (or (and (render-settings-constructor-style-printing? render-settings)
+                    (if (render-settings-abbreviate-cons-as-list? render-settings)
+                        (eq? fun-val special-list-value)
+                        (and (eq? fun-val special-cons-value)
+                             (second-arg-is-list? mark-list))))
+               ;(model-settings:special-function? 'vector fun-val)
+               (and (eq? fun-val void)
+                    (eq? args null))
+               (struct-constructor-procedure? fun-val))))))
+    
+    
+    
+  (define (skip-lazy-redex-step? mark-list render-settings)
+    (let ([expr (mark-source (car mark-list))])
+      (kernel:kernel-syntax-case
+       expr #f
+       [(#%plain-app (lam args body) fn . rest)
+        (eq? (syntax->datum #'lam) 'lambda)
+        (let ([tmp (constructor-app? (skipto/auto #'fn 'discard (λ (x) x))
+                          (syntax->list #'rest)
+                          mark-list
+                          render-settings)])
+          (if tmp
+              (begin
+                (printf "skipping lazy redex step\n")
+                tmp)
+              tmp))]
+       [(#%plain-app (#%plain-app proc-extract-target p) . args)
+        (eq? (syntax->datum #'proc-extract-target)
+             'procedure-extract-target)
+        (let ([tmp (constructor-app? #'p
+                                     (syntax->list #'args)
+                                     mark-list
+                                     render-settings)])
+          (if tmp
+              (begin
+                (printf "skipping lazy redex step\n")
+                tmp)
+              tmp))]
+       [else #f])))
+          
+      
   ;; skip-redex-step : mark-list? render-settings? -> boolean?
   (define (skip-redex-step? mark-list render-settings)
     
@@ -267,6 +321,7 @@
     (and (pair? mark-list)
          (let ([expr (mark-source (car mark-list))])
            (or (stepper-syntax-property expr 'stepper-hide-reduction)
+               (skip-lazy-redex-step? mark-list render-settings)
                (kernel:kernel-syntax-case 
                 expr #f
                 [id
@@ -281,8 +336,9 @@
                  (varref-skip-step? #`id-stx)]
                 [(#%plain-app . terms)
                  ; don't halt for proper applications of constructors
-                 (let ([fun-val (lookup-binding mark-list (get-arg-var 0))])
-                   (and #f ; STC - I dont think we need this anymore because I remove redundant steps now
+                 (let* ([fun-val (lookup-binding mark-list (get-arg-var 0))]
+                        [tmp (printf "SKIP-REDEX-STEP? ~a\n" fun-val)])
+                   (and ;#f ; STC - I dont think we need this anymore because I remove redundant steps now
                         (procedure? fun-val)
                         (procedure-arity-includes? 
                          fun-val
@@ -302,16 +358,27 @@
   ;; like 'list' should not be shown as steps, because the before and after steps will be the same.
   ;; it might be easier simply to discover and discard these at display time.
   (define (find-special-value name valid-args)
+    (printf "FIND-SPECIAL-VALUE for: ~a\n" name)
     (let* ([expanded-application (expand (cons name valid-args))]
+           [tmp0 (printf "expanded: ~a\n" (syntax->datum expanded-application))]
            [stepper-safe-expanded (skipto/auto expanded-application 'discard (lambda (x) x))]
-           [just-the-fn (kernel:kernel-syntax-case stepper-safe-expanded #f
-                          [(#%plain-app fn . rest)
-                           #`fn]
-                          [(let-values . rest) #f] ; so lazy racket doesnt give error
-                          [else (error 'find-special-name "couldn't find expanded name for ~a" name)])])
-      (if just-the-fn
-          (eval (syntax-recertify just-the-fn expanded-application (current-code-inspector) #f))
-          #f))) ; so lazy racket doesnt give error
+           [tmp1 (printf "safe expanded: ~a\n" (syntax->datum stepper-safe-expanded))]
+           [just-the-fn (kernel:kernel-syntax-case 
+                         stepper-safe-expanded #f
+                         [(#%plain-app 
+                           (#%plain-app toplevelforcer)
+                           (#%plain-app (lam args body) fn . rest))
+                          (and (eq? (syntax->datum #'toplevelforcer) 'toplevel-forcer)
+                               (eq? (syntax->datum #'lam) 'lambda))
+                          (skipto/auto #'fn 'discard (λ (x) x))] ; lazy racket
+                         [(#%plain-app fn . rest) #'fn]
+                         ;[(let-values . rest) #f] ; so lazy racket doesnt give error
+                         [else (error 'find-special-name "couldn't find expanded name for ~a" name)])]
+           [tmp2 (printf "just the fn: ~a\n" just-the-fn)]
+           [tmp3 (printf "evaled: ~a\n" (eval (syntax-recertify just-the-fn expanded-application (current-code-inspector) #f)))])
+;      (if just-the-fn
+          (eval (syntax-recertify just-the-fn expanded-application (current-code-inspector) #f)) ))
+;          #f))) ; so lazy racket doesnt give error
 
   ;; these are delayed so that they use the userspace expander.  I'm sure
   ;; there's a more robust & elegant way to do this.
@@ -374,7 +441,8 @@
   ; unknown promises, generated from library (ie - non-user) code
   (define unknown-promises (make-weak-hash))
   (define next-unknown-promise 0)
-                                                                       
+  
+  (define not-yet-called-apps (make-hash))
                                                                                                                
  ; ;;  ;;;    ;;;   ;;;   ; ;;           ;;;   ;;;   ;   ;  ; ;;  ;;;   ;;;           ;;;  ;    ;  ; ;;;   ; ;;
  ;;   ;   ;  ;     ;   ;  ;;  ;         ;     ;   ;  ;   ;  ;;   ;     ;   ;         ;   ;  ;  ;   ;;   ;  ;;  
@@ -745,6 +813,8 @@
                      (recon-source-expr expr mark-list null null render-settings))]
                   [top-mark (car mark-list)]
                   [exp (mark-source top-mark)]
+                  [dont-use-ellipses?
+                   (stepper-syntax-property exp 'dont-use-ellipses)]
                   [iota (lambda (x) (build-list x (lambda (x) x)))]
                   
                   [recon-let
@@ -868,7 +938,13 @@
                       (case (mark-label (car mark-list))
                         ((not-yet-called)
                          (if (null? unevaluated)
-                             #`(#%plain-app . #,rectified-evaluated)
+                             (begin
+                               (when dont-use-ellipses?
+                                 (printf "not yet called, dont use ellipses: ~a\n" (syntax->datum exp))
+                                 (hash-set! not-yet-called-apps
+                                            (syntax->datum exp)
+                                            (mark-binding-value (car (mark-bindings top-mark)))))
+                               #`(#%plain-app . #,rectified-evaluated))
                              ; STC added let
                              (letrec
                                  ([current-subterm
@@ -910,13 +986,45 @@
                                   #,@(map recon-source-current-marks (cdr (map car unevaluated))))
                                ) ))
                         ((called)
-                         (let ([mark-src (mark-source (car mark-list))])
-                           (stepper-syntax-property
-                            (if (eq? so-far nothing-so-far)
-                                (datum->syntax #'here `(,#'#%plain-app ...)) ; in unannotated code ... can this occur?
-                                (datum->syntax #'here `(,#'#%plain-app ... ,so-far ...)))
-                            'stepper-args-of-call 
-                            rectified-evaluated)))
+                         (stepper-syntax-property
+                          (if (eq? so-far nothing-so-far)
+                              (datum->syntax #'here `(,#'#%plain-app ...)) ; in unannotated code ... can this occur?
+                              (if dont-use-ellipses?
+                                  #;(let* ([val (hash-ref not-yet-called-apps 
+                                                        (syntax->datum exp))]
+                                         [reconed-val (recon-value val render-settings)])
+                                    (unless val (error 'recon-inner "couldnt find not-yet-called-app: ~a" exp))
+                                    ;#`(#%plain-app #,(datum->syntax #'here dont-use-ellipses?) #,so-far)
+                                    (datum->syntax 
+                                     #'here 
+                                     `(,#'#%plain-app ,reconed-val .. ,so-far))
+                                         #;(mark-as-highlight 
+                                          (datum->syntax 
+                                           #'here 
+                                           `(,#'#%plain-app 
+                                             ,reconed-val 
+                                             ,(stepper-syntax-property so-far 'stepper-highlight #f)))) )
+                                  (let* ([vals
+                                          (build-list
+                                           (sub1 ; dont want to include #%app
+                                            (length (syntax->list 
+                                                     (mark-source 
+                                                      (car mark-list)))))
+                                           (λ (n)
+                                             (lookup-binding mark-list 
+                                                             (get-arg-var n))))]
+                                         [tmp0 (map (λ (v) (printf "~a\n" v)) vals)]
+                                         [tmp1 (printf "~a\n" (map (λ (p) (and (promise? p) (promise-running? p))) vals))]
+                                         ; I'm assuming hole must be where running promise is
+                                         [reconed-vals-with-so-far-inserted
+                                          (map (λ (v) (if (and (promise? v) (promise-running? v))
+                                                          so-far
+                                                          (recon-value v render-settings)))
+                                               vals)])
+                                    #`(#%plain-app #,@reconed-vals-with-so-far-inserted))
+                                  (datum->syntax #'here `(,#'#%plain-app ... ,so-far ...))))
+                          'stepper-args-of-call 
+                          rectified-evaluated))
                         (else
                          (error 'recon-inner "bad label (~v) in application mark in expr: ~a" (mark-label (car mark-list)) exp))))
                     exp)]

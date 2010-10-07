@@ -112,9 +112,10 @@
           (stepper-syntax-property stx 'use-inferred-name define-name)
           stx)))
   
+
   (define-for-syntax (stepper-set-dont-use-ellipses-property stx)
     (stepper-syntax-property stx 'dont-use-ellipses #t))
-  (define-for-syntax (stepper-set-remove-ellipses-property stx)
+  #;(define-for-syntax (stepper-set-remove-ellipses-property stx)
     (stepper-syntax-property stx 'remove-ellipses #t))
   (define-for-syntax (stepper-mark-as-from-lazy stx)
     (stepper-syntax-property stx 'comes-from-lazy #t))
@@ -317,7 +318,7 @@
                 ((lambda (p y ...) 
                         #,($$ #'(if (lazy? p) lazy strict)))
                     f x ...))
-             unwind-app)
+              unwind-app)
 ;               (quasisyntax/loc stx
 ;                 (let ([p f] [y x] ...)
 ;                   #,($$ #'(if (lazy? p) lazy strict)))))
@@ -340,8 +341,7 @@
           #,(stepper-set-dont-use-ellipses-property
              (stepper-attach-unwind-fn
               #'(!app f x ...)
-              unwind-app)
-             )))
+              unwind-app))))
        ]))
   
   (define-for-syntax (toplevel?)

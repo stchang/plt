@@ -231,37 +231,37 @@
         
         ; sends a step to the stepper, if lhs and rhs are not the same
         (define (send-step lhs-exps lhs-finished-exps rhs-exps rhs-finished-exps
-                           step-kind lhs-posn-info rhs-posn-info)
+                           step-kind lhs-posn-info rhs-posn-info [move-highlight? #f])
           (let*
               ([printf-msg (printf "maybe sending step ... \n")]
                [print-left 
                 (printf "left side = ~a\n" 
-                        (map syntax->datum lhs-exps))]
+                        (map syntax->hilite-datum lhs-exps))]
                [print-right 
                 (printf "right side = ~a\n" 
-                        (map syntax->datum rhs-exps))]
+                        (map syntax->hilite-datum rhs-exps))]
                [left-equals-right? (step=? lhs-exps rhs-exps)]
-               [rhs-uses-ellipses? (expr-has-ellipses? (car rhs-exps))]
-               [print-rhs-uses-ellipses
+               #;[rhs-uses-ellipses? (expr-has-ellipses? (car rhs-exps))]
+               #;[print-rhs-uses-ellipses
                 (and rhs-uses-ellipses?
                      (printf "rhs has ellipses\n"))]
-               [2nd-mark-is-called (and (>= (length mark-list) 2)
+               #;[2nd-mark-is-called (and (>= (length mark-list) 2)
                                         (eq? (mark-label (cadr mark-list)) 'called))]
-               [dont-use-ellipses? (and 2nd-mark-is-called
+               #;[dont-use-ellipses? (and 2nd-mark-is-called
                                         (stepper-syntax-property 
                                          (mark-source (cadr mark-list))
                                          'dont-use-ellipses))]
-               [remove-ellipses? (and 2nd-mark-is-called
+               #;[remove-ellipses? (and 2nd-mark-is-called
                                       (stepper-syntax-property 
                                        (mark-source (cadr mark-list))
                                        'remove-ellipses))])
-            (if (and rhs-uses-ellipses? dont-use-ellipses?)
+            ;(if (and rhs-uses-ellipses? dont-use-ellipses?)
                 ; dont send step
                 ; dont store last-rhs unless it's the first ellipses step
                 ; (usually, storing the last-rhs is unnecessary because it will
                 ;  be the same as what's already stored, but this is needed 
                 ;  when the ellipses step is the first step)
-                (let
+                #;(let
                     ([lhs-uses-ellipses? (expr-has-ellipses? (car lhs-exps))])
                   (printf "dont-use-ellipses property = #t, skipping step\n")
                   (if lhs-uses-ellipses?
@@ -269,13 +269,13 @@
                       (begin
                         (set! last-rhs-held (create-held lhs-exps))
                         (set! last-rhs-finished lhs-finished-exps))))
-                (begin
-                  (when (and rhs-uses-ellipses? remove-ellipses?)
+                ;(begin
+                  #;(when (and rhs-uses-ellipses? remove-ellipses?)
                     (print "removing ellipses\n")
                     (set! lhs-exps (map remove-ellipses lhs-exps))
                     (set! rhs-exps (map remove-ellipses rhs-exps))
-                    (printf "left side = ~a\n" (map syntax->datum lhs-exps))
-                    (printf "right side = ~a\n" (map syntax->datum rhs-exps)))
+                    (printf "left side = ~a\n" (map syntax->hilite-datum lhs-exps))
+                    (printf "right side = ~a\n" (map syntax->hilite-datum rhs-exps)))
                   (let
                       ([left-equals-right? (step=? lhs-exps rhs-exps)])
                     (when (not (and left-equals-right?
@@ -287,9 +287,32 @@
                         step-kind
                         lhs-posn-info rhs-posn-info))
                       (printf "step sent\n"))
-                    (set! last-rhs-held (create-held rhs-exps))
+                    (if move-highlight?
+                        (set! last-rhs-held (create-held (cons
+                                                          (move-highlight-out 
+                                                           (car rhs-exps))
+                                                          (cdr rhs-exps))))
+                        (set! last-rhs-held (create-held rhs-exps)))
                     (set! last-rhs-finished rhs-finished-exps)
-                    (printf "last-rhs set\n"))))))
+                    (printf "last-rhs set\n"))))
+        
+        (define (has-highlight? exp)
+          (stepper-syntax-property exp 'stepper-highlight))
+        (define (mark-as-highlight exp)
+          (stepper-syntax-property exp 'stepper-highlight #t))
+        (define (unmark-as-highlight exp)
+          (stepper-syntax-property exp 'stepper-highlight #f))
+        
+        (define (move-highlight-out exp)
+          (if (has-highlight? exp)
+              exp
+              (let ([subexps (syntax->list exp)])
+                (if subexps
+                    (if (ormap has-highlight? subexps)
+                        (mark-as-highlight
+                         #`#,(map unmark-as-highlight subexps))
+                        #`#,(map move-highlight-out subexps))
+                    exp))))
         
         (define (expr-has-ellipses? exp)
           (syntax-case exp ()
@@ -327,7 +350,7 @@
           (if (no-last-rhs?)
               (begin
                 (printf "no last rhs, so store exps as pending:\n")
-                (map (λ (x) (printf "  ~a\n" (syntax->datum x))) current-exps)
+                (map (λ (x) (printf "  ~a\n" (syntax->hilite-datum x))) current-exps)
                 (set! pending-rhs-held (create-held current-exps))
                 (set! pending-rhs-finished current-finished-exps))
               (match last-rhs-held
@@ -335,7 +358,7 @@
                  (send-step last-rhs last-rhs-finished
                             current-exps current-finished-exps
                             (compute-step-kind held-step-was-app?)
-                            held-posn-info posn-info)])))
+                            held-posn-info posn-info #t)])))
         
 
          (define (handle-pending-rhs current-exps current-finished-exps current-posn-info)
@@ -361,7 +384,7 @@
                   (if (r:hide-completed? source)
                       (begin
                         (printf "hidden, before reconstruct: ~a\n" 
-                                (syntax->datum source))
+                                (syntax->hilite-datum source))
                         (match 
                             (r:reconstruct-completed
                              source lifting-indices
@@ -369,7 +392,7 @@
                           [(vector exp b) 
                            (begin
                              (printf "hidden, after reconstruct, preunwound: ~a\n" 
-                                     (syntax->datum exp))
+                                     (syntax->hilite-datum exp))
                              (printf "hidden, after reconstruct, unwound: ~a\n" 
                                      (unwind exp render-settings)) )])
                         #f)
@@ -378,12 +401,12 @@
                               getter render-settings)
                         [(vector exp #f) 
                          (begin
-                           (printf "preunwound: ~a\n" (syntax->datum exp))
+                           (printf "preunwound: ~a\n" (syntax->hilite-datum exp))
                            (unwind exp render-settings)
                            )]
                       [(vector exp #t) 
                        (begin
-                         (printf "notunwound: ~a\n" (syntax->datum exp))
+                         (printf "notunwound: ~a\n" (syntax->hilite-datum exp))
                          exp
                          )])))])
              finished-exps)
@@ -416,13 +439,13 @@
                     ([lhs-reconstructed
                       (r:reconstruct-left-side mark-list returned-value-list render-settings)]
                      [print-lhs 
-                      (printf "left side (pre-unwound):\n  ~a\n" (syntax->datum lhs-reconstructed))]
+                      (printf "left side (pre-unwound):\n  ~a\n" (syntax->hilite-datum lhs-reconstructed))]
                      [lhs-unwound
                       (map (λ (exp) (unwind exp render-settings))
                            (maybe-lift lhs-reconstructed #f))]
                      [print-lhs-unwound 
                       (for-each 
-                       (λ (x) (printf "left side (unwound): ~a\n" (syntax->datum x))) 
+                       (λ (x) (printf "left side (unwound): ~a\n" (syntax->hilite-datum x))) 
                        lhs-unwound)]
                      [lhs-finished-exps (reconstruct-all-completed)])
                     (handle-pending-rhs lhs-unwound lhs-finished-exps (compute-posn-info))
@@ -453,12 +476,9 @@
                     (printf "held = no sexp\n")
                     (let* ([use-lhs-ellipses?
                             (not
-                             (or (stepper-syntax-property 
-                                  (mark-source (car mark-list))
-                                  'dont-use-ellipses)
-                                 (stepper-syntax-property
-                                  (mark-source (car mark-list))
-                                  'remove-ellipses)))]
+                             (stepper-syntax-property 
+                              (mark-source (car mark-list))
+                              'dont-use-ellipses))]
                            [tmp (printf "use ellipses on lhs? = ~a\n" use-lhs-ellipses?)]
                            [new-rhs (reconstruct)]
                            [posn-info (compute-posn-info)]
@@ -494,14 +514,18 @@
                   ([new-finished-list (reconstruct-all-completed)]
                    [reconstruct-result
                     (r:reconstruct-double-break mark-list render-settings)]
-                   [tmp0 (printf "left (before unwind):\n  ~a\n" (syntax->datum (car reconstruct-result)))]
-                   [tmp1 (printf "right (before unwind):\n  ~a\n" (syntax->datum (cadr reconstruct-result)))]
+                   [tmp0 (printf "left (before unwind):\n  ~a\n" (syntax->hilite-datum (car reconstruct-result)))]
+                   [tmp1 (printf "right (before unwind):\n  ~a\n" (syntax->hilite-datum (cadr reconstruct-result)))]
                    [lhs-unwound (map (lambda (exp) (unwind exp render-settings))
                                    (maybe-lift (car reconstruct-result) #f))]
                    [rhs-unwound (map (lambda (exp) (unwind exp render-settings))
                                     (maybe-lift (cadr reconstruct-result) #t))]
-                   [tmp2 (map (λ (x) (printf "left side (unwound):\n  ~a\n" (syntax->datum x))) lhs-unwound)]
-                   [tmp3 (map (λ (x) (printf "right side (unwound):\n  ~a\n" (syntax->datum x))) rhs-unwound)])
+                   [tmp2 (map (λ (x) (printf "left side (unwound):\n  ~a\n" 
+                                             (syntax->hilite-datum x))) 
+                              lhs-unwound)]
+                   [tmp3 (map (λ (x) (printf "right side (unwound):\n  ~a\n" 
+                                             (syntax->hilite-datum x)))
+                              rhs-unwound)])
                   (send-step lhs-unwound new-finished-list
                              rhs-unwound new-finished-list
                              'normal
@@ -519,7 +543,7 @@
                  (for-each 
                   (λ (x) 
                     (printf "add to finished:\n")
-                    (printf "  source: ~a\n" (syntax->datum ((car x))))
+                    (printf "  source: ~a\n" (syntax->hilite-datum ((car x))))
                     (printf "  index: ~a\n" (second x))
                     (printf "  getter: ")
                     (if (stepper-syntax-property ((car x)) 'stepper-define-struct-hint)
@@ -539,15 +563,6 @@
         (lambda (stx dont-care) (list stx))))
   
   (define (step-through-expression expanded expand-next-expression)
-    #;(printf "NAMESPACE BINDINGS:\n")
-    #;(for-each 
-     (λ (s) 
-       (printf 
-        "_ ~a = ~a _" 
-        s 
-        (namespace-variable-value s #t (λ () "syntax"))
-        ))
-     (namespace-mapped-symbols))
     (let* ([annotated (a:annotate expanded break show-lambdas-as-lambdas?
                                   language-level)])
       (parameterize ([test-engine:test-silence #t])

@@ -13,7 +13,13 @@
 ;(define (f x) (+ (cadr x) (car x)))
 ;(f (take 2 (list (+ 1 2) (+ 3 4))))
 
-;(cdr (cons (/ 1 0) (+ 1 2)))
+;(cadr (cddr (cddr (cddr (list 1 2 3 4 5 6 7 8)))))
+;(+ (cadr (cddr (list 1 2 3 4))) (cadr (cddr (list 5 6 7 8))))
+;(cadr (cddr (list (+ 2 3 ) (+ 4 5) (+ 5 6) (+ 7 8))))
+
+;(cadr (list (/ 1 0) (+ 1 2)))
+
+;(define (f x y) (cadr (list x y x))) (f (/ 1 0) (+ 1 2))
 
 ;(! (if #f 2 3))
 ;(cadr (list 1 (if (+ 4 5) 2 3)))
@@ -24,10 +30,10 @@
 ;(define (f x) x)
 ;(f ones)
 
-;(define (f x) (+ x (+ x x)))
-;(define (g y) (+ (+ y y) y))
-;(+ (f (+ 1 2)) (g (+ 3 4)))
-;(f (+ (+ 1 2) (+ 3 4)))
+(define (f x) (+ x (+ x x)))
+(define (g y) (+ (+ y y) y))
+(+ (f (+ 1 2)) (g (+ 3 4)))
+(f (+ (+ 1 2) (+ 3 4)))
 ;)  
 
  
