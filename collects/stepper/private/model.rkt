@@ -271,11 +271,11 @@
                         (set! last-rhs-finished lhs-finished-exps))))
                 ;(begin
                   #;(when (and rhs-uses-ellipses? remove-ellipses?)
-                    (print "removing ellipses\n")
-                    (set! lhs-exps (map remove-ellipses lhs-exps))
-                    (set! rhs-exps (map remove-ellipses rhs-exps))
-                    (printf "left side = ~a\n" (map syntax->hilite-datum lhs-exps))
-                    (printf "right side = ~a\n" (map syntax->hilite-datum rhs-exps)))
+                      (print "removing ellipses\n")
+                      (set! lhs-exps (map remove-ellipses lhs-exps))
+                      (set! rhs-exps (map remove-ellipses rhs-exps))
+                      (printf "left side = ~a\n" (map syntax->hilite-datum lhs-exps))
+                      (printf "right side = ~a\n" (map syntax->hilite-datum rhs-exps)))
                   (let
                       ([left-equals-right? (step=? lhs-exps rhs-exps)])
                     (when (not (and left-equals-right?
@@ -288,10 +288,12 @@
                         lhs-posn-info rhs-posn-info))
                       (printf "step sent\n"))
                     (if move-highlight?
+                        (begin
+                          (printf "moving highlight ...\n")
                         (set! last-rhs-held (create-held (cons
                                                           (move-highlight-out 
                                                            (car rhs-exps))
-                                                          (cdr rhs-exps))))
+                                                          (cdr rhs-exps)))) )
                         (set! last-rhs-held (create-held rhs-exps)))
                     (set! last-rhs-finished rhs-finished-exps)
                     (printf "last-rhs set\n"))))
@@ -314,7 +316,7 @@
                         #`#,(map move-highlight-out subexps))
                     exp))))
         
-        (define (expr-has-ellipses? exp)
+        #;(define (expr-has-ellipses? exp)
           (syntax-case exp ()
             [(dots1 body dots2)
              (and (eq? (syntax->datum #'dots1) '...)
@@ -325,7 +327,7 @@
                (ormap expr-has-ellipses? terms))]             
             [_ #f]))
         
-        (define (remove-ellipses exp)
+        #;(define (remove-ellipses exp)
           (syntax-case exp ()
             [(dots1 body dots2)
              (and (eq? (syntax->datum #'dots1) '...)
@@ -340,7 +342,7 @@
           
        
 
-        
+        ;; only called during result-value-break
         (define (handle-dont-use-ellipses current-exps current-finished-exps posn-info)
           (printf "lhs = no sexp, but not using ellipses\n")
           ; if we dont want to use ellipses on lhs, we can either:
@@ -361,7 +363,7 @@
                             held-posn-info posn-info #t)])))
         
 
-         (define (handle-pending-rhs current-exps current-finished-exps current-posn-info)
+         (define (handle-pending-rhs current-exps current-finished-exps current-posn-info [result-value-break? #f])
           (printf "checking pending rhs ...\n")
           (if (pending-rhs?)
               (match pending-rhs-held
@@ -369,7 +371,7 @@
                  (send-step pending-rhs pending-rhs-finished
                             current-exps current-finished-exps
                             'normal
-                            held-posn-info current-posn-info)
+                            held-posn-info current-posn-info result-value-break?)
                  (reset-pending-rhs)])
               (printf "no pending rhs\n")))
         
@@ -460,7 +462,8 @@
                                (maybe-lift
                                 (r:reconstruct-right-side
                                  mark-list returned-value-list render-settings)
-                                #f)))])
+                                #f)))]
+                        [result-value-break? (equal? break-kind 'result-value-break)])
                  (match held-exp-list
                    [(struct skipped-step ())
                      ;; don't render if before step was a skipped-step
@@ -483,13 +486,13 @@
                            [new-rhs (reconstruct)]
                            [posn-info (compute-posn-info)]
                            [new-finished-list (reconstruct-all-completed)])
-                      (handle-pending-rhs new-rhs new-finished-list posn-info)
+                      (handle-pending-rhs new-rhs new-finished-list posn-info result-value-break?)
                       (if use-lhs-ellipses?
                           ;; NB: this (... ...) IS UNRELATED TO 
                           ;; THE MACRO IDIOM OF THE SAME NAME
                           (send-step (list #'(... ...)) '()
                                      new-rhs new-finished-list
-                                     'normal #f #f)
+                                     'normal #f #f result-value-break?)
                           (handle-dont-use-ellipses new-rhs new-finished-list posn-info))
                       (reset-held-exp-list))]
                    [(struct held (held-exps held-step-was-app? held-posn-info))
@@ -501,7 +504,7 @@
                       (send-step held-exps held-finished-list
                                  new-rhs new-finished-list
                                  (compute-step-kind held-step-was-app?)
-                                 held-posn-info (compute-posn-info))
+                                 held-posn-info (compute-posn-info) result-value-break?)
                       (reset-held-exp-list))]))]
                 [(double-break)
                  ;; a double-break occurs at the beginning of a let's

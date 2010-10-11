@@ -105,25 +105,12 @@
           [(promise? f) (pref f)]
           [else f]))
   
-
+  (define-syntax (pr stx)
+    (syntax-case stx ()
+      [(_ x)
+       (with-syntax ([xx (datum->syntax #'x (symbol->string (syntax->datum #'x)))])
+       #'(printf (string-append xx " = ~a\n") x))]))
   (define (print-render-settings rs)
-    ; try 1
-    #;(define (print-field field)
-        (let ([fieldstr (symbol->string field)])
-          (printf (string-append fieldstr " = ~a\n")
-                  (eval `(,(string->symbol (string-append "render-settings-" fieldstr))
-                          ,rs) ns))))
-    ; try 2
-    #;(define-syntax (print-field stx)
-      (syntax-case stx ()
-        [(_ field) 
-         #`(printf (string-append (symbol->string field) " = ~a\n") 
-                   (#,(datum->syntax 
-                       #'here (string->symbol (string-append 
-                                               "render-settings-" 
-                                               (symbol->string (syntax->datum (cadr (syntax-e #'field)))))))
-                    rs))]))
-    ; try 3
     (define-syntax (print-field stx)
       (syntax-case stx ()
         [(_ field)
@@ -252,22 +239,22 @@
   
   (define (constructor-app? fn args mark-list render-settings)
     ; don't halt for proper applications of constructors
-    (and (identifier? fn) ; handle cases like (#%top . f)
-     (let* ([fun-val (lookup-binding mark-list fn)]
-           [tmp (printf "CONSTRUCTOR-APP? ~a\n" fun-val)])
-      (and (procedure? fun-val)
-           (procedure-arity-includes? 
-            fun-val
-            (length args))
-           (or (and (render-settings-constructor-style-printing? render-settings)
-                    (if (render-settings-abbreviate-cons-as-list? render-settings)
-                        (eq? fun-val special-list-value)
-                        (and (eq? fun-val special-cons-value)
-                             (second-arg-is-list? mark-list))))
-               ;(model-settings:special-function? 'vector fun-val)
-               (and (eq? fun-val void)
-                    (eq? args null))
-               (struct-constructor-procedure? fun-val))))))
+    (and 
+     (identifier? fn) ; handle cases like (#%top . f)
+     (let ([fun-val (extract-if-struct (lookup-binding mark-list fn))])
+       (and (procedure? fun-val)
+            (procedure-arity-includes? 
+             fun-val
+             (length args))
+            (or (and (render-settings-constructor-style-printing? render-settings)
+                     (if (render-settings-abbreviate-cons-as-list? render-settings)
+                         (eq? fun-val special-list-value)
+                         (and (eq? fun-val special-cons-value)
+                              (second-arg-is-list? mark-list))))
+                ;(model-settings:special-function? 'vector fun-val)
+                (and (eq? fun-val void)
+                     (eq? args null))
+                (struct-constructor-procedure? fun-val))))))
     
     
     
@@ -278,9 +265,9 @@
        [(#%plain-app (lam args body) fn . rest)
         (eq? (syntax->datum #'lam) 'lambda)
         (let ([tmp (constructor-app? (skipto/auto #'fn 'discard (λ (x) x))
-                          (syntax->list #'rest)
-                          mark-list
-                          render-settings)])
+                                     (syntax->list #'rest)
+                                     mark-list
+                                     render-settings)])
           (if tmp
               (begin
                 (printf "skipping lazy redex step\n")
@@ -290,9 +277,9 @@
         (eq? (syntax->datum #'proc-extract-target)
              'procedure-extract-target)
         (let ([tmp (constructor-app? #'p
-                                     (syntax->list #'args)
-                                     mark-list
-                                     render-settings)])
+                                      (syntax->list #'args)
+                                      mark-list
+                                      render-settings)])
           (if tmp
               (begin
                 (printf "skipping lazy redex step\n")
@@ -307,16 +294,18 @@
     (define (varref-skip-step? varref)
       (with-handlers ([exn:fail:contract:variable? (lambda (dc-exn) #f)])
         (let ([val (lookup-binding mark-list varref)])
-          (equal? (syntax->interned-datum (recon-value val render-settings))
-                  (syntax->interned-datum (case (stepper-syntax-property varref 'stepper-binding-type)
-                                                   ([let-bound]
-                                                    (binding-lifted-name mark-list varref))
-                                                   ([non-lexical]
-                                                    varref)
-                                                   (else
-                                                    (error 'varref-skip-step? "unexpected value for stepper-binding-type: ~e for variable: ~e\n"
-                                                           (stepper-syntax-property varref 'stepper-binding-type)
-                                                           varref))))))))
+          (equal? (syntax->interned-datum 
+                   (recon-value val render-settings))
+                  (syntax->interned-datum 
+                   (case (stepper-syntax-property varref 'stepper-binding-type)
+                     ([let-bound]
+                      (binding-lifted-name mark-list varref))
+                     ([non-lexical]
+                      varref)
+                     (else
+                      (error 'varref-skip-step? "unexpected value for stepper-binding-type: ~e for variable: ~e\n"
+                             (stepper-syntax-property varref 'stepper-binding-type)
+                             varref))))))))
     
     (and (pair? mark-list)
          (let ([expr (mark-source (car mark-list))])
@@ -336,10 +325,12 @@
                  (varref-skip-step? #`id-stx)]
                 [(#%plain-app . terms)
                  ; don't halt for proper applications of constructors
-                 (let* ([fun-val (lookup-binding mark-list (get-arg-var 0))]
-                        [tmp (printf "SKIP-REDEX-STEP? ~a\n" fun-val)])
-                   (and ;#f ; STC - I dont think we need this anymore because I remove redundant steps now
-                        (procedure? fun-val)
+                 (constructor-app? (get-arg-var 0)
+                                   (cdr (syntax->list #'terms))
+                                   mark-list
+                                   render-settings)
+                 #;(let ([fun-val (lookup-binding mark-list (get-arg-var 0))])
+                   (and (procedure? fun-val)
                         (procedure-arity-includes? 
                          fun-val
                          (length (cdr (syntax->list (syntax terms)))))
@@ -358,11 +349,8 @@
   ;; like 'list' should not be shown as steps, because the before and after steps will be the same.
   ;; it might be easier simply to discover and discard these at display time.
   (define (find-special-value name valid-args)
-    (printf "FIND-SPECIAL-VALUE for: ~a\n" name)
     (let* ([expanded-application (expand (cons name valid-args))]
-           [tmp0 (printf "expanded: ~a\n" (syntax->datum expanded-application))]
            [stepper-safe-expanded (skipto/auto expanded-application 'discard (lambda (x) x))]
-           [tmp1 (printf "safe expanded: ~a\n" (syntax->datum stepper-safe-expanded))]
            [just-the-fn (kernel:kernel-syntax-case 
                          stepper-safe-expanded #f
                          [(#%plain-app 
@@ -373,11 +361,10 @@
                           (skipto/auto #'fn 'discard (λ (x) x))] ; lazy racket
                          [(#%plain-app fn . rest) #'fn]
                          ;[(let-values . rest) #f] ; so lazy racket doesnt give error
-                         [else (error 'find-special-name "couldn't find expanded name for ~a" name)])]
-           [tmp2 (printf "just the fn: ~a\n" just-the-fn)]
-           [tmp3 (printf "evaled: ~a\n" (eval (syntax-recertify just-the-fn expanded-application (current-code-inspector) #f)))])
+                         [else (error 'find-special-name "couldn't find expanded name for ~a" name)])])
 ;      (if just-the-fn
-          (eval (syntax-recertify just-the-fn expanded-application (current-code-inspector) #f)) ))
+          (extract-if-struct 
+           (eval (syntax-recertify just-the-fn expanded-application (current-code-inspector) #f))) ))
 ;          #f))) ; so lazy racket doesnt give error
 
   ;; these are delayed so that they use the userspace expander.  I'm sure
@@ -442,7 +429,7 @@
   (define unknown-promises (make-weak-hash))
   (define next-unknown-promise 0)
   
-  (define not-yet-called-apps (make-hash))
+  #;(define not-yet-called-apps (make-hash))
                                                                                                                
  ; ;;  ;;;    ;;;   ;;;   ; ;;           ;;;   ;;;   ;   ;  ; ;;  ;;;   ;;;           ;;;  ;    ;  ; ;;;   ; ;;
  ;;   ;   ;  ;     ;   ;  ;;  ;         ;     ;   ;  ;   ;  ;;   ;     ;   ;         ;   ;  ;  ;   ;;   ;  ;;  
@@ -941,21 +928,21 @@
                              (begin
                                (when dont-use-ellipses?
                                  (printf "not yet called, dont use ellipses: ~a\n" (syntax->datum exp))
-                                 (hash-set! not-yet-called-apps
+                                 #;(hash-set! not-yet-called-apps
                                             (syntax->datum exp)
                                             (mark-binding-value (car (mark-bindings top-mark)))))
                                #`(#%plain-app . #,rectified-evaluated))
                              ; STC added let
                              (letrec
-                                 ([current-subterm
-                                   (caar unevaluated)]
-                                  [get-fn
+                                 ([current-binding-maybe
+                                   (skipto/auto (caar unevaluated) 'discard (λ (x) x))]
+                                  #;[get-fn
                                    (λ (f)
                                      (case f
                                        [(car) car]
                                        [(cdr) cdr]
                                        [(syntax-e) syntax-e]))]
-                                  [maybe-extract-binding
+                                  #;[maybe-extract-binding
                                    (λ (e)
                                      (cond
                                        [(identifier? e) e]
@@ -970,14 +957,14 @@
                                             e 
                                             skipto-fns)))]
                                        [else #f]))]
-                                  [current-binding
+                                  #;[current-binding
                                    (maybe-extract-binding current-subterm)]
                                   [current-val
                                    (and
-                                    current-binding
-                                    (lookup-binding mark-list current-binding))]
+                                    current-binding-maybe
+                                    (lookup-binding mark-list current-binding-maybe))]
                                   [add-to-promise-table
-                                   (when current-binding
+                                   (when current-binding-maybe
                                      (hash-set! partially-evaluated-promises
                                                 current-val so-far))])
                                #`(#%plain-app 
@@ -1013,8 +1000,6 @@
                                            (λ (n)
                                              (lookup-binding mark-list 
                                                              (get-arg-var n))))]
-                                         [tmp0 (map (λ (v) (printf "~a\n" v)) vals)]
-                                         [tmp1 (printf "~a\n" (map (λ (p) (and (promise? p) (promise-running? p))) vals))]
                                          ; I'm assuming hole must be where running promise is
                                          [reconed-vals-with-so-far-inserted
                                           (map (λ (v) (if (and (promise? v) (promise-running? v))
@@ -1112,7 +1097,7 @@
                                             [(begin0 first-body . rest-bodies)
                                              (if (eq? so-far nothing-so-far)
                                                  (error 'foo "not implemented")
-                                                 ;; don't know what goes hereyet
+                                                 ;; don't know what goes here yet
                                                  #`(begin0 #,so-far #,@(map recon-source-current-marks (syntax->list #`rest-bodies))))]
                                             
                                             ; let-values
@@ -1179,7 +1164,8 @@
                       (if returned-value-list ; is it a normal-break/values?
                           (begin 
                             (unless 
-                                (and (pair? returned-value-list) (null? (cdr returned-value-list)))
+                                (and (pair? returned-value-list) 
+                                     (null? (cdr returned-value-list)))
                               (error 'reconstruct "context expected one value, given ~v" returned-value-list))
                             (recon-value (car returned-value-list) render-settings))
                           nothing-so-far)])
@@ -1189,7 +1175,8 @@
                       (if returned-value-list ; is it an expr -> value reduction?
                           (begin 
                             (unless 
-                                (and (pair? returned-value-list) (null? (cdr returned-value-list)))
+                                (and (pair? returned-value-list) 
+                                     (null? (cdr returned-value-list)))
                               (error 'reconstruct "context expected one value, given ~v" returned-value-list))
                             (recon-value (car returned-value-list) render-settings))
                           (recon-source-expr (mark-source (car mark-list)) mark-list null null render-settings))])

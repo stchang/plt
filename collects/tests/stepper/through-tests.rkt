@@ -1555,6 +1555,233 @@
      :: {(cadr (list (/ 1 0) (+ 1 2)))}
      -> {(+ 1 2)}
      -> {3})
+  (t 'lazy-list3 m:lazy
+     (cadr (cddr (list 1 2 3 4 5)))
+     :: (cadr {(cddr (list 1 2 3 4 5))})
+     -> (cadr {(list 3 4 5)})
+     :: {(cadr (list 3 4 5))}
+     -> {4})
+  (t 'lazy-list4 m:lazy
+     (cadr (cddr (cddr (list 1 2 3 4 5 6 7 8))))
+     :: (cadr (cddr {(cddr (list 1 2 3 4 5 6 7 8))}))
+     -> (cadr (cddr {(list 3 4 5 6 7 8)}))
+     :: (cadr {(cddr (list 3 4 5 6 7 8))})
+     -> (cadr {(list 5 6 7 8)})
+     :: {(cadr (list 5 6 7 8))}
+     -> {6})
+  (t 'lazy-list5 m:lazy
+     (cadr (cddr (list (/ 1 0) (/ 1 0) (/ 1 0) (+ 7 8))))
+     :: (cadr {(cddr (list (/ 1 0) (/ 1 0) (/ 1 0) (+ 7 8)))})
+     -> (cadr {(list (/ 1 0) (+ 7 8))})
+     :: {(cadr (list (/ 1 0) (+ 7 8)))}
+     -> {(+ 7 8)}
+     -> {15})
+  (t 'lazy-list6 m:lazy
+     (car (cdr (cddr (cdddr (cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))))
+     :: (car (cdr (cddr (cdddr {(cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))}))))
+     -> (car (cdr (cddr (cdddr {(list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)}))))
+     :: (car (cdr (cddr {(cdddr (list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))})))
+     -> (car (cdr (cddr {(list 8 9 10 11 12 13 14 15 16 17 18 19 20)})))
+     :: (car (cdr {(cddr (list 8 9 10 11 12 13 14 15 16 17 18 19 20))}))
+     -> (car (cdr {(list 10 11 12 13 14 15 16 17 18 19 20)}))
+     :: (car {(cdr (list 10 11 12 13 14 15 16 17 18 19 20))})
+     -> (car {(list 11 12 13 14 15 16 17 18 19 20)})
+     :: {(car (list 11 12 13 14 15 16 17 18 19 20))}
+     -> {11})
+    (t 'lazy-list7 m:lazy
+     (car (rest (cddr (cdddr (cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))))
+     :: (car (rest (cddr (cdddr {(cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))}))))
+     -> (car (rest (cddr (cdddr {(list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)}))))
+     :: (car (rest (cddr {(cdddr (list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))})))
+     -> (car (rest (cddr {(list 8 9 10 11 12 13 14 15 16 17 18 19 20)})))
+     :: (car (rest {(cddr (list 8 9 10 11 12 13 14 15 16 17 18 19 20))}))
+     -> (car (rest {(list 10 11 12 13 14 15 16 17 18 19 20)}))
+     :: (car {(rest (list 10 11 12 13 14 15 16 17 18 19 20))})
+     -> (car {(list 11 12 13 14 15 16 17 18 19 20)})
+     :: {(car (list 11 12 13 14 15 16 17 18 19 20))}
+     -> {11})
+    (t 'lazy-list8 m:lazy
+     (first (cdr (cddr (cdddr (cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))))
+     :: (first (cdr (cddr (cdddr {(cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))}))))
+     -> (first (cdr (cddr (cdddr {(list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)}))))
+     :: (first (cdr (cddr {(cdddr (list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))})))
+     -> (first (cdr (cddr {(list 8 9 10 11 12 13 14 15 16 17 18 19 20)})))
+     :: (first (cdr {(cddr (list 8 9 10 11 12 13 14 15 16 17 18 19 20))}))
+     -> (first (cdr {(list 10 11 12 13 14 15 16 17 18 19 20)}))
+     :: (first {(cdr (list 10 11 12 13 14 15 16 17 18 19 20))})
+     -> (first {(list 11 12 13 14 15 16 17 18 19 20)})
+     :: {(first (list 11 12 13 14 15 16 17 18 19 20))}
+     -> {11})
+    (t 'lazy-list9 m:lazy
+     (cadr (cdr (cddr (cdddr (cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))))
+     :: (cadr (cdr (cddr (cdddr {(cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))}))))
+     -> (cadr (cdr (cddr (cdddr {(list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)}))))
+     :: (cadr (cdr (cddr {(cdddr (list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))})))
+     -> (cadr (cdr (cddr {(list 8 9 10 11 12 13 14 15 16 17 18 19 20)})))
+     :: (cadr (cdr {(cddr (list 8 9 10 11 12 13 14 15 16 17 18 19 20))}))
+     -> (cadr (cdr {(list 10 11 12 13 14 15 16 17 18 19 20)}))
+     :: (cadr {(cdr (list 10 11 12 13 14 15 16 17 18 19 20))})
+     -> (cadr {(list 11 12 13 14 15 16 17 18 19 20)})
+     :: {(cadr (list 11 12 13 14 15 16 17 18 19 20))}
+     -> {12})
+    (t 'lazy-list10 m:lazy
+     (second (cdr (cddr (cdddr (cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))))
+     :: (second (cdr (cddr (cdddr {(cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))}))))
+     -> (second (cdr (cddr (cdddr {(list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)}))))
+     :: (second (cdr (cddr {(cdddr (list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))})))
+     -> (second (cdr (cddr {(list 8 9 10 11 12 13 14 15 16 17 18 19 20)})))
+     :: (second (cdr {(cddr (list 8 9 10 11 12 13 14 15 16 17 18 19 20))}))
+     -> (second (cdr {(list 10 11 12 13 14 15 16 17 18 19 20)}))
+     :: (second {(cdr (list 10 11 12 13 14 15 16 17 18 19 20))})
+     -> (second {(list 11 12 13 14 15 16 17 18 19 20)})
+     :: {(second (list 11 12 13 14 15 16 17 18 19 20))}
+     -> {12})
+    (t 'lazy-list11 m:lazy
+     (caddr (cdr (cddr (cdddr (cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))))
+     :: (caddr (cdr (cddr (cdddr {(cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))}))))
+     -> (caddr (cdr (cddr (cdddr {(list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)}))))
+     :: (caddr (cdr (cddr {(cdddr (list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))})))
+     -> (caddr (cdr (cddr {(list 8 9 10 11 12 13 14 15 16 17 18 19 20)})))
+     :: (caddr (cdr {(cddr (list 8 9 10 11 12 13 14 15 16 17 18 19 20))}))
+     -> (caddr (cdr {(list 10 11 12 13 14 15 16 17 18 19 20)}))
+     :: (caddr {(cdr (list 10 11 12 13 14 15 16 17 18 19 20))})
+     -> (caddr {(list 11 12 13 14 15 16 17 18 19 20)})
+     :: {(caddr (list 11 12 13 14 15 16 17 18 19 20))}
+     -> {13})
+    (t 'lazy-list12 m:lazy
+     (third (cdr (cddr (cdddr (cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))))
+     :: (third (cdr (cddr (cdddr {(cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))}))))
+     -> (third (cdr (cddr (cdddr {(list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)}))))
+     :: (third (cdr (cddr {(cdddr (list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))})))
+     -> (third (cdr (cddr {(list 8 9 10 11 12 13 14 15 16 17 18 19 20)})))
+     :: (third (cdr {(cddr (list 8 9 10 11 12 13 14 15 16 17 18 19 20))}))
+     -> (third (cdr {(list 10 11 12 13 14 15 16 17 18 19 20)}))
+     :: (third {(cdr (list 10 11 12 13 14 15 16 17 18 19 20))})
+     -> (third {(list 11 12 13 14 15 16 17 18 19 20)})
+     :: {(third (list 11 12 13 14 15 16 17 18 19 20))}
+     -> {13})
+    (t 'lazy-list13 m:lazy
+     (cadddr (cdr (cddr (cdddr (cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))))
+     :: (cadddr (cdr (cddr (cdddr {(cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))}))))
+     -> (cadddr (cdr (cddr (cdddr {(list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)}))))
+     :: (cadddr (cdr (cddr {(cdddr (list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))})))
+     -> (cadddr (cdr (cddr {(list 8 9 10 11 12 13 14 15 16 17 18 19 20)})))
+     :: (cadddr (cdr {(cddr (list 8 9 10 11 12 13 14 15 16 17 18 19 20))}))
+     -> (cadddr (cdr {(list 10 11 12 13 14 15 16 17 18 19 20)}))
+     :: (cadddr {(cdr (list 10 11 12 13 14 15 16 17 18 19 20))})
+     -> (cadddr {(list 11 12 13 14 15 16 17 18 19 20)})
+     :: {(cadddr (list 11 12 13 14 15 16 17 18 19 20))}
+     -> {14})
+    (t 'lazy-list14 m:lazy
+     (fourth (cdr (cddr (cdddr (cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))))
+     :: (fourth (cdr (cddr (cdddr {(cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))}))))
+     -> (fourth (cdr (cddr (cdddr {(list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)}))))
+     :: (fourth (cdr (cddr {(cdddr (list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))})))
+     -> (fourth (cdr (cddr {(list 8 9 10 11 12 13 14 15 16 17 18 19 20)})))
+     :: (fourth (cdr {(cddr (list 8 9 10 11 12 13 14 15 16 17 18 19 20))}))
+     -> (fourth (cdr {(list 10 11 12 13 14 15 16 17 18 19 20)}))
+     :: (fourth {(cdr (list 10 11 12 13 14 15 16 17 18 19 20))})
+     -> (fourth {(list 11 12 13 14 15 16 17 18 19 20)})
+     :: {(fourth (list 11 12 13 14 15 16 17 18 19 20))}
+     -> {14})
+    (t 'lazy-list15 m:lazy
+     (fifth (cdr (cddr (cdddr (cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))))
+     :: (fifth (cdr (cddr (cdddr {(cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))}))))
+     -> (fifth (cdr (cddr (cdddr {(list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)}))))
+     :: (fifth (cdr (cddr {(cdddr (list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))})))
+     -> (fifth (cdr (cddr {(list 8 9 10 11 12 13 14 15 16 17 18 19 20)})))
+     :: (fifth (cdr {(cddr (list 8 9 10 11 12 13 14 15 16 17 18 19 20))}))
+     -> (fifth (cdr {(list 10 11 12 13 14 15 16 17 18 19 20)}))
+     :: (fifth {(cdr (list 10 11 12 13 14 15 16 17 18 19 20))})
+     -> (fifth {(list 11 12 13 14 15 16 17 18 19 20)})
+     :: {(fifth (list 11 12 13 14 15 16 17 18 19 20))}
+     -> {15})
+    (t 'lazy-list16 m:lazy
+     (sixth (cdr (cddr (cdddr (cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))))
+     :: (sixth (cdr (cddr (cdddr {(cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))}))))
+     -> (sixth (cdr (cddr (cdddr {(list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)}))))
+     :: (sixth (cdr (cddr {(cdddr (list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))})))
+     -> (sixth (cdr (cddr {(list 8 9 10 11 12 13 14 15 16 17 18 19 20)})))
+     :: (sixth (cdr {(cddr (list 8 9 10 11 12 13 14 15 16 17 18 19 20))}))
+     -> (sixth (cdr {(list 10 11 12 13 14 15 16 17 18 19 20)}))
+     :: (sixth {(cdr (list 10 11 12 13 14 15 16 17 18 19 20))})
+     -> (sixth {(list 11 12 13 14 15 16 17 18 19 20)})
+     :: {(sixth (list 11 12 13 14 15 16 17 18 19 20))}
+     -> {16})
+    (t 'lazy-list17 m:lazy
+     (seventh (cdr (cddr (cdddr (cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))))
+     :: (seventh (cdr (cddr (cdddr {(cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))}))))
+     -> (seventh (cdr (cddr (cdddr {(list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)}))))
+     :: (seventh (cdr (cddr {(cdddr (list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))})))
+     -> (seventh (cdr (cddr {(list 8 9 10 11 12 13 14 15 16 17 18 19 20)})))
+     :: (seventh (cdr {(cddr (list 8 9 10 11 12 13 14 15 16 17 18 19 20))}))
+     -> (seventh (cdr {(list 10 11 12 13 14 15 16 17 18 19 20)}))
+     :: (seventh {(cdr (list 10 11 12 13 14 15 16 17 18 19 20))})
+     -> (seventh {(list 11 12 13 14 15 16 17 18 19 20)})
+     :: {(seventh (list 11 12 13 14 15 16 17 18 19 20))}
+     -> {17})
+    (t 'lazy-list18 m:lazy
+     (eighth (cdr (cddr (cdddr (cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))))
+     :: (eighth (cdr (cddr (cdddr {(cddddr (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))}))))
+     -> (eighth (cdr (cddr (cdddr {(list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)}))))
+     :: (eighth (cdr (cddr {(cdddr (list 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))})))
+     -> (eighth (cdr (cddr {(list 8 9 10 11 12 13 14 15 16 17 18 19 20)})))
+     :: (eighth (cdr {(cddr (list 8 9 10 11 12 13 14 15 16 17 18 19 20))}))
+     -> (eighth (cdr {(list 10 11 12 13 14 15 16 17 18 19 20)}))
+     :: (eighth {(cdr (list 10 11 12 13 14 15 16 17 18 19 20))})
+     -> (eighth {(list 11 12 13 14 15 16 17 18 19 20)})
+     :: {(eighth (list 11 12 13 14 15 16 17 18 19 20))}
+     -> {18})
+    (t 'lazy-list19 m:lazy
+     (caar (rest (cddr (cdddr (cddddr (list 1 2 3 4 5 6 7 8 9 10 (list 11 12 13 14 15 16 17 18 19 20)))))))
+     :: (caar (rest (cddr (cdddr {(cddddr (list 1 2 3 4 5 6 7 8 9 10 (list 11 12 13 14 15 16 17 18 19 20)))}))))
+     -> (caar (rest (cddr (cdddr {(list 5 6 7 8 9 10 (list 11 12 13 14 15 16 17 18 19 20))}))))
+     :: (caar (rest (cddr {(cdddr (list 5 6 7 8 9 10 (list 11 12 13 14 15 16 17 18 19 20)))})))
+     -> (caar (rest (cddr {(list 8 9 10 (list 11 12 13 14 15 16 17 18 19 20))})))
+     :: (caar (rest {(cddr (list 8 9 10 (list 11 12 13 14 15 16 17 18 19 20)))}))
+     -> (caar (rest {(list 10 (list 11 12 13 14 15 16 17 18 19 20))}))
+     :: (caar {(rest (list 10 (list 11 12 13 14 15 16 17 18 19 20)))})
+     -> (caar {(list (list 11 12 13 14 15 16 17 18 19 20))})
+     :: {(caar (list (list 11 12 13 14 15 16 17 18 19 20)))}
+     -> {11})
+    (t 'lazy-list20 m:lazy
+     (caaar (rest (cddr (cdddr (cddddr (list 1 2 3 4 5 6 7 8 9 10 (list (list 11 12 13 14 15 16 17 18 19 20))))))))
+     :: (caaar (rest (cddr (cdddr {(cddddr (list 1 2 3 4 5 6 7 8 9 10 (list (list 11 12 13 14 15 16 17 18 19 20))))}))))
+     -> (caaar (rest (cddr (cdddr {(list 5 6 7 8 9 10 (list (list 11 12 13 14 15 16 17 18 19 20)))}))))
+     :: (caaar (rest (cddr {(cdddr (list 5 6 7 8 9 10 (list (list 11 12 13 14 15 16 17 18 19 20))))})))
+     -> (caaar (rest (cddr {(list 8 9 10 (list (list 11 12 13 14 15 16 17 18 19 20)))})))
+     :: (caaar (rest {(cddr (list 8 9 10 (list (list 11 12 13 14 15 16 17 18 19 20))))}))
+     -> (caaar (rest {(list 10 (list (list 11 12 13 14 15 16 17 18 19 20)))}))
+     :: (caaar {(rest (list 10 (list (list 11 12 13 14 15 16 17 18 19 20))))})
+     -> (caaar {(list (list (list 11 12 13 14 15 16 17 18 19 20)))})
+     :: {(caaar (list (list (list 11 12 13 14 15 16 17 18 19 20))))}
+     -> {11})
+    (t 'lazy-list21 m:lazy
+     (caaaar (rest (cddr (cdddr (cddddr (list 1 2 3 4 5 6 7 8 9 10 (list (list (list 11 12 13 14 15 16 17 18 19 20)))))))))
+     :: (caaaar (rest (cddr (cdddr {(cddddr (list 1 2 3 4 5 6 7 8 9 10 (list (list (list 11 12 13 14 15 16 17 18 19 20)))))}))))
+     -> (caaaar (rest (cddr (cdddr {(list 5 6 7 8 9 10 (list (list (list 11 12 13 14 15 16 17 18 19 20))))}))))
+     :: (caaaar (rest (cddr {(cdddr (list 5 6 7 8 9 10 (list (list (list 11 12 13 14 15 16 17 18 19 20)))))})))
+     -> (caaaar (rest (cddr {(list 8 9 10 (list (list (list 11 12 13 14 15 16 17 18 19 20))))})))
+     :: (caaaar (rest {(cddr (list 8 9 10 (list (list (list 11 12 13 14 15 16 17 18 19 20)))))}))
+     -> (caaaar (rest {(list 10 (list (list (list 11 12 13 14 15 16 17 18 19 20))))}))
+     :: (caaaar {(rest (list 10 (list (list (list 11 12 13 14 15 16 17 18 19 20)))))})
+     -> (caaaar {(list (list (list (list 11 12 13 14 15 16 17 18 19 20))))})
+     :: {(caaaar (list (list (list (list 11 12 13 14 15 16 17 18 19 20)))))}
+     -> {11})
+    (t 'lazy-list22 m:lazy
+     (cdar (rest (cddr (cdddr (cddddr (list 1 2 3 4 5 6 7 8 9 10 (list 11 12 13 14 15 16 17 18 19 20)))))))
+     :: (cdar (rest (cddr (cdddr {(cddddr (list 1 2 3 4 5 6 7 8 9 10 (list 11 12 13 14 15 16 17 18 19 20)))}))))
+     -> (cdar (rest (cddr (cdddr {(list 5 6 7 8 9 10 (list 11 12 13 14 15 16 17 18 19 20))}))))
+     :: (cdar (rest (cddr {(cdddr (list 5 6 7 8 9 10 (list 11 12 13 14 15 16 17 18 19 20)))})))
+     -> (cdar (rest (cddr {(list 8 9 10 (list 11 12 13 14 15 16 17 18 19 20))})))
+     :: (cdar (rest {(cddr (list 8 9 10 (list 11 12 13 14 15 16 17 18 19 20)))}))
+     -> (cdar (rest {(list 10 (list 11 12 13 14 15 16 17 18 19 20))}))
+     :: (cdar {(rest (list 10 (list 11 12 13 14 15 16 17 18 19 20)))})
+     -> (cdar {(list (list 11 12 13 14 15 16 17 18 19 20))})
+     :: {(cdar (list (list 11 12 13 14 15 16 17 18 19 20)))}
+     -> {(list 12 13 14 15 16 17 18 19 20)})
+
+    
   (let* ([def '(define (f x y) (cadr (list x y x)))])
     (t 'lazy-list-fn1 m:lazy
        ,def (f (/ 1 0) (+ 1 2))
@@ -1578,9 +1805,20 @@
      (+ 1 2) (+ 3 4)
      :: {(+ 1 2)} -> {3}
      :: 3 {(+ 3 4)} -> 3 {7})
+  (t 'lazy-multi-value-list1 m:lazy
+     (cadr (cddr (list 1 2 3 4 5))) (cadr (cddr (list (/ 1 0) (/ 1 0) (/ 1 0) (+ 7 8))))
+     :: (cadr {(cddr (list 1 2 3 4 5))})
+     -> (cadr {(list 3 4 5)})
+     :: {(cadr (list 3 4 5))}
+     -> {4}
+     :: 4 (cadr {(cddr (list (/ 1 0) (/ 1 0) (/ 1 0) (+ 7 8)))})
+     -> 4 (cadr {(list (/ 1 0) (+ 7 8))})
+     :: 4 {(cadr (list (/ 1 0) (+ 7 8)))}
+     -> 4 {(+ 7 8)}
+     -> 4 {15})
      
      
-     
+  
      
      
      

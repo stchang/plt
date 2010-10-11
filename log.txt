@@ -2194,11 +2194,90 @@ SOLUTION: rebuild the entire app, similar to how the uncalled case works, except
 
 BUG: highlighting is broken when eliminating ellipses
 CAUSE: highlight remains on the value of the last evaled subexpression
-SOLUTION: move the highlight out one level (add optional param to send-step in model.rkt to do this) when encountering ellipses as the lhs of a step
+SOLUTION: move the highlight out one level (add optional param to send-step in model.rkt to do this) for saved rhs when encountering ellipses as the lhs of a step
+BETTER SOLUTION (10/10/2010): move highlight out one level for all saved rhs whenever break is result-value-break
 
 
 TODO Tomorrow:
 1) make sure the moving out of the highlighting works when there are more than 1 expr in a step (right now I think I only deal with the first exp in the exps list)
+  - this doesnt seem to be a problem 10/10/2010
 2) write tests
 3) email matthias
 4) clean up debugging output
+
+
+
+--------------------------------------------------------------------------------
+----- 10/7/2010 - LAPTOP
+--------------------------------------------------------------------------------
+Getting error when trying to run stepper tests:
+
+string<?: expects type <string> as 1st argument, given: #f; other arguments were: "dcdf0433aca16ea2f5db9a003821f56a718d2da5"
+
+
+Isolated the error to:
+
+mzlib/contract.rkt, when I try to run the file
+     |
+     V
+mzlib/private/contract-object.rkt
+     |
+     V
+mzlib/private/contract-arrow.rkt
+     |
+     V
+racket/contract/private/opt.rkt
+     |
+     V
+racket/contract/private/guts.rkt
+     |
+     V
+racket/private/base.rkt
+     |
+     V
+racket/private/pre-base.rkt
+     |
+     V
+racket/private/more-scheme.rkt
+     |
+     V
+racket/private/small-scheme.rkt
+     |
+     V
+racket/private/define-et-al.rkt
+     |
+     V
+racket/private/cond.rkt
+
+
+SOLUTION: bug fixed in 5.0.1.*, see http://lists.racket-lang.org/dev/archive/2010-July/003692.html
+WORKAROUND for 5.0.0.*: set Dynamic Properties (Choose Language -> Show Details) to Debugging and profiling (bug shows up when it's just Debugging, or maybe even with No debugging or profiling)
+
+--------------------------------------------------------------------------------
+----- 10/8/2010 - LAPTOP
+--------------------------------------------------------------------------------
+COMPILING Racket from source in Windows with Visual Studio express:
+(basically following the appropriate steps of C:\plt\src\worksp\build.bat but doing it manually bc VS Express doesnt have devenv.exe)
+(these steps are also outlined in c:\plt\src\worksp\README but less succinctly)
+(*NOTE: "plt" is the base directory for the repository)
+
+1) open C:\plt\src\worksp\racket\racket.sln with Visual C++ 2008 Express (double clicking the file is enough to open it) (click yes to convert the file, made backup)
+2) Build -> Build Solution (Release Win32 version)
+3) open C:\plt\src\worksp\gracket\gracket.sln with Visual C++ 2008 Express (double clicking the file is enough to open it) (click yes to convert the file, made backup)
+4) Build -> Build Solution (Release Win32 version)
+5) ran C:\program files\Microsoft Visual Studio 9.0\Common7\Tools\vsvars32.bat to "Setting environment for using Microsoft Visual Studio 2008 x86 tools."
+6) ran ..\..\..\racketcgc.exe -c make.rkt from plt\src\worksp\gc2 
+7) open C:\plt\src\worksp\mrstart\mrstart.sln with Visual C++ Express and compile like previous steps
+8) open C:\plt\src\worksp\mrstart\mzstart.sln with Visual C++ Express and compile like previous steps
+9) run racket -l setup -N "raco setup" from c:\plt to build other exe's
+  - got errors:
+raco setup: error: during Early Install for plot
+raco setup:   compile-extension: can't find an installed C compiler
+10) ran instead: racket.exe -l- setup
+  - got same plot errors
+
+
+--------------------------------------------------------------------------------
+----- 10/10/2010 - LAPTOP
+--------------------------------------------------------------------------------
+BUG: 'trivial-begin0 stepper test fails in 5.0.1.5 when Dynamic properties is Debugging and profiling, but passes when debugging and profiling are off, or just debugging is on
