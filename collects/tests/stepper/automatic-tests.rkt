@@ -17,9 +17,9 @@
                      lazy-list11 lazy-list12 lazy-list13 lazy-list14 lazy-list15
                      lazy-list16 lazy-list17 lazy-list18 lazy-list19 lazy-list20
                      lazy-list21 lazy-list22
-                     lazy-list-fn1 lazy-list-fn2
+                     lazy-list-fn1 lazy-list-fn2 lazy-list-fn3 lazy-list-fn4
                      lazy-list-fn-parallel-reduce1
-                     lazy-take1 lazy-take2 lazy-take3 lazy-take4 lazy-take5 lazy-take6 lazy-take7
+                     lazy-take1 lazy-take2 lazy-take3 lazy-take4 lazy-take5 lazy-take6 lazy-take7 lazy-take8
                      ))
 
 (let ([ns (make-base-namespace)])

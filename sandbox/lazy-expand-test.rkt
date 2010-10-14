@@ -10,10 +10,10 @@
 
 ;(cadr (cons (/ 1 0) (cons (+ 1 2) '())))
 
-(define (f x) (+ (car x) (car x)))
-(f (list (+ 1 2) (+ 3 4)))
+;(define (f x) (+ (cadr x) (cadr x)))
+;(f (list (+ 1 2) (+ 3 4) (/ 1 0)))
 (define (g x) (+ (cadr x) (cadr x)))
-(g (take 2 (list 1 2 3)))
+(g (take 2 (list (+ 1 2) (+ 3 4) (/ 1 0))))
 
 
 ;(define (f x) (append (!! x) x))

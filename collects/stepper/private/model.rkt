@@ -289,7 +289,7 @@
                       (printf "step sent\n"))
                     (if move-highlight?
                         (begin
-                          (printf "moving highlight ...\n")
+                          (printf "moving highlight for saved rhs ...\n")
                         (set! last-rhs-held (create-held (cons
                                                           (move-highlight-out 
                                                            (car rhs-exps))

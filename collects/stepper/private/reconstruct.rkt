@@ -112,7 +112,6 @@
     (extract-proc-if-promise (extract-proc-if-struct f)))
     
   (define (new-promise-running? p)
-    (printf "checking if ~a (~a) is running\n" p (eq-hash-code p))
     (if (promise? p)
         (let ([v (pref p)])
           (or (running? v)
@@ -166,11 +165,6 @@
   
   (define recon-value
     (opt-lambda (val render-settings [assigned-name #f])
-      (printf "val = ~a (~a)\n" val (eq-hash-code val))
-      (and (promise? (extract-proc-if-struct val))
-           (printf "val is promise\n")
-           (new-promise-running? (extract-proc-if-struct val))
-           (printf "val is running promise\n"))
       (if (hash-ref finished-xml-box-table val (lambda () #f))
           (stepper-syntax-property #`(quote #,val) 'stepper-xml-value-hint 'from-xml-box)
           (let ([closure-record 
@@ -185,7 +179,6 @@
                                       (construct-lifted-name base-name lifted-index)
                                       base-name)])
                        (if (and assigned-name (free-identifier=? base-name assigned-name))
-                           ;(recon-source-expr (mark-source mark) (list mark) null null render-settings)
                            (recon-source-expr (mark-source mark) (list mark) null null render-settings)
                            #`#,name))
                      (recon-source-expr (mark-source mark) (list mark) null null render-settings) ))]
@@ -199,10 +192,7 @@
                              [reconed-cdr (recon-value (cdr val) render-settings assigned-name)])
                  #'(cons reconed-car reconed-cdr))]
               [(promise? val) ; must be from library code
-               (let ([tmp0 (printf "hash:\n")]
-                     [tmp (hash-for-each partially-evaluated-promises-table
-                                         (λ (x y) (printf "~a (~a) = ~a\n" x (eq-hash-code x) y)))]
-                     [partial-eval-promise
+               (let ([partial-eval-promise
                       (hash-ref partially-evaluated-promises-table
                                 val (λ () #f))]
                      [partial-eval-promise2
@@ -214,12 +204,9 @@
                      partial-eval-promise
                      (if partial-eval-promise2
                          partial-eval-promise2
+               ; promise should never be running here          
                (if (and (promise-forced? val) (not (new-promise-running? val)))
-                   (dynamic-wind 
-                    (λ () (printf "before: ~a (~a)\n" val (eq-hash-code val)))
-                    (λ () (recon-value (force val) render-settings))
-                    (λ () (printf "after: ~a (~a)\n" val (eq-hash-code val))))
-                   
+                   (recon-value (force val) render-settings)
                    (let ([unknown-promise (hash-ref unknown-promises-table val (λ () #f))])
                      (if unknown-promise
                          (begin
@@ -1233,8 +1220,7 @@
                                      (null? (cdr returned-value-list)))
                               (error 'reconstruct "context expected one value, given ~v" returned-value-list))
                             (recon-value (car returned-value-list) render-settings))
-                          (recon-source-expr (mark-source (car mark-list)) mark-list null null render-settings))]
-                     [tmp (pr innermost)])
+                          (recon-source-expr (mark-source (car mark-list)) mark-list null null render-settings))])
                 (recon (mark-as-highlight innermost) (cdr mark-list) #f)))
              ((double-break)
               (let* ([source-expr (mark-source (car mark-list))]
