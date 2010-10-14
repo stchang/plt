@@ -2281,3 +2281,17 @@ raco setup:   compile-extension: can't find an installed C compiler
 ----- 10/10/2010 - LAPTOP
 --------------------------------------------------------------------------------
 BUG: 'trivial-begin0 stepper test fails in 5.0.1.5 when Dynamic properties is Debugging and profiling, but passes when debugging and profiling are off, or just debugging is on
+
+
+--------------------------------------------------------------------------------
+----- 10/13/2010 - LAPTOP
+--------------------------------------------------------------------------------
+BUG: some nested promises dont render correctly
+example programs: 
+(define (f x) (+ (car x) (car x)))
+(f (list (+ 1 2) (+ 3 4)))
+(define (g x) (+ (cadr x) (cadr x)))
+(g (take 2 (list 1 2 3)))
+CAUSE: partially evaluated promises wasnt being stored correctly all the time
+SOLUTION: overhauled the way I store and retrieve partially evaluated promises:
+At the beginning of recon-inner, look for any running promise in the bindings of the top mark (there either should only be 1, or they should all be the same one), and store that in the partially-evaluated-promises-table as the key, using so-far as the value. Then in recon-value, when rendering a promise, first look up in partially-evaluated-promises-table. (for some reason sometimes I needed to unwrap the promise one layer to get it to work. I still can't figure out why this is needed).
