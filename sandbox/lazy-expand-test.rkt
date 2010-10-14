@@ -10,12 +10,15 @@
 
 ;(cadr (cons (/ 1 0) (cons (+ 1 2) '())))
 
-;(define (f x) (+ (cadr x) (car x)))
-;(f (take 2 (list (+ 1 2) (+ 3 4))))
+(define (f x) (+ (car x) (car x)))
+(f (list (+ 1 2) (+ 3 4)))
+(define (g x) (+ (cadr x) (cadr x)))
+(g (take 2 (list 1 2 3)))
 
-;(cadr (cons 1 (cons 2 empty))) ; broken
-;(* 2 (second (take 2 (list 1 2 3 4 5))))
-(take 2 (list (+ 1 2) (+ 3 4) (+ 5 6)))
+
+;(define (f x) (append (!! x) x))
+;(f (cdr (take 2 (list 1 2 3 4 5))))
+
 ;(cadr (cddr (list 1 2 3 4 5)))
 ;(cadr (cddr (cddr (cddr (list 1 2 3 4 5 6 7 8)))))
 ;(+ (cadr (cddr (list 1 2 3 4))) (cadr (cddr (list 5 6 7 8))))

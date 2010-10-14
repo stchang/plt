@@ -95,20 +95,36 @@
     (stepper-syntax-property stx 'stepper-highlight #t))
   
   ; STC add
-  ; extract-if-struct : any -> procedure?
+  ; extract-proc-if-struct : any -> procedure? or any
   ; Purpose: extracts closure from struct procedure (ie - lazy-proc in lazy racket)
-  ;          or from promise
-  (define (extract-if-struct f)
-    (cond [(procedure? f)
-           (let ([extracted (procedure-extract-target f)])
-             (if extracted extracted f))]
-          [(promise? f) (pref f)]
-          [else f]))
+  (define (extract-proc-if-struct f)
+    (if (procedure? f)
+        (let ([extracted (procedure-extract-target f)])
+          (if extracted extracted f))
+        f))
+  ; extract-proc-if-promise : any -> thunk or any
+  (define (extract-proc-if-promise p)
+    (if (promise? p) 
+        (extract-proc-if-promise (pref p))
+        p))
+  ; unwraps struct or promise around procedure
+  (define (unwrap-proc f)
+    (extract-proc-if-promise (extract-proc-if-struct f)))
+    
+  (define (new-promise-running? p)
+    (printf "checking if ~a (~a) is running\n" p (eq-hash-code p))
+    (if (promise? p)
+        (let ([v (pref p)])
+          (or (running? v)
+              (and (promise? v)
+                   (new-promise-running? v))))
+        (raise-type-error 'new-promise-running? "promise" p)))
   
+  (require (for-syntax mzlib/string)) ; for expr->string
   (define-syntax (pr stx)
     (syntax-case stx ()
       [(_ x)
-       (with-syntax ([xx (datum->syntax #'x (symbol->string (syntax->datum #'x)))])
+       (with-syntax ([xx (datum->syntax #'x (expr->string (syntax->datum #'x)))])
        #'(printf (string-append xx " = ~a\n") x))]))
   (define (print-render-settings rs)
     (define-syntax (print-field stx)
@@ -150,10 +166,15 @@
   
   (define recon-value
     (opt-lambda (val render-settings [assigned-name #f])
+      (printf "val = ~a (~a)\n" val (eq-hash-code val))
+      (and (promise? (extract-proc-if-struct val))
+           (printf "val is promise\n")
+           (new-promise-running? (extract-proc-if-struct val))
+           (printf "val is running promise\n"))
       (if (hash-ref finished-xml-box-table val (lambda () #f))
           (stepper-syntax-property #`(quote #,val) 'stepper-xml-value-hint 'from-xml-box)
           (let ([closure-record 
-                 (closure-table-lookup (extract-if-struct val) (lambda () #f))])
+                 (closure-table-lookup (unwrap-proc val) (lambda () #f))])
             (cond
               [closure-record
                (let* ([mark (closure-record-mark closure-record)]
@@ -164,9 +185,10 @@
                                       (construct-lifted-name base-name lifted-index)
                                       base-name)])
                        (if (and assigned-name (free-identifier=? base-name assigned-name))
-                            (recon-source-expr (mark-source mark) (list mark) null null render-settings)
-                            #`#,name))
-                     (recon-source-expr (mark-source mark) (list mark) null null render-settings)))]
+                           ;(recon-source-expr (mark-source mark) (list mark) null null render-settings)
+                           (recon-source-expr (mark-source mark) (list mark) null null render-settings)
+                           #`#,name))
+                     (recon-source-expr (mark-source mark) (list mark) null null render-settings) ))]
               [(empty? val) #'empty] ; handle empty list separately
               [(list? val)
                (with-syntax ([(reconed-vals ...) 
@@ -177,9 +199,28 @@
                              [reconed-cdr (recon-value (cdr val) render-settings assigned-name)])
                  #'(cons reconed-car reconed-cdr))]
               [(promise? val) ; must be from library code
-               (if (promise-forced? val)
-                   (recon-value (force val) render-settings)
-                   (let ([unknown-promise (hash-ref unknown-promises val (λ () #f))])
+               (let ([tmp0 (printf "hash:\n")]
+                     [tmp (hash-for-each partially-evaluated-promises-table
+                                         (λ (x y) (printf "~a (~a) = ~a\n" x (eq-hash-code x) y)))]
+                     [partial-eval-promise
+                      (hash-ref partially-evaluated-promises-table
+                                val (λ () #f))]
+                     [partial-eval-promise2
+                      ; i dont know why there is an extra layer around the promise but there is,
+                      ; so I need to unwrap one layer
+                      (hash-ref partially-evaluated-promises-table
+                                (pref val) (λ () #f))])
+                 (if partial-eval-promise 
+                     partial-eval-promise
+                     (if partial-eval-promise2
+                         partial-eval-promise2
+               (if (and (promise-forced? val) (not (new-promise-running? val)))
+                   (dynamic-wind 
+                    (λ () (printf "before: ~a (~a)\n" val (eq-hash-code val)))
+                    (λ () (recon-value (force val) render-settings))
+                    (λ () (printf "after: ~a (~a)\n" val (eq-hash-code val))))
+                   
+                   (let ([unknown-promise (hash-ref unknown-promises-table val (λ () #f))])
                      (if unknown-promise
                          (begin
                            (printf "unknown promise found: ~a\n" unknown-promise)
@@ -187,9 +228,9 @@
                            )
                          (begin0
                            (render-unknown-promise next-unknown-promise)
-                           (hash-set! unknown-promises val next-unknown-promise)
+                           (hash-set! unknown-promises-table val next-unknown-promise)
                            (set! next-unknown-promise (add1 next-unknown-promise))
-                           (printf "next unknown promise: ~a\n" next-unknown-promise)))))]
+                           (printf "next unknown promise: ~a\n" next-unknown-promise))))) )))]
 
               [else
                (let* ([rendered ((render-settings-render-to-sexp render-settings) val)])
@@ -241,13 +282,15 @@
     ; don't halt for proper applications of constructors
     (and 
      (identifier? fn) ; handle cases like (#%top . f)
-     (let ([fun-val (extract-if-struct (lookup-binding mark-list fn))])
+     (let ([fun-val (extract-proc-if-struct (lookup-binding mark-list fn))])
        (and (procedure? fun-val)
             (procedure-arity-includes? 
              fun-val
              (length args))
             (or (and (render-settings-constructor-style-printing? render-settings)
-                     (if (render-settings-abbreviate-cons-as-list? render-settings)
+                     (or (eq? fun-val special-list-value)
+                         (eq? fun-val special-cons-value))
+                     #;(if (render-settings-abbreviate-cons-as-list? render-settings)
                          (eq? fun-val special-list-value)
                          (and (eq? fun-val special-cons-value)
                               (second-arg-is-list? mark-list))))
@@ -259,12 +302,13 @@
     
     
   (define (skip-lazy-redex-step? mark-list render-settings)
+
     (let ([expr (mark-source (car mark-list))])
       (kernel:kernel-syntax-case
        expr #f
        [(#%plain-app (lam args body) fn . rest)
         (eq? (syntax->datum #'lam) 'lambda)
-        (let ([tmp (constructor-app? (skipto/auto #'fn 'discard (λ (x) x))
+        (let* ([tmp (constructor-app? (skipto/auto #'fn 'discard (λ (x) x))
                                      (syntax->list #'rest)
                                      mark-list
                                      render-settings)])
@@ -290,7 +334,7 @@
       
   ;; skip-redex-step : mark-list? render-settings? -> boolean?
   (define (skip-redex-step? mark-list render-settings)
-    
+
     (define (varref-skip-step? varref)
       (with-handlers ([exn:fail:contract:variable? (lambda (dc-exn) #f)])
         (let ([val (lookup-binding mark-list varref)])
@@ -306,7 +350,7 @@
                       (error 'varref-skip-step? "unexpected value for stepper-binding-type: ~e for variable: ~e\n"
                              (stepper-syntax-property varref 'stepper-binding-type)
                              varref))))))))
-    
+
     (and (pair? mark-list)
          (let ([expr (mark-source (car mark-list))])
            (or (stepper-syntax-property expr 'stepper-hide-reduction)
@@ -325,10 +369,12 @@
                  (varref-skip-step? #`id-stx)]
                 [(#%plain-app . terms)
                  ; don't halt for proper applications of constructors
+                 (let ([tmp
                  (constructor-app? (get-arg-var 0)
                                    (cdr (syntax->list #'terms))
                                    mark-list
-                                   render-settings)
+                                   render-settings)])
+                   (if tmp (begin (printf "constructor app, skipping\n") tmp) tmp))
                  #;(let ([fun-val (lookup-binding mark-list (get-arg-var 0))])
                    (and (procedure? fun-val)
                         (procedure-arity-includes? 
@@ -363,7 +409,7 @@
                          ;[(let-values . rest) #f] ; so lazy racket doesnt give error
                          [else (error 'find-special-name "couldn't find expanded name for ~a" name)])])
 ;      (if just-the-fn
-          (extract-if-struct 
+          (extract-proc-if-struct 
            (eval (syntax-recertify just-the-fn expanded-application (current-code-inspector) #f))) ))
 ;          #f))) ; so lazy racket doesnt give error
 
@@ -374,7 +420,9 @@
   
   (define (reset-special-values)
     (set! special-list-value (find-special-value 'list '(3)))
-    (set! special-cons-value (find-special-value 'cons '(3 empty))))
+    (set! special-cons-value (find-special-value 'cons '(3 empty)))
+    (set! unknown-promises-table (make-weak-hash))
+    (set! next-unknown-promise 0))
   
   (define (second-arg-is-list? mark-list)
     (let ([arg-val (lookup-binding mark-list (get-arg-var 2))])
@@ -423,10 +471,11 @@
 
   ; weak hash table where keys = promises, values = syntax
   ; initialized in reconstruct-current
-  (define partially-evaluated-promises null)
+  (define partially-evaluated-promises-table null)
   
   ; unknown promises, generated from library (ie - non-user) code
-  (define unknown-promises (make-weak-hash))
+  ;; reset in reset-special-values fn
+  (define unknown-promises-table null)
   (define next-unknown-promise 0)
   
   #;(define not-yet-called-apps (make-hash))
@@ -579,9 +628,9 @@
                                                    ; STC add
                                                    (let* ([val (lookup-binding mark-list var)]
                                                           [partial-eval-promise
-                                                           (hash-ref partially-evaluated-promises
+                                                           (hash-ref partially-evaluated-promises-table
                                                                      val (λ () #f))])
-                                                     (if partial-eval-promise
+                                                     (if #f ;partial-eval-promise
                                                          partial-eval-promise
                                                          (recon-value val render-settings))))
                                                   ((macro-bound)
@@ -802,6 +851,13 @@
                   [exp (mark-source top-mark)]
                   [dont-use-ellipses?
                    (stepper-syntax-property exp 'dont-use-ellipses)]
+                  [maybe-running-promise
+                   (findf (λ (f) (and (promise? f) (new-promise-running? f)))
+                          (map mark-binding-value (mark-bindings top-mark)))]
+                  [tmp-caching-running-promise
+                   (when maybe-running-promise
+                     (hash-set! partially-evaluated-promises-table
+                                maybe-running-promise so-far))]
                   [iota (lambda (x) (build-list x (lambda (x) x)))]
                   
                   [recon-let
@@ -925,16 +981,10 @@
                       (case (mark-label (car mark-list))
                         ((not-yet-called)
                          (if (null? unevaluated)
-                             (begin
-                               (when dont-use-ellipses?
-                                 (printf "not yet called, dont use ellipses: ~a\n" (syntax->datum exp))
-                                 #;(hash-set! not-yet-called-apps
-                                            (syntax->datum exp)
-                                            (mark-binding-value (car (mark-bindings top-mark)))))
-                               #`(#%plain-app . #,rectified-evaluated))
+                             #`(#%plain-app . #,rectified-evaluated)
                              ; STC added let
-                             (letrec
-                                 ([current-binding-maybe
+                             (let*
+                                 ([current-subterm
                                    (skipto/auto (caar unevaluated) 'discard (λ (x) x))]
                                   #;[get-fn
                                    (λ (f)
@@ -959,13 +1009,17 @@
                                        [else #f]))]
                                   #;[current-binding
                                    (maybe-extract-binding current-subterm)]
+                                  [current-binding-maybe
+                                   (if (identifier? current-subterm)
+                                       current-subterm
+                                       #f)]
                                   [current-val
                                    (and
                                     current-binding-maybe
                                     (lookup-binding mark-list current-binding-maybe))]
-                                  [add-to-promise-table
+                                  #;[add-to-promise-table
                                    (when current-binding-maybe
-                                     (hash-set! partially-evaluated-promises
+                                     (hash-set! partially-evaluated-promises-table
                                                 current-val so-far))])
                                #`(#%plain-app 
                                   #,@rectified-evaluated
@@ -1157,7 +1211,7 @@
          
          (define answer
            (begin
-             (set! partially-evaluated-promises (make-weak-hash))
+             (set! partially-evaluated-promises-table (make-weak-hash))
              (case break-kind
              ((left-side)
               (let* ([innermost 
@@ -1179,7 +1233,8 @@
                                      (null? (cdr returned-value-list)))
                               (error 'reconstruct "context expected one value, given ~v" returned-value-list))
                             (recon-value (car returned-value-list) render-settings))
-                          (recon-source-expr (mark-source (car mark-list)) mark-list null null render-settings))])
+                          (recon-source-expr (mark-source (car mark-list)) mark-list null null render-settings))]
+                     [tmp (pr innermost)])
                 (recon (mark-as-highlight innermost) (cdr mark-list) #f)))
              ((double-break)
               (let* ([source-expr (mark-source (car mark-list))]

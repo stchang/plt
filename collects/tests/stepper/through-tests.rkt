@@ -1545,6 +1545,23 @@
      :: {(cdr (cons (/ 1 0) (+ 1 2)))}
      -> {(+ 1 2)}
      -> {3})
+  (t 'lazy-cons2 m:lazy
+     (cadr (cdr (cddr (cons 1 (cons 2 (cons 3 (cons 4 (cons 5 (cons 6 empty)))))))))
+     :: (cadr (cdr {(cddr (cons 1 (cons 2 (cons 3 (cons 4 (cons 5 (cons 6 empty)))))))}))
+     -> (cadr (cdr {(cons 3 (cons 4 (cons 5 (cons 6 empty))))}))
+     :: (cadr {(cdr (cons 3 (cons 4 (cons 5 (cons 6 empty)))))})
+     -> (cadr {(cons 4 (cons 5 (cons 6 empty)))})
+     :: {(cadr (cons 4 (cons 5 (cons 6 empty))))}
+     -> {5})
+  (t 'lazy-cons3 m:lazy
+     (cadr (cdr (cddr (cons 1 (cons 2 (cons 3 (cons 4 (cons 5 (cons 6 7)))))))))
+     :: (cadr (cdr {(cddr (cons 1 (cons 2 (cons 3 (cons 4 (cons 5 (cons 6 7)))))))}))
+     -> (cadr (cdr {(cons 3 (cons 4 (cons 5 (cons 6 7))))}))
+     :: (cadr {(cdr (cons 3 (cons 4 (cons 5 (cons 6 7)))))})
+     -> (cadr {(cons 4 (cons 5 (cons 6 7)))})
+     :: {(cadr (cons 4 (cons 5 (cons 6 7))))}
+     -> {5})
+
   (t 'lazy-list1 m:lazy
      (cadr (cons (/ 1 0) (cons (+ 1 2) ())))
      :: {(cadr (cons (/ 1 0) (cons (+ 1 2) null)))}
@@ -1781,15 +1798,130 @@
      :: {(cdar (list (list 11 12 13 14 15 16 17 18 19 20)))}
      -> {(list 12 13 14 15 16 17 18 19 20)})
 
+    (t 'lazy-take1 m:lazy
+       (* 2 (second (take 2 (list 1 2 3 4 5))))
+       :: (* 2 (second {(take 2 (list 1 2 3 4 5))}))
+       -> (* 2 (second {(cons 1 <DelayedEvaluation#0>)}))
+       :: (* 2 {(second (cons 1 <DelayedEvaluation#0>))})
+       -> (* 2 {2})
+       :: {(* 2 2)}
+       -> {4})
+    (t 'lazy-take2 m:lazy
+       (* 2 (cadr (take 2 (list (+ 1 2) (+ 3 4) (+ 5 6)))))
+       :: (* 2 (cadr {(take 2 (list (+ 1 2) (+ 3 4) (+ 5 6)))}))
+       -> (* 2 (cadr {(cons (+ 1 2) <DelayedEvaluation#0>)}))
+       :: (* 2 {(cadr (cons (+ 1 2) <DelayedEvaluation#0>))})
+       -> (* 2 {(+ 3 4)})
+       -> (* 2 {7})
+       :: {(* 2 7)}
+       -> {14})
+    (let ([def '(define (f x) (* 2 (cadr x)))])
+      (t 'lazy-take3 m:lazy
+         ,def (f (take 2 (list (+ 1 2) (+ 3 4) (+ 5 6))))
+         :: ,def {(f (take 2 (list (+ 1 2) (+ 3 4) (+ 5 6))))}
+         -> ,def {(* 2 (cadr (take 2 (list (+ 1 2) (+ 3 4) (+ 5 6)))))}
+         :: ,def (* 2 (cadr {(take 2 (list (+ 1 2) (+ 3 4) (+ 5 6)))}))
+         -> ,def (* 2 (cadr {(cons (+ 1 2) <DelayedEvaluation#0>)}))
+         :: ,def (* 2 {(cadr (cons (+ 1 2) <DelayedEvaluation#0>))})
+         -> ,def (* 2 {(+ 3 4)})
+         -> ,def (* 2 {7})
+         :: ,def  {(* 2 7)}
+         -> ,def {14}))
+    (let ([def '(define (f x) (+ (car x) (car x)))])
+      (t 'lazy-take4 m:lazy
+         ,def (f (take 2 (list 1 2 3)))
+         :: ,def {(f (take 2 (list 1 2 3)))}
+         -> ,def {(+ (car (take 2 (list 1 2 3))) 
+                     (car (take 2 (list 1 2 3))))}
+         :: ,def (+ (car {(take 2 (list 1 2 3))}) 
+                    (car {(take 2 (list 1 2 3))}))
+         -> ,def (+ (car {(cons 1 <DelayedEvaluation#0>)}) 
+                    (car {(cons 1 <DelayedEvaluation#0>)}))
+         :: ,def (+ {(car (cons 1 <DelayedEvaluation#0>))} 
+                    (car (cons 1 <DelayedEvaluation#0>)))
+         -> ,def (+ {1}
+                    (car (cons 1 <DelayedEvaluation#0>)))
+         :: ,def (+ 1
+                    {(car (cons 1 <DelayedEvaluation#0>))})
+         -> ,def (+ 1 {1})
+         :: ,def {(+ 1 1)}
+         -> ,def {2}))
+    (let ([def '(define (f x) (+ x x))])
+      (t 'lazy-take5 m:lazy
+         ,def (f (car (take 2 (list 1 2 3))))
+         :: ,def {(f (car (take 2 (list 1 2 3))))}
+         -> ,def {(+ (car (take 2 (list 1 2 3))) 
+                     (car (take 2 (list 1 2 3))))}
+         :: ,def (+ (car {(take 2 (list 1 2 3))}) 
+                    (car {(take 2 (list 1 2 3))}))
+         -> ,def (+ (car {(cons 1 <DelayedEvaluation#0>)}) 
+                    (car {(cons 1 <DelayedEvaluation#0>)}))
+         :: ,def (+ {(car (cons 1 <DelayedEvaluation#0>))} 
+                    {(car (cons 1 <DelayedEvaluation#0>))})
+         -> ,def (+ {1}
+                    {1})
+         :: ,def {(+ 1 1)}
+         -> ,def {2}))
+    (let ([def '(define (f x) (+ x x))])
+      (t 'lazy-take6 m:lazy
+         ,def (f (cadr (take 2 (list 1 2 3))))
+         :: ,def {(f (cadr (take 2 (list 1 2 3))))}
+         -> ,def {(+ (cadr (take 2 (list 1 2 3))) 
+                     (cadr (take 2 (list 1 2 3))))}
+         :: ,def (+ (cadr {(take 2 (list 1 2 3))}) 
+                    (cadr {(take 2 (list 1 2 3))}))
+         -> ,def (+ (cadr {(cons 1 <DelayedEvaluation#0>)}) 
+                    (cadr {(cons 1 <DelayedEvaluation#0>)}))
+         :: ,def (+ {(cadr (cons 1 <DelayedEvaluation#0>))} 
+                    {(cadr (cons 1 <DelayedEvaluation#0>))})
+         -> ,def (+ {2}
+                    {2})
+         :: ,def {(+ 2 2)}
+         -> ,def {4}))
+    (let ([def '(define (f x) (+ x x))])
+      (t 'lazy-take7 m:lazy
+         ,def (f (cadr (take 2 (list (+ 1 2) (+ 3 4) (+ 5 6)))))
+         :: ,def {(f (cadr (take 2 (list (+ 1 2) (+ 3 4) (+ 5 6)))))}
+         -> ,def {(+ (cadr (take 2 (list (+ 1 2) (+ 3 4) (+ 5 6)))) 
+                     (cadr (take 2 (list (+ 1 2) (+ 3 4) (+ 5 6)))))}
+         :: ,def (+ (cadr {(take 2 (list (+ 1 2) (+ 3 4) (+ 5 6)))}) 
+                    (cadr {(take 2 (list (+ 1 2) (+ 3 4) (+ 5 6)))}))
+         -> ,def (+ (cadr {(cons (+ 1 2) <DelayedEvaluation#0>)}) 
+                    (cadr {(cons (+ 1 2) <DelayedEvaluation#0>)}))
+         :: ,def (+ {(cadr (cons (+ 1 2) <DelayedEvaluation#0>))} 
+                    {(cadr (cons (+ 1 2) <DelayedEvaluation#0>))})
+         -> ,def (+ {(+ 3 4)}
+                    {(+ 3 4)})
+         -> ,def (+ {7} {7})
+         :: ,def {(+ 7 7)}
+         -> ,def {14}))
     
-  (let* ([def '(define (f x y) (cadr (list x y x)))])
+  (let ([def '(define (f x y) (cadr (list x y x)))])
     (t 'lazy-list-fn1 m:lazy
        ,def (f (/ 1 0) (+ 1 2))
        :: ,def {(f (/ 1 0) (+ 1 2))}
        -> ,def {(cadr (list (/ 1 0) (+ 1 2) (/ 1 0)))}
        -> ,def {(+ 1 2)}
        -> ,def {3}))
-  (let* ([def '(define (f x y) (+ x (car (list x y))))])
+  (let ([def '(define (f x) (+ (cadr x) (cadr x)))])
+    (t 'lazy-list-fn2 m:lazy
+       ,def (f (list 1 2))
+       :: ,def {(f (list 1 2))}
+       -> ,def {(+ (cadr (list 1 2))
+                   (cadr (list 1 2)))}
+       :: ,def (+ {(cadr (list 1 2))}
+                  (cadr (list 1 2)))
+       -> ,def (+ {2}
+                  (cadr (list 1 2)))
+       :: ,def (+ 2
+                  {(cadr (list 1 2))})
+       -> ,def (+ 2 {2})
+       :: ,def {(+ 2 2)}
+       -> ,def {4}))
+       
+       
+       
+  (let ([def '(define (f x y) (+ x (car (list x y))))])
     (t 'lazy-list-fn-parallel-reduce1 m:lazy
        ,def (f (+ 1 2) (/ 1 0))
        :: ,def {(f (+ 1 2) (/ 1 0))}
