@@ -847,10 +847,8 @@
                           (map mark-binding-value (mark-bindings top-mark)))]
                   [tmp-caching-running-promise
                    (when (and maybe-running-promise
-                              #t #;(not (hash-has-key? partially-evaluated-promises-table
+                              (not (hash-has-key? partially-evaluated-promises-table
                                                   maybe-running-promise)))
-                     (printf "adding ~a = ~a to partially-eval-promises-table\n"
-                             maybe-running-promise (syntax->datum so-far))
                      (hash-set! partially-evaluated-promises-table
                                 maybe-running-promise so-far))]
                   [iota (lambda (x) (build-list x (lambda (x) x)))]

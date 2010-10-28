@@ -48,14 +48,28 @@
 ;(g (take 2 (list (+ 1 2) (+ 3 4) (/ 1 0))))
 
 
-(define (list-length list)
+#;(define (list-length list)
   (if (null? list)
       0
       (+ 1 (list-length (rest list)))))
-(list-length (list 1 2))
 
 
+#;(define (list-length-helper list len)
+  (if (null? list)
+      len
+      (list-length-helper (rest list) (+ len 1))))
+#;(define (list-length list)
+  (list-length-helper list 0))
 
+#;(list-length (list 1 2))
+
+#;(define (sum-list l)
+  (if (null? l)
+      0
+      (+ (first l) (sum-list (rest l)))))
+#;(sum-list (list (+ 1 2) (+ 3 4) (+ 5 6)))
+
+  
 ;(define ones (cons 1 ones))
 ;(define (f x) (cadr x))
 ;(f ones)
