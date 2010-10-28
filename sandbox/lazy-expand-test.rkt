@@ -12,8 +12,8 @@
 
 ;(define (f x) (+ (cadr x) (cadr x)))
 ;(f (list (+ 1 2) (+ 3 4) (/ 1 0)))
-(define (g x) (+ (cadr x) (cadr x)))
-(g (take 2 (list (+ 1 2) (+ 3 4) (/ 1 0))))
+;(define (g x) (+ (cadr x) (cadr x)))
+;(g (take 2 (list (+ 1 2) (+ 3 4) (/ 1 0))))
 
 
 ;(define (f x) (append (!! x) x))
@@ -33,8 +33,31 @@
 
 ;(for-each (lambda (x) x) '(1 2 3))
 
+
+; broken: get 2 nested lists
+; - nevermind, it works, i accidentally wrote (λ x ...) instead of (λ (x) ...)
+;((λ (x) (+ (car (cdr x)) (car x))) (cons (+ 1 2) (cons (+ 3 4) null)))
+
+; broken: get 2 nested lists
+; - nevermind, it works, i accidentally wrote (λ x ...) instead of (λ (x) ...)
+;((λ (x) (+ (car (cdr x)) (car x))) (list (+ 1 2) (+ 3 4)))
+
+;(define (f x) (+ (car (cdr x)) (car x)))
+;(define (g x) (+ (cadr x) (cadr x)))
+;(f (list (+ 1 2) (+ 3 4)))
+;(g (take 2 (list (+ 1 2) (+ 3 4) (/ 1 0))))
+
+
+(define (list-length list)
+  (if (null? list)
+      0
+      (+ 1 (list-length (rest list)))))
+(list-length (list 1 2))
+
+
+
 ;(define ones (cons 1 ones))
-;(define (f x) x)
+;(define (f x) (cadr x))
 ;(f ones)
 
 ;(define (f x) (+ x (+ x x)))

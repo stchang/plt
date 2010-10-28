@@ -162,9 +162,11 @@
   ; recon-value print-converts a value.  If the value is a closure, recon-value
   ; prints the name attached to the procedure, unless we're on the right-hand-side
   ; of a let, or unless there _is_ no name.
-  
+  (require racket/set)
+  (define seen-promises null)
   (define recon-value
-    (opt-lambda (val render-settings [assigned-name #f])
+    (opt-lambda (val render-settings [assigned-name #f] [recur? #f])
+      (when (not recur?) (set! seen-promises (set)))
       (if (hash-ref finished-xml-box-table val (lambda () #f))
           (stepper-syntax-property #`(quote #,val) 'stepper-xml-value-hint 'from-xml-box)
           (let ([closure-record 
@@ -185,11 +187,11 @@
               [(empty? val) #'empty] ; handle empty list separately
               [(list? val)
                (with-syntax ([(reconed-vals ...) 
-                              (map (lx (recon-value _ render-settings assigned-name)) val)])
+                              (map (lx (recon-value _ render-settings assigned-name #t)) val)])
                  #'(list reconed-vals ...))]
               [(pair? val) ; handle improper lists
-               (with-syntax ([reconed-car (recon-value (car val) render-settings assigned-name)]
-                             [reconed-cdr (recon-value (cdr val) render-settings assigned-name)])
+               (with-syntax ([reconed-car (recon-value (car val) render-settings assigned-name #t)]
+                             [reconed-cdr (recon-value (cdr val) render-settings assigned-name #t)])
                  #'(cons reconed-car reconed-cdr))]
               [(promise? val) ; must be from library code
                (let ([partial-eval-promise
@@ -205,8 +207,10 @@
                      (if partial-eval-promise2
                          partial-eval-promise2
                ; promise should never be running here          
-               (if (and (promise-forced? val) (not (new-promise-running? val)))
-                   (recon-value (force val) render-settings)
+               (if (and (promise-forced? val) (not (new-promise-running? val)) (not (set-member? seen-promises val)))
+                   (begin
+                     (set! seen-promises (set-add seen-promises val))
+                     (recon-value (force val) render-settings assigned-name #t))
                    (let ([unknown-promise (hash-ref unknown-promises-table val (λ () #f))])
                      (if unknown-promise
                          (begin
@@ -842,7 +846,11 @@
                    (findf (λ (f) (and (promise? f) (new-promise-running? f)))
                           (map mark-binding-value (mark-bindings top-mark)))]
                   [tmp-caching-running-promise
-                   (when maybe-running-promise
+                   (when (and maybe-running-promise
+                              #t #;(not (hash-has-key? partially-evaluated-promises-table
+                                                  maybe-running-promise)))
+                     (printf "adding ~a = ~a to partially-eval-promises-table\n"
+                             maybe-running-promise (syntax->datum so-far))
                      (hash-set! partially-evaluated-promises-table
                                 maybe-running-promise so-far))]
                   [iota (lambda (x) (build-list x (lambda (x) x)))]

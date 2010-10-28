@@ -2295,3 +2295,34 @@ example programs:
 CAUSE: partially evaluated promises wasnt being stored correctly all the time
 SOLUTION: overhauled the way I store and retrieve partially evaluated promises:
 At the beginning of recon-inner, look for any running promise in the bindings of the top mark (there either should only be 1, or they should all be the same one), and store that in the partially-evaluated-promises-table as the key, using so-far as the value. Then in recon-value, when rendering a promise, first look up in partially-evaluated-promises-table. (for some reason sometimes I needed to unwrap the promise one layer to get it to work. I still can't figure out why this is needed).
+
+--------------------------------------------------------------------------------
+----- 10/28/2010 - LAPTOP
+--------------------------------------------------------------------------------
+BUG: the so-far associated with a running-promise in partially-evaluated-promises is wrong sometimes, for example, in this program:
+
+(define (list-length list)
+  (if (null? list)
+      0
+      (+ 1 (list-length (rest list)))))
+(list-length (list 1 2))
+
+After the first recursive call, while evaluating the if test, we get the step:
+
+(+ 1
+ (if (null? (rest (list 1 2)))
+   0
+   (+ 1 (list-length (rest (rest (list 1 2)))))))
+
+->
+
+(+ 1
+ (if (null? (rest (list 1 2)))
+   0
+   (+ 1 (list-length (rest (null? (rest (list 1 2))))))))
+
+where the null? erroneously appears in the recursive call argument as wel
+
+CAUSE: in recon-inner, when the running-promise is added to the partially-evaluated-promises-table, it's not checked whether the running-promise is already in the table, so it gets overwritten, which is wrong, because we always want the so-far associated with the first appearance of the running-promise
+
+SOLUTION: before adding a running-promise/so-far pair to partially-evaluated-promises-table, check if it's already there, and if so, dont add to hash table

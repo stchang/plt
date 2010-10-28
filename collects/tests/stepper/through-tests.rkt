@@ -2010,8 +2010,84 @@
      :: 4 {(cadr (list (/ 1 0) (+ 7 8)))}
      -> 4 {(+ 7 8)}
      -> 4 {15})
-     
-     
+  
+  ; laziness, sharing, if, recursion, fncall, nonimmediate-so-far
+  (let ([def '(define (list-length list)
+                (if (null? list)
+                    0
+                    (+ 1 (list-length (rest list)))))])
+    (t 'lazy-list-length m:lazy
+       ,def (list-length (list 1 2))
+       :: ,def {(list-length (list 1 2))}
+       -> ,def {(if (null? (list 1 2))
+                    0
+                    (+ 1 (list-length (rest (list 1 2)))))}
+       :: ,def (if {(null? (list 1 2))}
+                   0
+                   (+ 1 (list-length (rest (list 1 2)))))
+       -> ,def (if {false}
+                   0
+                   (+ 1 (list-length (rest (list 1 2)))))
+       :: ,def {(if false
+                    0
+                    (+ 1 (list-length (rest (list 1 2)))))}
+       -> ,def {(+ 1 (list-length (rest (list 1 2))))}
+       :: ,def (+ 1 {(list-length (rest (list 1 2)))})
+       -> ,def (+ 1
+                  {(if (null? (rest (list 1 2)))
+                      0
+                      (+ 1 (list-length (rest (rest (list 1 2))))))})
+       :: ,def (+ 1
+                  (if (null? {(rest (list 1 2))})
+                      0
+                      (+ 1 (list-length (rest {(rest (list 1 2))})))))
+       -> ,def (+ 1
+                  (if (null? {(list 2)})
+                      0
+                      (+ 1 (list-length (rest {(list 2)})))))
+       :: ,def (+ 1
+                  (if {(null? (list 2))}
+                      0
+                      (+ 1 (list-length (rest (list 2))))))
+       -> ,def (+ 1
+                  (if {false}
+                      0
+                      (+ 1 (list-length (rest (list 2))))))
+       :: ,def (+ 1
+                  {(if false
+                      0
+                      (+ 1 (list-length (rest (list 2)))))})
+       -> ,def (+ 1 {(+ 1 (list-length (rest (list 2))))})
+       :: ,def (+ 1 (+ 1 {(list-length (rest (list 2)))}))
+       -> ,def (+ 1 (+ 1
+                       {(if (null? (rest (list 2)))
+                           0
+                           (+ 1 (list-length (rest (rest (list 2))))))}))
+       :: ,def (+ 1 (+ 1
+                       (if (null? {(rest (list 2))})
+                           0
+                           (+ 1 (list-length (rest {(rest (list 2))}))))))
+       -> ,def (+ 1 (+ 1
+                       (if (null? {empty})
+                           0
+                           (+ 1 (list-length (rest {empty}))))))
+       :: ,def (+ 1 (+ 1
+                       (if {(null? empty)}
+                           0
+                           (+ 1 (list-length (rest empty))))))
+       -> ,def (+ 1 (+ 1
+                       (if {true}
+                           0
+                           (+ 1 (list-length (rest empty))))))
+       :: ,def (+ 1 (+ 1
+                       {(if true
+                           0
+                           (+ 1 (list-length (rest empty))))}))
+       -> ,def (+ 1 (+ 1 {0}))
+       :: ,def (+ 1 {(+ 1 0)})
+       -> ,def (+ 1 {1})
+       :: ,def {(+ 1 1)}
+       -> ,def {2}))
   
      
      
