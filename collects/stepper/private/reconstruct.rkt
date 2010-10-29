@@ -193,7 +193,7 @@
                (with-syntax ([reconed-car (recon-value (car val) render-settings assigned-name #t)]
                              [reconed-cdr (recon-value (cdr val) render-settings assigned-name #t)])
                  #'(cons reconed-car reconed-cdr))]
-              [(promise? val) ; must be from library code
+              [(promise? val) ; must be from library code, or running promise
                (let ([partial-eval-promise
                       (hash-ref partially-evaluated-promises-table
                                 val (λ () #f))]
@@ -206,6 +206,8 @@
                      partial-eval-promise
                      (if partial-eval-promise2
                          partial-eval-promise2
+                         (if (new-promise-running? val)
+                             last-so-far
                ; promise should never be running here          
                (if (and (promise-forced? val) (not (new-promise-running? val)) (not (set-member? seen-promises val)))
                    (begin
@@ -221,7 +223,7 @@
                            (render-unknown-promise next-unknown-promise)
                            (hash-set! unknown-promises-table val next-unknown-promise)
                            (set! next-unknown-promise (add1 next-unknown-promise))
-                           (printf "next unknown promise: ~a\n" next-unknown-promise))))) )))]
+                           (printf "next unknown promise: ~a\n" next-unknown-promise))))) ))))]
 
               [else
                (let* ([rendered ((render-settings-render-to-sexp render-settings) val)])
@@ -409,11 +411,20 @@
   (define special-list-value #f)
   (define special-cons-value #f)
   
+  ; This is used when we need the exp associated with a running promise, but the promise is at top-level,
+  ; so it never gets added to partially-evaluated-promises-table
+  ; This is a huge hack and I dont know if it the assumptions I'm making always hold
+  ;  (ie - that the exp associated with any running promise not in partially-evaluated-promises-table is the last so-far), 
+  ;  but it's working for all test cases so far 10/29/2010.
+  ;  Another solution is to wrap all lazy programs in a dummy top-level expression???
+  (define last-so-far null)
+  
   (define (reset-special-values)
     (set! special-list-value (find-special-value 'list '(3)))
     (set! special-cons-value (find-special-value 'cons '(3 empty)))
     (set! unknown-promises-table (make-weak-hash))
-    (set! next-unknown-promise 0))
+    (set! next-unknown-promise 0)
+    (set! last-so-far null))
   
   (define (second-arg-is-list? mark-list)
     (let ([arg-val (lookup-binding mark-list (get-arg-var 2))])
@@ -1174,6 +1185,7 @@
          
          (define (recon so-far mark-list first)
            (cond [(null? mark-list) ; now taken to indicate a callback:
+                  (set! last-so-far so-far)
                   so-far
                   ;(error `recon "expcted a top-level mark at the end of the mark list.")
                   ]

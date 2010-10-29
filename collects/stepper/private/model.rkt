@@ -383,6 +383,9 @@
              (match-lambda
                [(list source-thunk lifting-indices getter)
                 (let ([source (source-thunk)])
+                  (printf "reconstructing:\n")
+                  (printf "  source: ~a\n" (syntax->datum source))
+                  (printf "  getter: ~a\n" (getter))
                   (if (r:hide-completed? source)
                       (begin
                         (printf "hidden, before reconstruct: ~a\n" 

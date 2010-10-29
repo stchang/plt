@@ -4,7 +4,7 @@
          (prefix-in m: "language-level-model.ss")
          "test-engine.ss"
          "test-abbrev.ss"
-         
+
          ;; for xml testing:
          ;; mzlib/class
          ;; (all-except xml/xml-snipclass snip-class)
@@ -2090,10 +2090,45 @@
        -> ,def {2}))
   
      
+  ;; Lazy Racket examples from Eli's lecture
+  (let ([def '(define (foo x) 3)])
+    (t 'lazy-eli-1 m:lazy
+       ,def (foo (+ 1 "2"))
+       :: ,def {(foo (+ 1 "2"))}
+       -> ,def {3}))
      
+  (let ([def '(define (my-if x y z) (if x y z))])
+    (t 'lazy-eli-2 m:lazy
+       ,def (my-if (< 1 2) 3 (+ 4 "5"))
+       :: ,def {(my-if (< 1 2) 3 (+ 4 "5"))}
+       -> ,def {(if (< 1 2) 3 (+ 4 "5"))}
+       :: ,def (if {(< 1 2)} 3 (+ 4 "5"))
+       -> ,def (if {true} 3 (+ 4 "5"))
+       :: ,def {(if true 3 (+ 4 "5"))}
+       -> ,def {3}))
+  
+  (let* ([def-a '(list 1 2 (+ 3 "4") (* 5 6))]
+         [def-b '(list 1 2 (+ 3 "4") 30)]
+         [def1 `(define a ,def-a)]
+         [def2 `(define a ,def-b)])
+    (t 'lazy-eli-3 m:lazy
+       ,def1 (first a) (second a) (fourth a)
+       :: ,def1 {(first a)} -> ,def1 {1}
+       :: ,def1 1 (second {a}) -> ,def1 1 (second {,def-a})
+       :: ,def1 1 {(second ,def-a)} -> ,def1 1 {2}
+       :: ,def1 1 2 (fourth {a}) -> ,def1 1 2 (fourth {,def-a})
+       :: ,def1 1 2 {(fourth ,def-a)} -> ,def1 1 2 {(* 5 6)}
+       :: (define a (list 1 2 (+ 3 "4") {(* 5 6)})) 1 2 {(* 5 6)} 
+       -> (define a (list 1 2 (+ 3 "4") {30})) 1 2 {30}))
      
-     
-     
+  (t 'lazy-eli-4 m:lazy
+     (second (cons 1 (cons 2 (first null))))
+     :: {(second (cons 1 (cons 2 (first null))))}
+     -> {2})
+  
+  
+  
+  
   #;
   (t1 'teachpack-callbacks
      (test-teachpack-sequence

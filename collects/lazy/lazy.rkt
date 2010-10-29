@@ -416,7 +416,9 @@
       [(~if e1 e2)
        #`(hidden-~
           #,(stepper-set-dont-use-ellipses-property
-             #'(if (hidden-! e1) e2) ))]))
+             #'(if (hidden-! e1) e2) ))]
+      [~if (identifier? #'~if) #'*if]
+      [(~if x ...) #'(*if x ...)]))
   
   (define* (*and . xs)
     (let ([xs (!list xs)])
