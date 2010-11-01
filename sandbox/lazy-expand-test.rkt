@@ -33,6 +33,9 @@
 
 ;(for-each (lambda (x) x) '(1 2 3))
 
+;(define foo (append (list 1 2 3) foo))
+;(fourth foo)
+
 (define foo (append (list 1 2 3) foo))
 (fourth foo)
 

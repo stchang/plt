@@ -166,7 +166,7 @@
   (define seen-promises null)
   (define recon-value
     (opt-lambda (val render-settings [assigned-name #f] [recur? #f])
-      (when (not recur?) (set! seen-promises (set)))
+      (when (not recur?) (set! seen-promises (set))) ; seen-promises deals with infinite lists
       (if (hash-ref finished-xml-box-table val (lambda () #f))
           (stepper-syntax-property #`(quote #,val) 'stepper-xml-value-hint 'from-xml-box)
           (let ([closure-record 
@@ -206,13 +206,17 @@
                      partial-eval-promise
                      (if partial-eval-promise2
                          partial-eval-promise2
-                         (if (new-promise-running? val)
-                             last-so-far
-               ; promise should never be running here          
-               (if (and (promise-forced? val) (not (new-promise-running? val)) (not (set-member? seen-promises val)))
+                         (if (and (new-promise-running? val) (not (null? last-so-far)))
+                               last-so-far
+               ; promise should never be running here
+               (if (and (promise-forced? val) 
+                        (not (new-promise-running? val)) 
+                        (not (set-member? seen-promises val)))
                    (begin
-                     (set! seen-promises (set-add seen-promises val))
+                     (set! seen-promises (set-add seen-promises val)) ; deals with infinite lists
                      (recon-value (force val) render-settings assigned-name #t))
+                   (if assigned-name
+                       assigned-name
                    (let ([unknown-promise (hash-ref unknown-promises-table val (λ () #f))])
                      (if unknown-promise
                          (begin
@@ -223,7 +227,7 @@
                            (render-unknown-promise next-unknown-promise)
                            (hash-set! unknown-promises-table val next-unknown-promise)
                            (set! next-unknown-promise (add1 next-unknown-promise))
-                           (printf "next unknown promise: ~a\n" next-unknown-promise))))) ))))]
+                           (printf "next unknown promise: ~a\n" next-unknown-promise)))))) ))))]
 
               [else
                (let* ([rendered ((render-settings-render-to-sexp render-settings) val)])
@@ -417,6 +421,11 @@
   ;  (ie - that the exp associated with any running promise not in partially-evaluated-promises-table is the last so-far), 
   ;  but it's working for all test cases so far 10/29/2010.
   ;  Another solution is to wrap all lazy programs in a dummy top-level expression???
+  ;  Update 11/1/2010: needed to add the following guards in the code to make the assumptions hold 
+  ;                    (guards are mainly triggered when there are infinite lists)
+  ;  - in recon-inner, dont add running promise to partially-evaluated-promises-table if so-far = nothing-so-far
+  ;  - in recon, dont set last-so-far when so-far = nothing-so-far 
+  ;  - in recon-value, dont use last-so-far if it hasnt been set (ie - if it's still null)
   (define last-so-far null)
   
   (define (reset-special-values)
@@ -859,7 +868,8 @@
                   [tmp-caching-running-promise
                    (when (and maybe-running-promise
                               (not (hash-has-key? partially-evaluated-promises-table
-                                                  maybe-running-promise)))
+                                                  maybe-running-promise))
+                              (not (eq? so-far nothing-so-far)))
                      (hash-set! partially-evaluated-promises-table
                                 maybe-running-promise so-far))]
                   [iota (lambda (x) (build-list x (lambda (x) x)))]
@@ -1185,7 +1195,8 @@
          
          (define (recon so-far mark-list first)
            (cond [(null? mark-list) ; now taken to indicate a callback:
-                  (set! last-so-far so-far)
+                  (unless (eq? so-far nothing-so-far)
+                    (set! last-so-far so-far))
                   so-far
                   ;(error `recon "expcted a top-level mark at the end of the mark list.")
                   ]

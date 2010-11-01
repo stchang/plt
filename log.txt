@@ -2333,3 +2333,29 @@ SOLUTION: before adding a running-promise/so-far pair to partially-evaluated-pro
 BUG: running-promise in definition doesnt update correctly
 CAUSE: when the promise is at the top level, the running-promise never gets added to partially-evaluated-promises-table, so it gets displayed as "DelayedEvaluation" in the definition
 SOLUTION: always save the last so-far and use it as the exp for a running-promise that's not found in partially-evaluated-promises-table. This is a HUGE assumption but I think it will work.
+UPDATE 11/1/2010:
+Of course, the huge assumption I made didnt quite hold all the time. Added a few guards:
+- in recon-inner, dont add running promise to partially-evaluated-promises-table if so-far = nothing-so-far (this occurs when we have infinite lists in lazy racket)
+- in recon, dont set last-so-far when so-far = nothing-so-far (again, this occurs when we have infinite lists)
+- in recon-value, dont use last-so-far if it hasnt been set (ie - if it's still null)
+
+
+--------------------------------------------------------------------------------
+----- 11/1/2010 - LAPTOP
+--------------------------------------------------------------------------------
+TODO: infinite lists in lazy racket doesnt work in stepper test framework
+Example: This test:
+
+  (let ([def '(define ones (cons 1 ones))])
+    (t 'lazy-eli-5 m:lazy
+       ,def (car ones) (second ones) (fifth ones)
+       :: ,def {(car (cons 1 (cons 1 <DelayedEvaluation#0>)))} -> ,def {1}
+       :: ,def 1 {(second (cons 1 <DelayedEvaluation#0>))}     -> ,def 1 {1}
+       :: ,def 1 1 {(fifth (cons 1 <DelayedEvaluation#0>))}    -> ,def 1 1 {1}))
+
+Generates this error:
+
+test-sequence: steps do not match
+   given: #(struct:error-result "<collects>/stepper\\private\\shared.rkt: \n  (file\n   C:\\Program Files\\Racket-Full-5.0.0.6\\collects\\stepper\\private\\marks.rkt)\n broke the contract (-> syntax? any) on syntax->interned-datum given to \n  (file\n   C:\\Program Files\\Racket-Full-5.0.0.6\\collects\\stepper\\private\\reconstruct.rkt)\n; expected <syntax?>, given: ()")
+expected: (before-after ((define ones (cons 1 ones)) (hilite (car (cons 1 (cons 1 <DelayedEvaluation#0>))))) ((define ones (cons 1 ones)) (hilite 1)))
+...Error has occurred during test: lazy-eli-5

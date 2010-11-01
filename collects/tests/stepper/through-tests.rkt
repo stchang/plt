@@ -2126,7 +2126,18 @@
      :: {(second (cons 1 (cons 2 (first null))))}
      -> {2})
   
+  ; infinite lists arent working in tests
+  (let ([def '(define ones (cons 1 ones))])
+    (t 'lazy-eli-5 m:lazy
+       ,def (car ones) (second ones) (fifth ones)
+       :: ,def {(car (cons 1 (cons 1 <DelayedEvaluation#0>)))} -> ,def {1}
+       :: ,def 1 {(second (cons 1 <DelayedEvaluation#0>))}     -> ,def 1 {1}
+       :: ,def 1 1 {(fifth (cons 1 <DelayedEvaluation#0>))}    -> ,def 1 1 {1}))
   
+  (let ([def '(define foo (append (list 1 2 3) foo))])
+    (t 'lazy-eli-6 m:lazy
+       ,def (fourth foo)
+       :: ,def {(fourth foo)} -> {1}))
   
   
   #;
