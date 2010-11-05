@@ -114,6 +114,7 @@
   
   ; the rhs of the last sent step; for use when there is ellipses on lhs
   (define last-rhs-held null)
+  (define last-rhs-held-highlight-not-moved null) ; only used when highlight moved in last-rhs-held
   (define (no-last-rhs?) (null? last-rhs-held))
   (define last-rhs-finished null)
   
@@ -293,7 +294,9 @@
                         (set! last-rhs-held (create-held (cons
                                                           (move-highlight-out 
                                                            (car rhs-exps))
-                                                          (cdr rhs-exps)))) )
+                                                          (cdr rhs-exps))))
+                        (set! last-rhs-held-highlight-not-moved
+                              (create-held (cons (car rhs-exps) (cdr rhs-exps)))) )
                         (set! last-rhs-held (create-held rhs-exps)))
                     (set! last-rhs-finished rhs-finished-exps)
                     (printf "last-rhs set\n"))))
@@ -355,12 +358,19 @@
                 (map (λ (x) (printf "  ~a\n" (syntax->hilite-datum x))) current-exps)
                 (set! pending-rhs-held (create-held current-exps))
                 (set! pending-rhs-finished current-finished-exps))
-              (match last-rhs-held
+              (let* ([dont-move-highlight?
+                      (stepper-syntax-property 
+                       (mark-source (car mark-list))
+                       'dont-move-highlight)]
+                     [lhs (if dont-move-highlight? 
+                              last-rhs-held-highlight-not-moved
+                              last-rhs-held)])
+              (match lhs
                 [(struct held (last-rhs held-step-was-app? held-posn-info))
                  (send-step last-rhs last-rhs-finished
                             current-exps current-finished-exps
                             (compute-step-kind held-step-was-app?)
-                            held-posn-info posn-info #t)])))
+                            held-posn-info posn-info #t)]))))
         
 
          (define (handle-pending-rhs current-exps current-finished-exps current-posn-info [result-value-break? #f])
@@ -463,8 +473,11 @@
                           (map (lambda (exp)
                                  (unwind exp render-settings))
                                (maybe-lift
+                                (begin
+                                  (let* ([r
                                 (r:reconstruct-right-side
-                                 mark-list returned-value-list render-settings)
+                                 mark-list returned-value-list render-settings)]
+                                         [tmp (printf "recon-before-lift: ~a\n" (syntax->hilite-datum r))]) r))
                                 #f)))]
                         [result-value-break? (equal? break-kind 'result-value-break)])
                  (match held-exp-list

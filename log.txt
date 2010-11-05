@@ -2359,3 +2359,40 @@ test-sequence: steps do not match
    given: #(struct:error-result "<collects>/stepper\\private\\shared.rkt: \n  (file\n   C:\\Program Files\\Racket-Full-5.0.0.6\\collects\\stepper\\private\\marks.rkt)\n broke the contract (-> syntax? any) on syntax->interned-datum given to \n  (file\n   C:\\Program Files\\Racket-Full-5.0.0.6\\collects\\stepper\\private\\reconstruct.rkt)\n; expected <syntax?>, given: ()")
 expected: (before-after ((define ones (cons 1 ones)) (hilite (car (cons 1 (cons 1 <DelayedEvaluation#0>))))) ((define ones (cons 1 ones)) (hilite 1)))
 ...Error has occurred during test: lazy-eli-5
+
+
+--------------------------------------------------------------------------------
+----- 11/2/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+BUG: sometimes we dont want to move highlights on last-rhs used as lhs, when there normally would be ellipses on lhs
+example:
+(define (f lst) (+ (second lst) (third lst)))
+(f (map (lambda (x) (+ x 1)) (list 1 2 3)))
+
+simpler example: (+ (car (map + (list (+ 1 2)) (list (+ 3 4)))) 1)
+
+CAUSE: highlights always moved
+SOLUTION: add extra last-rhs-held-highlight-not-moved global var in model.rkt, and use it instead of last-rhs-held when 'dont-move-highlight stepper-syntax-property is true ('dont-move-hightlight used around app in thunk in racket/private/promise.rkt)
+
+
+TODO tomorrow:
+BUG: sometimes we want to use ellipses on lhs
+example:
+(define (f lst) (+ (second lst) (third lst)))
+(f (map + (list 1 (+ 2 3) (+ 4 5)) (list 4 (+ 6 7) (+ 8 9))))
+
+CAUSE: ellipses always removed
+SOLUTION: add 'dont-remove-ellipses stepper-syntax-property?
+
+
+--------------------------------------------------------------------------------
+----- 11/4/2010 - LAPTOP
+--------------------------------------------------------------------------------
+
+BUG: Strategy of looking for running promise in recon-inner, #%plain-app, called case doesnt always work.
+CAUSE: Sometimes, running promise is inside another promise, or there may be no running promise (usually infinite lists are involved in both cases). For the example, see the sieve primes example from Eli's lecture.
+SOLUTION: instead of just checking for running promise and then replacing it with so-far, pass so-far to recon-val as optional param and use that to replace running promise if the running promise is not in partially-evaluated-promises-table (use the passed-in so-far before using last-so-far). This fixes the problem when the running promise is inside another promise.
+SOLUTION 2: When there is no running promise, then there could be a highlighting problem. Add a check after recon-inner returns in recon (result is bound to reconstructed). If reconstructed has no highlight, then highlight the whole thing. It will probably be wrong, but it's better than crashing.
+OTHER FIX: if we are going to use assigned name for promises when avail, we need to set assigned name to #t when we recur inside the promise, otherwise, we'll be using the wrong name
+OTHER FIX 2: Also, last-so-far needs to be reset more often than just with the other special vals. Reset it on every recon (at the beginning of the eval of answer in reconstruct-current).

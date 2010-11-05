@@ -13,6 +13,7 @@
            "model-settings.ss"
            "shared.ss"
            "my-macros.ss"
+           "lifting.rkt" ; for find-highlight
            (for-syntax scheme/base)
            racket/private/promise ; STC add
            #;(file "/Users/clements/clements/scheme-scraps/eli-debug.ss"))
@@ -91,6 +92,9 @@
   ; (test (2vals '(a b c) '(d e f)) n-split-list 3 '(a b c d e f))
   
   
+  (define (no-highlight? stx)
+    (with-handlers ((exn:fail? (λ (x) #t)))
+      (if (find-highlight stx) #f 42)))
   (define (mark-as-highlight stx)
     (stepper-syntax-property stx 'stepper-highlight #t))
   
@@ -157,7 +161,7 @@
                                                                      
   ;; NaturalNumber -> syntax    
   (define (render-unknown-promise x)
-    #`#,(string->symbol (string-append "<DelayedEvaluation#" (number->string x) ">")))
+    #`(quote #,(string->symbol (string-append "<DelayedEvaluation#" (number->string x) ">"))))
   
   ; recon-value print-converts a value.  If the value is a closure, recon-value
   ; prints the name attached to the procedure, unless we're on the right-hand-side
@@ -165,7 +169,7 @@
   (require racket/set)
   (define seen-promises null)
   (define recon-value
-    (opt-lambda (val render-settings [assigned-name #f] [recur? #f])
+    (opt-lambda (val render-settings [assigned-name #f] [recur? #f] [current-so-far nothing-so-far])
       (when (not recur?) (set! seen-promises (set))) ; seen-promises deals with infinite lists
       (if (hash-ref finished-xml-box-table val (lambda () #f))
           (stepper-syntax-property #`(quote #,val) 'stepper-xml-value-hint 'from-xml-box)
@@ -187,12 +191,12 @@
               [(empty? val) #'empty] ; handle empty list separately
               [(list? val)
                (with-syntax ([(reconed-vals ...) 
-                              (map (lx (recon-value _ render-settings assigned-name #t)) val)])
+                              (map (lx (recon-value _ render-settings #f #t current-so-far)) val)])
                  #'(list reconed-vals ...))]
               [(pair? val) ; handle improper lists
-               (with-syntax ([reconed-car (recon-value (car val) render-settings assigned-name #t)]
-                             [reconed-cdr (recon-value (cdr val) render-settings assigned-name #t)])
-                 #'(cons reconed-car reconed-cdr))]
+               (with-syntax ([reconed-car (recon-value (car val) render-settings #f #t current-so-far)]
+                             [reconed-cdr (recon-value (cdr val) render-settings #f #t current-so-far)])
+                 #'(#%plain-app cons reconed-car reconed-cdr))]
               [(promise? val) ; must be from library code, or running promise
                (let ([partial-eval-promise
                       (hash-ref partially-evaluated-promises-table
@@ -206,15 +210,21 @@
                      partial-eval-promise
                      (if partial-eval-promise2
                          partial-eval-promise2
-                         (if (and (new-promise-running? val) (not (null? last-so-far)))
-                               last-so-far
+                         (if (and (new-promise-running? val) (not (eq? current-so-far nothing-so-far)))
+                             (begin
+                               (hash-set! partially-evaluated-promises-table val current-so-far)
+                               (printf "using current-so-far\n")
+                               current-so-far)
+                             (if (and (new-promise-running? val) (not (null? last-so-far)))
+                                 (begin (printf "using last-so-far\n")
+                                 last-so-far)
                ; promise should never be running here
                (if (and (promise-forced? val) 
                         (not (new-promise-running? val)) 
                         (not (set-member? seen-promises val)))
                    (begin
                      (set! seen-promises (set-add seen-promises val)) ; deals with infinite lists
-                     (recon-value (force val) render-settings assigned-name #t))
+                     (recon-value (force val) render-settings #f #t current-so-far))
                    (if assigned-name
                        assigned-name
                    (let ([unknown-promise (hash-ref unknown-promises-table val (λ () #f))])
@@ -227,7 +237,7 @@
                            (render-unknown-promise next-unknown-promise)
                            (hash-set! unknown-promises-table val next-unknown-promise)
                            (set! next-unknown-promise (add1 next-unknown-promise))
-                           (printf "next unknown promise: ~a\n" next-unknown-promise)))))) ))))]
+                           (printf "next unknown promise: ~a\n" next-unknown-promise))))))) ))))]
 
               [else
                (let* ([rendered ((render-settings-render-to-sexp render-settings) val)])
@@ -432,8 +442,7 @@
     (set! special-list-value (find-special-value 'list '(3)))
     (set! special-cons-value (find-special-value 'cons '(3 empty)))
     (set! unknown-promises-table (make-weak-hash))
-    (set! next-unknown-promise 0)
-    (set! last-so-far null))
+    (set! next-unknown-promise 0))
   
   (define (second-arg-is-list? mark-list)
     (let ([arg-val (lookup-binding mark-list (get-arg-var 2))])
@@ -855,6 +864,9 @@
          
          
          (define (recon-inner mark-list so-far)
+           (if (not (eq? so-far nothing-so-far))
+               (printf "recon-inner, so-far: ~a\n" (syntax->hilite-datum so-far))
+               (printf "recon-inner, so-far: nothing-so-far\n"))
            (let* ([recon-source-current-marks 
                    (lambda (expr)
                      (recon-source-expr expr mark-list null null render-settings))]
@@ -1000,29 +1012,6 @@
                              (let*
                                  ([current-subterm
                                    (skipto/auto (caar unevaluated) 'discard (λ (x) x))]
-                                  #;[get-fn
-                                   (λ (f)
-                                     (case f
-                                       [(car) car]
-                                       [(cdr) cdr]
-                                       [(syntax-e) syntax-e]))]
-                                  #;[maybe-extract-binding
-                                   (λ (e)
-                                     (cond
-                                       [(identifier? e) e]
-                                       [(stepper-syntax-property e 'stepper-skipto) 
-                                        =>
-                                        (λ (skipto-fns) 
-                                          (maybe-extract-binding
-                                           (foldl 
-                                            (λ (f res) 
-;                                              ((eval f) res)) 
-                                              ((get-fn f) res))
-                                            e 
-                                            skipto-fns)))]
-                                       [else #f]))]
-                                  #;[current-binding
-                                   (maybe-extract-binding current-subterm)]
                                   [current-binding-maybe
                                    (if (identifier? current-subterm)
                                        current-subterm
@@ -1030,11 +1019,7 @@
                                   [current-val
                                    (and
                                     current-binding-maybe
-                                    (lookup-binding mark-list current-binding-maybe))]
-                                  #;[add-to-promise-table
-                                   (when current-binding-maybe
-                                     (hash-set! partially-evaluated-promises-table
-                                                current-val so-far))])
+                                    (lookup-binding mark-list current-binding-maybe))])
                                #`(#%plain-app 
                                   #,@rectified-evaluated
                                   #,so-far 
@@ -1045,20 +1030,6 @@
                           (if (eq? so-far nothing-so-far)
                               (datum->syntax #'here `(,#'#%plain-app ...)) ; in unannotated code ... can this occur?
                               (if dont-use-ellipses?
-                                  #;(let* ([val (hash-ref not-yet-called-apps 
-                                                        (syntax->datum exp))]
-                                         [reconed-val (recon-value val render-settings)])
-                                    (unless val (error 'recon-inner "couldnt find not-yet-called-app: ~a" exp))
-                                    ;#`(#%plain-app #,(datum->syntax #'here dont-use-ellipses?) #,so-far)
-                                    (datum->syntax 
-                                     #'here 
-                                     `(,#'#%plain-app ,reconed-val .. ,so-far))
-                                         #;(mark-as-highlight 
-                                          (datum->syntax 
-                                           #'here 
-                                           `(,#'#%plain-app 
-                                             ,reconed-val 
-                                             ,(stepper-syntax-property so-far 'stepper-highlight #f)))) )
                                   (let* ([vals
                                           (build-list
                                            (sub1 ; dont want to include #%app
@@ -1070,9 +1041,12 @@
                                                              (get-arg-var n))))]
                                          ; I'm assuming hole must be where running promise is
                                          [reconed-vals-with-so-far-inserted
-                                          (map (λ (v) (if (and (promise? v) (promise-running? v))
-                                                          so-far
-                                                          (recon-value v render-settings)))
+                                          (map 
+                                           (λ (v) (recon-value v render-settings #f #f so-far))
+                                             #;(if (and (promise? v) 
+                                                      (promise-running? v))
+                                                 so-far
+                                                 (recon-value v render-settings))
                                                vals)])
                                     #`(#%plain-app #,@reconed-vals-with-so-far-inserted))
                                   (datum->syntax #'here `(,#'#%plain-app ... ,so-far ...))))
@@ -1211,7 +1185,12 @@
                        (recon
                         (if first
                             (mark-as-highlight reconstructed)
-                            reconstructed)
+                            ; this situation should only happen in lazy racket, 
+                            ; when there are infinite lists -- sometimes
+                            ; the so-far doesnt get used, so we lose the highlight
+                            (if (no-highlight? reconstructed)
+                                (mark-as-highlight reconstructed)
+                                reconstructed))
                         (cdr mark-list)
                         #f))])]))
 
@@ -1228,6 +1207,7 @@
          (define answer
            (begin
              (set! partially-evaluated-promises-table (make-weak-hash))
+             (set! last-so-far null)
              (case break-kind
              ((left-side)
               (let* ([innermost 

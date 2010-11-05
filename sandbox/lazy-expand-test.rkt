@@ -36,8 +36,18 @@
 ;(define foo (append (list 1 2 3) foo))
 ;(fourth foo)
 
-(define foo (append (list 1 2 3) foo))
-(fourth foo)
+; need to add dont-remove-ellipses
+;(+ (car (map + (list (+ 1 2)) (list (+ 3 4)))) 1)
+
+(define nats (cons 1 (map (λ (x) (+ x 1)) nats)))
+(define (divides? n m)
+  (zero? (modulo m n)))
+(define (sift n l)
+  (filter (lambda (x) (not (divides? n x))) l))
+(define (sieve l)
+    (cons (car l) (sieve (sift (car l) (cdr l)))))
+(define primes (sieve (cdr nats)))
+(third primes)
 
 ; broken: get 2 nested lists
 ; - nevermind, it works, i accidentally wrote (λ x ...) instead of (λ (x) ...)
