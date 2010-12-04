@@ -2089,8 +2089,43 @@
        :: ,def {(+ 1 1)}
        -> ,def {2}))
   
-     
+  ; some highlighting still messed up (11/2/2010)
+  (let ([def '(define (f lst) (+ (second lst) (third lst)))]
+        [arg '(map (lambda (x) (+ x 1)) (list 1 2 3))]
+        [make-delayed (λ (x) (string->symbol
+                              (string-append 
+                               "<DelayedEvaluation#"
+                               (number->string x)
+                               ">")))])
+    (t 'lazy-map-1 m:lazy
+       ,def (f ,arg)
+       :: ,def {(f ,arg)}
+       -> ,def {(+ (second ,arg) (third ,arg))}
+       :: ,def (+ (second {,arg}) (third {,arg}))
+       -> ,def (+ (second {(cons ,(make-delayed 0) ,(make-delayed 1))})
+                  (third {(cons ,(make-delayed 0) ,(make-delayed 1))}))
+       :: ,def (+ {(second (cons ,(make-delayed 0) ,(make-delayed 1)))}
+                  {(third (cons ,(make-delayed 0) ,(make-delayed 1)))})
+       -> ,def (+ {,(make-delayed 2)}
+                  (third (cons ,(make-delayed 0) (cons ,(make-delayed 2) ,(make-delayed 3)))))
+       -> ,def (+ {(+ 2 1)}
+                  (third (cons ,(make-delayed 0) (cons {(+ 2 1)} ,(make-delayed 3)))))
+       -> ,def (+ {3}
+                  (third (cons ,(make-delayed 0) (cons {3} ,(make-delayed 3)))))
+       :: ,def (+ 3
+                  {(third (cons ,(make-delayed 0) (cons 3 ,(make-delayed 3))))})
+       -> ,def (+ 3 {,(make-delayed 4)})
+       -> ,def (+ 3 {(+ 3 1)})
+       -> ,def (+ 3 {4})
+       :: ,def {(+ 3 4)}
+       -> ,def {7}))
+  
+  
+  
+  
+  ;;
   ;; Lazy Racket examples from Eli's lecture
+  ;;
   (let ([def '(define (foo x) 3)])
     (t 'lazy-eli-1 m:lazy
        ,def (foo (+ 1 "2"))
@@ -2137,8 +2172,19 @@
   (let ([def '(define foo (append (list 1 2 3) foo))])
     (t 'lazy-eli-6 m:lazy
        ,def (fourth foo)
-       :: ,def {(fourth foo)} -> {1}))
+;       :: (define foo {(append (list 1 2 3) <DelayedEvaluation#0>)}) (fourth {(append (list 1 2 3) <DelayedEvaluation#0>)})
+;       -> (define foo {(cons 1 <DelayedEvaluation#1>)}) (fourth {(cons 1 <DelayedEvaluation#1>)})
+       :: (define foo (append (list 1 2 3) foo)) {(fourth foo)}
+       -> (define foo {(append (list 1 2 3) foo)}) (fourth {(append (list 1 2 3) foo)})
+       :: (define foo {(cons 1 <DelayedEvaluation#1>)}) {(fourth (cons 1 <DelayedEvaluation#1>))}
+       -> (define foo (cons 1 (cons 2 (cons 3 (cons 1 <DelayedEvaluation#1>))))) {1}))
   
+  (let ([def '(define nats (cons 1 (map (λ (x) (+ x 1)) nats)))])
+    (t 'lazy-eli-6 m:lazy
+       .def (third nats)
+       ::
+       ->
+       ))
   
   #;
   (t1 'teachpack-callbacks

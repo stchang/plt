@@ -20,7 +20,7 @@
                      lazy-list-fn1 lazy-list-fn2 lazy-list-fn3 lazy-list-fn4
                      lazy-list-fn-parallel-reduce1
                      lazy-take1 lazy-take2 lazy-take3 lazy-take4 lazy-take5 lazy-take6 lazy-take7 lazy-take8
-                     lazy-list-length
+                     lazy-list-length lazy-map-1
                      lazy-eli-1 lazy-eli-2 lazy-eli-3 lazy-eli-4))
 
 (let ([ns (make-base-namespace)])

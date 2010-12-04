@@ -104,13 +104,6 @@
   (define-for-syntax (stepper-attach-unwind-fn stx unwind-fn)
     (stepper-syntax-property stx 'stepper-hint unwind-fn))
   
-  (define-for-syntax (stepper-set-use-inferred-name-property stx)
-    (let* ([define-name (stepper-syntax-property stx 'stepper-proc-define-name)]
-           [tmp (printf "setting use-inferred-name prop: ~a\n" (syntax-object->datum stx))]
-           [tmp2 (printf "define-name = ~a\n" define-name)])
-      (if define-name
-          (stepper-syntax-property stx 'use-inferred-name define-name)
-          stx)))
   
 
   (define-for-syntax (stepper-set-dont-use-ellipses-property stx)

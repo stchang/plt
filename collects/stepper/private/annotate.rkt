@@ -146,71 +146,72 @@
                
                
                [rewritten
-                (kernel:kernel-syntax-case stx #f
-                                           
-                                           ; cond :
-                                           [(if test (begin then) else-stx)
-                                            (let ([origin (syntax-property stx 'origin)]
-                                                  [rebuild-if
-                                                   (lambda (new-cond-test)
-                                                     (let* ([new-then (recur-regular (syntax then))]
-                                                            [rebuilt (stepper-syntax-property
-                                                                      (rebuild-stx `(if ,(recur-regular (syntax test))
-                                                                                        ,new-then
-                                                                                        ,(recur-in-cond (syntax else-stx) new-cond-test))
-                                                                                   stx)
-                                                                      'stepper-hint
-                                                                      'comes-from-cond)])
-                                                       ; move the stepper-else mark to the if, if it's present:
-                                                       (if (stepper-syntax-property (syntax test) 'stepper-else)
-                                                           (stepper-syntax-property rebuilt 'stepper-else #t)
-                                                           rebuilt)))])
-                                              (cond [(cond-test stx) ; continuing an existing 'cond'
-                                                     (rebuild-if cond-test)]
-                                                    [(and origin (pair? origin) (eq? (syntax-e (car origin)) 'cond)) ; starting a new 'cond'
-                                                     (rebuild-if (lambda (test-stx) 
-                                                                   (and (eq? (syntax-source stx) (syntax-source test-stx))
-                                                                        (eq? (syntax-position stx) (syntax-position test-stx)))))]
-                                                    [else ; not from a 'cond' at all.
-                                                     (rebuild-stx `(if ,@(map recur-regular (list (syntax test) (syntax (begin then)) (syntax else-stx)))) stx)]))]
-                                           [(begin body) ; else clauses of conds; ALWAYS AN ERROR CALL
-                                            (cond-test stx)
-                                            (stepper-syntax-property stx 'stepper-skip-completely #t)]
-                                           
-                                           ; wrapper on a local.  This is necessary because teach.ss expands local into a trivial let wrapping a bunch of
-                                           ;  internal defines, and therefore the letrec-values on which I want to hang the 'stepper-hint doesn't yet
-                                           ;  exist.  So we patch it up after expansion.  And we discard the outer 'let' at the same time.
-                                           [(let-values () expansion-of-local)
-                                            (eq? (stepper-syntax-property stx 'stepper-hint) 'comes-from-local)
-                                            (syntax-case #`expansion-of-local (letrec-values)
-                                              [(letrec-values (bogus-clause clause ...) . bodies)
-                                               (recur-regular
-                                                (stepper-syntax-property #`(letrec-values (clause ...) . bodies) 'stepper-hint 'comes-from-local))]
-                                              [else (error 'top-level-rewrite "expected a letrec-values inside a local, given: ~e" 
-                                                           (syntax->datum #`expansion-of-local))])]
-                                           
-                                           ; let/letrec :
-                                           [(let-values x ...) (do-let/rec stx #f)]
-                                           [(letrec-values x ...) (do-let/rec stx #t)]
-                                           
-                                           ; varref :
-                                           [var
-                                            (identifier? (syntax var))
-                                            (stepper-syntax-property 
-                                             (syntax var) 
-                                             'stepper-binding-type
-                                             (if (eq? (identifier-binding (syntax var)) 'lexical)
-                                                 (cond [(ormap (lx (bound-identifier=? _ (syntax var))) let-bound-bindings)
-                                                        'let-bound]
-                                                       [else
-                                                        'lambda-bound])
-                                                 'non-lexical))]
-                                           
-                                           [else
-                                            (let ([content (syntax-e stx)])
-                                              (if (pair? content)
-                                                  (rebuild-stx (syntax-pair-map content recur-regular) stx)
-                                                  stx))])])
+                (kernel:kernel-syntax-case 
+                 stx #f
+                 
+                 ; cond :
+                 [(if test (begin then) else-stx)
+                  (let ([origin (syntax-property stx 'origin)]
+                        [rebuild-if
+                         (lambda (new-cond-test)
+                           (let* ([new-then (recur-regular (syntax then))]
+                                  [rebuilt (stepper-syntax-property
+                                            (rebuild-stx `(if ,(recur-regular (syntax test))
+                                                              ,new-then
+                                                              ,(recur-in-cond (syntax else-stx) new-cond-test))
+                                                         stx)
+                                            'stepper-hint
+                                            'comes-from-cond)])
+                             ; move the stepper-else mark to the if, if it's present:
+                             (if (stepper-syntax-property (syntax test) 'stepper-else)
+                                 (stepper-syntax-property rebuilt 'stepper-else #t)
+                                 rebuilt)))])
+                    (cond [(cond-test stx) ; continuing an existing 'cond'
+                           (rebuild-if cond-test)]
+                          [(and origin (pair? origin) (eq? (syntax-e (car origin)) 'cond)) ; starting a new 'cond'
+                           (rebuild-if (lambda (test-stx) 
+                                         (and (eq? (syntax-source stx) (syntax-source test-stx))
+                                              (eq? (syntax-position stx) (syntax-position test-stx)))))]
+                          [else ; not from a 'cond' at all.
+                           (rebuild-stx `(if ,@(map recur-regular (list (syntax test) (syntax (begin then)) (syntax else-stx)))) stx)]))]
+                 [(begin body) ; else clauses of conds; ALWAYS AN ERROR CALL
+                  (cond-test stx)
+                  (stepper-syntax-property stx 'stepper-skip-completely #t)]
+                 
+                 ; wrapper on a local.  This is necessary because teach.ss expands local into a trivial let wrapping a bunch of
+                 ;  internal defines, and therefore the letrec-values on which I want to hang the 'stepper-hint doesn't yet
+                 ;  exist.  So we patch it up after expansion.  And we discard the outer 'let' at the same time.
+                 [(let-values () expansion-of-local)
+                  (eq? (stepper-syntax-property stx 'stepper-hint) 'comes-from-local)
+                  (syntax-case #`expansion-of-local (letrec-values)
+                    [(letrec-values (bogus-clause clause ...) . bodies)
+                     (recur-regular
+                      (stepper-syntax-property #`(letrec-values (clause ...) . bodies) 'stepper-hint 'comes-from-local))]
+                    [else (error 'top-level-rewrite "expected a letrec-values inside a local, given: ~e" 
+                                 (syntax->datum #`expansion-of-local))])]
+                 
+                 ; let/letrec :
+                 [(let-values x ...) (do-let/rec stx #f)]
+                 [(letrec-values x ...) (do-let/rec stx #t)]
+                 
+                 ; varref :
+                 [var
+                  (identifier? (syntax var))
+                  (stepper-syntax-property 
+                   (syntax var) 
+                   'stepper-binding-type
+                   (if (eq? (identifier-binding (syntax var)) 'lexical)
+                       (cond [(ormap (lx (bound-identifier=? _ (syntax var))) let-bound-bindings)
+                              'let-bound]
+                             [else
+                              'lambda-bound])
+                       'non-lexical))]
+                 
+                 [else
+                  (let ([content (syntax-e stx)])
+                    (if (pair? content)
+                        (rebuild-stx (syntax-pair-map content recur-regular) stx)
+                        stx))])])
           
           (if (eq? (stepper-syntax-property stx 'stepper-xml-hint) 'from-xml-box)
               (stepper-syntax-property #`(#%plain-app #,put-into-xml-table #,rewritten) 
