@@ -1,4 +1,4 @@
-(module test lazy
+;(module test lazy
 ; eli's example
 ;(define (h x) (+ x (second (list (/ 9 0) (+ x x) (car '())))))
 ;(h (+ 1 2))
@@ -40,9 +40,6 @@
 ;(+ (car (map + (list (+ 1 2)) (list (+ 3 4)))) 1)
 
 
-(take 2 (cons (+ 1 2) null))
-
-)
 ; broken: get 2 nested lists
 ; - nevermind, it works, i accidentally wrote (λ x ...) instead of (λ (x) ...)
 ;((λ (x) (+ (car (cdr x)) (car x))) (cons (+ 1 2) (cons (+ 3 4) null)))
@@ -83,10 +80,10 @@
 ;(define (f x) (cadr x))
 ;(f ones)
 
-;(define (f x) (+ x (+ x x)))
+(define (f x) (+ x (+ x x)))
 ;(define (g y) (+ (+ y y) y))
 ;(+ (f (+ 1 2)) (g (+ 3 4)))
-;(f (+ (+ 1 2) (+ 3 4)))
+(f (+ (+ 1 2) (+ 3 4)))
 ;)
 ;(cadr (cons (/ 1 0) (cons (+ 1 2) null)))
  

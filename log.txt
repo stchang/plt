@@ -2268,13 +2268,38 @@ COMPILING Racket from source in Windows with Visual Studio express:
 5) ran C:\program files\Microsoft Visual Studio 9.0\Common7\Tools\vsvars32.bat to "Setting environment for using Microsoft Visual Studio 2008 x86 tools."
 6) ran ..\..\..\racketcgc.exe -c make.rkt from plt\src\worksp\gc2 
 7) open C:\plt\src\worksp\mrstart\mrstart.sln with Visual C++ Express and compile like previous steps
-8) open C:\plt\src\worksp\mrstart\mzstart.sln with Visual C++ Express and compile like previous steps
+8) open C:\plt\src\worksp\mzstart\mzstart.sln with Visual C++ Express and compile like previous steps
 9) run racket -l setup -N "raco setup" from c:\plt to build other exe's
   - got errors:
 raco setup: error: during Early Install for plot
 raco setup:   compile-extension: can't find an installed C compiler
 10) ran instead: racket.exe -l- setup
   - got same plot errors
+
+1/11/2010: compiling 5.0.2
+- got error:
+raco setup: running: data\scribblings\data.scrbl
+WORKER ERROR ffi-lib: couldn't open "libpng14-14.dll" (The specified module coul
+d not be found.; errno=126)
+STDOUT
+raco setup: running: scribblings\draw\draw.scrbl
+=====
+STDERR
+get-doc-info-worker error: ffi-lib: couldn't open "libpng14-14.dll" (The specifi
+ed module could not be found.; errno=126)
+=====
+raco setup: running: preprocessor\scribblings\preprocessor.scrbl
+WORKER ERROR ffi-lib: couldn't open "libpng14-14.dll" (The specified module coul
+d not be found.; errno=126)
+STDOUT
+raco setup: running: scribblings\quick\quick.scrbl
+=====
+STDERR
+get-doc-info-worker error: ffi-lib: couldn't open "libpng14-14.dll" (The specifi
+ed module could not be found.; errno=126)
+=====
+
+solution: had to download gracket libs from github.com/mflatt/gracket-libs; saved and extracted to C:\racket\lib; copied everything from C:\racket\lib\mflatt-gracket-libs-2a312af\win32\i386 to C:\racket\lib
 
 
 --------------------------------------------------------------------------------
