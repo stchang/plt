@@ -2300,6 +2300,7 @@ ed module could not be found.; errno=126)
 =====
 
 solution: had to download gracket libs from github.com/mflatt/gracket-libs; saved and extracted to C:\racket\lib; copied everything from C:\racket\lib\mflatt-gracket-libs-2a312af\win32\i386 to C:\racket\lib
+ - or do git clone https://github.com/mflatt/gracket-libs.git (from c:\plt), and copy everything into lib/ dir
 
 
 --------------------------------------------------------------------------------
