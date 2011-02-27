@@ -2422,3 +2422,43 @@ SOLUTION: instead of just checking for running promise and then replacing it wit
 SOLUTION 2: When there is no running promise, then there could be a highlighting problem. Add a check after recon-inner returns in recon (result is bound to reconstructed). If reconstructed has no highlight, then highlight the whole thing. It will probably be wrong, but it's better than crashing.
 OTHER FIX: if we are going to use assigned name for promises when avail, we need to set assigned name to #t when we recur inside the promise, otherwise, we'll be using the wrong name
 OTHER FIX 2: Also, last-so-far needs to be reset more often than just with the other special vals. Reset it on every recon (at the beginning of the eval of answer in reconstruct-current).
+
+
+--------------------------------------------------------------------------------
+----- 2/20/2011
+--------------------------------------------------------------------------------
+- NEW STRATEGY FOR DEALING WITH ETA-EXPANDED LAZY #%APP:
+Instead of unwinding the extra application in lazy #%app's, I rewrite it before annotating, so that the extra eta-expansion is unncessary. This duplicates arguments, so it's not feasible for the lazy language, but it's ok for the stepper, since only small programs are usually stepped.
+
+- doesnt work for some cases:
+(define (f x) (+ (car x) (car x)))
+(f (list (+ 1 2)))
+
+The problem is that when the (+ 1 2) is evaled when evaluating the first (car x), the arg to the second (car x) displays a <DelayedEvaluation#0>. This is because the rewritten program doesnt get corrected stored as contmarks.
+
+Marks for the unrewritten program:
+
+---------- BREAK TYPE = normal-break ----------
+MARKLIST:
+source: (#%app p (#%app ! temp10) (#%app ! temp11))
+label: called
+bindings:
+ arg0-2248 : #<procedure:+>
+ arg1-2249 : 1
+ arg2-2250 : 2
+
+source: (#%app p (#%app ! temp1) (#%app ! temp2))
+label: not-yet-called
+bindings:
+ p : #<procedure:+>
+ temp1 : #<promise:!running>
+ temp2 : #<promise>
+ arg0-2248 : #<procedure:+>
+ arg1-2249 : #<*unevaluated-struct*>
+ arg2-2250 : #<*unevaluated-struct*>
+
+RETURNED VALUE LIST: (3)
+
+
+Marks for the rewritten program:
+
