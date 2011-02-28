@@ -2428,7 +2428,7 @@ OTHER FIX 2: Also, last-so-far needs to be reset more often than just with the o
 ----- 2/20/2011
 --------------------------------------------------------------------------------
 - NEW STRATEGY FOR DEALING WITH ETA-EXPANDED LAZY #%APP:
-Instead of unwinding the extra application in lazy #%app's, I rewrite it before annotating, so that the extra eta-expansion is unncessary. This duplicates arguments, so it's not feasible for the lazy language, but it's ok for the stepper, since only small programs are usually stepped.
+Instead of unwinding the extra application in lazy #%app's, I rewrite it before annotating, so that the extra eta-expansion is unncessary. This duplicates arguments, so it's not feasible for the lazy language, but it's ok for the stepper, since only small programs are usually stepped. Using the rewriting strategy also allows the stepper to drop any steps where the rhs = ..., instead of the more complicated strategy of saving the rhs and displaying it when the next full or half step comes.
 
 - doesnt work for some cases:
 (define (f x) (+ (car x) (car x)))
@@ -2462,3 +2462,78 @@ RETURNED VALUE LIST: (3)
 
 Marks for the rewritten program:
 
+---------- BREAK TYPE = normal-break ----------
+MARKLIST:
+source: (#%plain-app (#%app ! +) (#%plain-app ! (quote 1)) (#%plain-app ! (quote
+ 2)))
+label: not-yet-called
+bindings:
+ + : #<procedure:+>
+ arg0-724 : #<procedure:+>
+ arg1-725 : 1
+ arg2-726 : 2
+
+source: (#%plain-app (#%app ! +) (#%plain-app ! (#%app lazy (lambda () (if (if (
+#%plain-app lazy-proc? (#%app ! car)) (quote #t) (#%plain-app struct-constructor
+-procedure? (#%app ! car))) (#%plain-app (#%plain-app procedure-extract-target (
+#%app ! car)) x) (#%plain-app (#%app ! car) (#%plain-app ! x)))))) (#%plain-app
+! (#%app lazy (lambda () (if (if (#%plain-app lazy-proc? (#%app ! car)) (quote #
+t) (#%plain-app struct-constructor-procedure? (#%app ! car))) (#%plain-app (#%pl
+ain-app procedure-extract-target (#%app ! car)) x) (#%plain-app (#%app ! car) (#
+%plain-app ! x)))))))
+label: not-yet-called
+bindings:
+ + : #<procedure:+>
+ car : #<procedure:car>
+ x : #<promise!(#<promise:!running>)>
+ arg0-724 : #<procedure:+>
+ arg1-725 : #<*unevaluated-struct*>
+ arg2-726 : #<*unevaluated-struct*>
+
+RETURNED VALUE LIST: #f
+
+
+- Originally, I wrote a separate rewriting fn, but I wasnt properly transferring everything in the syntax obj, so instead I moved the rewriting to the existing top-level-rewrite fn. Here is the extra case in top-level-rewrite (in annotate.rkt):
+
+          ; STEVE ADD: for lazy
+          [(#%plain-app
+            (lambda (_ y ...)
+              (if (if (#%plain-app lazy-proc? _)
+                      '#t
+                      (#%plain-app struct-constructor-procedure? _))
+                  (#%plain-app (#%plain-app procedure-extract-target _) yy ...)
+                  (#%plain-app _ (#%plain-app ! yyy) ...)))
+            f x ...)
+           (rebuild-stx
+           (stepper-syntax-property
+            (quasisyntax/loc stx
+              (if (if (#%plain-app lazy-proc? f)
+                      '#t
+                      (#%plain-app struct-constructor-procedure? f))
+                  ; dont-use-ellipses property eliminates lhs ellipses after force
+                  #,(stepper-set-dont-use-ellipses-property
+                     #`(#%plain-app
+                        #,@#`(#,(stepper-hide-operator
+                                 ; I need the #,@#' because stepper-skipto expects a syntax obj
+                                 #`(#%plain-app 
+                                    #,@#`(procedure-extract-target 
+                                          #,(recur-regular #'f))))
+                              #,@(map recur-regular 
+                                      (syntax->list #'(x ...))))))
+                  #,(stepper-set-dont-use-ellipses-property
+                     #`(#%plain-app 
+                        #,@#`(#,(recur-regular #'f) 
+                              #,@(map (compose add-! recur-regular) 
+                                      (syntax->list #'(x ...))))))))
+            'stepper-skipto
+            (append skipto/cddr '(both-l () (car))))
+           stx)]
+
+    ; STEVE ADD: helper fns for lazy
+    (define (stepper-hide-operator stx)
+      (stepper-syntax-property stx 'stepper-skipto (append skipto/cdr skipto/second)))
+    (define (stepper-set-dont-use-ellipses-property stx)
+      (stepper-syntax-property stx 'dont-use-ellipses #t))
+    (define (add-! stx) 
+      (stepper-hide-operator
+       (quasisyntax/loc stx (#%plain-app #,@#`(! #,stx)))))
