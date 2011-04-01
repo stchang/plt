@@ -2537,3 +2537,58 @@ RETURNED VALUE LIST: #f
     (define (add-! stx) 
       (stepper-hide-operator
        (quasisyntax/loc stx (#%plain-app #,@#`(! #,stx)))))
+
+
+
+-------------------------------------------------------------------------------
+----- 4/1/2011 LAPTOP
+-------------------------------------------------------------------------------
+
+Official porting of stepper to main branch begins, forked build 5.1.0.5 on
+2011-03-31 to pltlazystep repository
+
+) add stepper button to Lazy Racket 
+- convert Lazy Racket to tools-based language
+  - edit lazy/info.rkt
+  - add lazy/lazy-tool.rkt
+
+(Lazy Racket is doubly a module language (ie - #lang); the "tools-based"
+implementation replaces the "module-based" language (which is different from a
+module language), which is specified with just info.rkt)
+
+- run raco setup after making changes to get stepper button
+
+
+) Lazy stepper wont initially work because stepper cant deal with toplevel of
+Lazy Racket programs
+- in stepper/private/annotate.rkt, add cases to annotate/top-level
+
+This gives a "working" stepper (only constructor output style works initially,
+print and write are broken and require some changes to get working; we'll deal
+with this later)
+
+
+) clean up Lazy Racket to initially remove all stepper hints and properties
+- no hidden-!
+- change !*app to use application instead of let (stepper has a difficult time
+  dealing with the temporary vars in the let)
+
+
+) in lazy/lazy.rkt
+- in !*app:
+  - add stepper-skipto property to skip if lazy-proc?
+  - for lazy-proc, extract proc from lazy-proc struct before applying
+- redefine ~define to use inferred-name
+
+
+) in stepper/private/reconstruct.rkt
+- in find-special-value, add case for Lazy Racket
+- delete final-mark-list? (seems unused)
+- in skip-redex-step?
+  - some code reformatting
+  - remove constructor application case
+- in recon-value
+  - some code reformatting
+  - render thunks (need to require racket/private/promise)
+
+- run raco setup (because provides/requires changed)
