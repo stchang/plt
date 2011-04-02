@@ -2592,3 +2592,36 @@ with this later)
   - render thunks (need to require racket/private/promise)
 
 - run raco setup (because provides/requires changed)
+
+
+) in stepper/private/model.rkt
+- add debugging outputs
+- reformat code
+
+- needed to run raco setup, weird
+
+in stepper/private/macro-unwind.rkt:
+- in fall-through
+  - add case for lazy racket app
+  - add case for procedure-extract-target
+- in unwind, change recur procedure for fn hints to unwind
+  (was recur-on-pieces)
+
+in racket/private/promise.rkt
+- add unwind fn as stepper-hint syntax property
+
+in stepper/private/reconstruct.rkt
+- add constructor application case back
+- in recon-inner
+  - in app called case, dont show ellipses for force
+  - initialize partially-eval-promise table
+  - reformat answer code
+  - add caching of running promises
+- in recon-value, add reconstructing of partially evaluated promises
+
+in stepper-private/annotate.rkt
+- in annotate/module-top-level, add lazy racket top level case - to hide top
+  level forcer
+
+in lazy/lazy.rkt
+- use hidden-~ and hidden-! instead of ~ and !
