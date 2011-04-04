@@ -2625,3 +2625,66 @@ in stepper-private/annotate.rkt
 
 in lazy/lazy.rkt
 - use hidden-~ and hidden-! instead of ~ and !
+
+
+) in tests/stepper/
+
+test-engine.rkt
+- add racket/private/promise to test-namespace using namespace-attach-module
+
+automatic-tests.rkt
+- add lazy tests
+
+through-tests.rkt
+- fix existing lazy tests lazy1, lazy2, lazy3
+
+language-level-model.rkt
+- fix lazy ll-model
+
+in stepper/private/model-settings.rkt
+- edit settings for lazy racket 
+
+
+) in stepper/private/reconstruct.rkt:
+- in recon-value, add cases to handle empty list, list, and cons
+- recon-inner, app called case, add case to handle lazy list fns that contain
+  an unannotated force: cadr, second, third, etc
+
+in stepper/private/model.rkt
+- add highlight-stack: push thunk to recon lhs onto highlight stack when
+  lhs = rhs, except for different highlighting
+  - this case happens when there is an unannotated force in some function like
+    cadr, second, third, etc.
+  - however, when a promise is forced, the promise will still be reconstructed
+    because it was annotated, so this must be dealt with, otherwise it will
+    seemingly just "pop up" in the stepper
+  - to deal with this case, i recon the fn containing the hidden ! (cadr,
+    third, second, etc) without ellipses, inserting an application of the fn in
+    question (cadr, third, second, etc) instead, letting send-step in model.rkt
+    detect and hide duplicates
+  - when a step with lhs ellipses occurs, it is matched with the top thunk on
+    the highlight stack
+
+To summarize the above, with fns like cadr, second, etc, there is a force in
+the definition, but it is unannotated, because the fns are defined as fns, so
+their body is not annotated. However, their arg is annotated and will "pop up"
+when forced inside the fn. To address this situation, stepper detects two
+things:
+1) steps that are equal, except for differences in highlighting
+2) steps with lhs = ellipses
+and matches up the lhs of #1 with the rhs of #2 to create a step.
+In addition, stepper recons "called" apps of these fns with the application of
+the fn, instead of the usual ellipses.
+
+UPDATE: the above scheme doesnt quite work because some fns, ie cdar, have more
+than one hidden !, so a thunk on the highlight stack must be used the # of
+times equal to the number of hidden !'s. I can't think of a way to calculate
+the #, other to manually hardcode.
+
+add file stepper/private/lazy-highlighting.rkt
+
+in tests/stepper/through-tests.rkt
+- add tests for list and cons fns
+
+in tests/stepper/automatic-tests.rkt
+- add tests for list and cons fns
