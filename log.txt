@@ -2688,3 +2688,43 @@ in tests/stepper/through-tests.rkt
 
 in tests/stepper/automatic-tests.rkt
 - add tests for list and cons fns
+
+
+) in tests/stepper/
+    through-tests.rkt
+    automatic-tests.rkt
+- add tests for if
+
+in stepper/private/reconstruct.rkt:
+- in recon-inner, in called app case, add "take" to lazy fn case and fix to
+  handle more than unary fns
+    
+
+) 2011-04-04: merge with plt branch
+
+
+) in stepper/private/reconstruct.rkt
+- in recon-inner, called app case, add first fn to list of special lazy fns
+- in recon-value, add handling of running promises not found by recon-inner
+  search
+  - running-promise caching in recon-inner only catches "top level" promises
+  - there may be running-promises nested within other promises, which wont
+    be detected until the outer promise is reconed in recon-value
+    (see take! example in icfp paper for example of nested running promise)
+  - thus, need to pass so-far to recon-value
+- add unknown-promises-table, and add case to recon-value to handle unknown
+  promises
+
+in stepper/private/lazy-highlighting.rkt
+- add (first,0) pair
+
+in stepper/private/model.rkt
+- modify lazy fn "skipping" (from lazy-highlight.rkt) to use the skips only
+  when last-rhs-exp = null; o.w. skipping can be handled solely by examining
+  last-rhs-exp
+
+in tests/stepper/
+  through-tests.rkt
+  automatic-tests.rkt
+- add take example from icfp paper
+- add tests for unknown promises
