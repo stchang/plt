@@ -2728,3 +2728,16 @@ in tests/stepper/
   automatic-tests.rkt
 - add take example from icfp paper
 - add tests for unknown promises
+
+
+
+) bug in macro-unwind.rkt:
+- in unwind-mz-let, last line, ",label" should just be "label" (no
+unquote)
+
+bug in reconstruct.rkt 
+- in reconstruct-completed-define, last line, arg to attach-info should be a
+quasisyntax (#`), not syntax (#')
+
+
+)
