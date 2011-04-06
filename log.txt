@@ -2740,4 +2740,38 @@ bug in reconstruct.rkt
 quasisyntax (#`), not syntax (#')
 
 
-)
+) in stepper/private/marks.rkt
+- in mark-binding-value, add exception handler to catch undefined vars, so
+  display-mark in break works with recursive fns
+
+in /tests/stepper/automatic-tests.rkt
+                  through-tests.rkt
+- add inf list example from icfp paper
+
+in stepper/private/model.rkt
+- refactor send-step to use cond instead of unless
+- in send-step, when highlight-stack = null and last-rhs != null (and lhs !=
+  last-rhs), send a step with lhs = last-rhs (previously skipped whenever
+  highlight-stack = null)
+  - basic filter example wasnt showing result without this
+  - in icfp inf list example, this shows some intermediate forcing states
+  - all other existing tests passed
+
+
+) in lazy/lazy.rkt
+- modify cond for stepper
+- add support for multiple values in stepper
+  - add inspector to multiple-values struct
+  - hide split-values call in ~define-values
+
+in tests/stepper
+- add tests for cond
+
+in stepper/private/annotate.rkt
+- in annotate/top-level, allow arbitrary top-level terms
+  (no error in else case), otherwise exprs like let throws error
+
+in stepper/private/
+  reconstruct.rkt
+  lazy-highlighting.rkt
+- add support for eq? eqv? equal? lazy fns
