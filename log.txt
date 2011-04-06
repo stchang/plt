@@ -2775,3 +2775,20 @@ in stepper/private/
   reconstruct.rkt
   lazy-highlighting.rkt
 - add support for eq? eqv? equal? lazy fns
+
+
+
+) in stepper/private/reconstruct.rkt
+- in recon-inner, in called app case
+  - add other force fns to force case (!!, !list, !!list)
+  - add other list fns
+    (list?, length, list-ref, etc)
+
+in stepper/private/lazy-highlighting.rkt
+- add various list fns (list?, length, list-ref, etc)
+
+in stepper/private/macro-unwind.rkt
+- in unwind-cond, disable check of user-source and user-position
+
+in tests/stepper/
+- add test for various list fns
