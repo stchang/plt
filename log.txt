@@ -2792,3 +2792,15 @@ in stepper/private/macro-unwind.rkt
 
 in tests/stepper/
 - add test for various list fns
+
+
+) fix user-position stepper-property bug in lazy cond stepper unwinding
+
+in stepper/private/macro-unwind.rkt
+- in fall-through, add special #%app case for force
+
+in stepper/private/reconstruct.rkt
+- in recon-inner, in called app case, combine force case with other lazy fns
+
+in tests/stepper/
+- add test for lazy cond unwinding problem
