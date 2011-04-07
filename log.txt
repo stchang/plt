@@ -2818,3 +2818,28 @@ in drracket/tool-lib.rkt
 - in contract for drracket:language:simple-settings-printing-style, add
   'trad-write
 
+
+) fix stepper tests mz1 and map broken by lazy stepper
+
+in stepper/private/model.rkt
+- send step where lhs = ... and last-rhs-exp != null
+
+
+
+-------------------------------------------------------------------------------
+----- 4/7/2011 LAPTOP
+-------------------------------------------------------------------------------
+
+Some thoughts about the lazy stepper + library (unannotated) fns:
+
+- The problem is that the lib fn is unannotated, but if you pass it a promise
+  that is annotated, when forced, the promise will seemingly popup randomly in
+  the reconstructed sequence. If the promise is forced in the immediate called
+  lib fn, then we can reconstruct the context of the forcing, since the cont
+  marks keeps "called" application marks on the stack. However, if the
+  annotated promise is passed back out, and then forced in another lib fn, then
+  we dont know the context of the forcing.
+
+- Right now, the lazy stepper tries to reconstruct context, assuming we are in
+  the immediate lib fn, so if the latter case occurs, the lazy stepper will not
+  reconstruct the correct steps.
