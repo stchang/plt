@@ -2804,3 +2804,17 @@ in stepper/private/reconstruct.rkt
 
 in tests/stepper/
 - add test for lazy cond unwinding problem
+
+
+) fix lazy stepper to work with print and write output-styles
+
+in stepper/stepper-tool.rkt
+- in simple-module-based-language-convert-value, add print and trad-write case
+
+in stepper/private/macro-unwind.rkt
+- in fall-through, add to procedure-extract-target case
+
+in drracket/tool-lib.rkt
+- in contract for drracket:language:simple-settings-printing-style, add
+  'trad-write
+
