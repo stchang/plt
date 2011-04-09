@@ -2843,3 +2843,75 @@ Some thoughts about the lazy stepper + library (unannotated) fns:
 - Right now, the lazy stepper tries to reconstruct context, assuming we are in
   the immediate lib fn, so if the latter case occurs, the lazy stepper will not
   reconstruct the correct steps.
+
+
+) remove need for lazy-highlighting.rkt table
+- use fn object name instead and just match with top called fn in mark list
+  when we get a step where lhs = ... (break-kind must = result-value-break as
+  well)
+
+
+TODO: fix rendering of lists
+
+
+-------------------------------------------------------------------------------
+----- 4/8/2011 LAPTOP
+-------------------------------------------------------------------------------
+
+) improve lazy stepper reconstruction of unannotated fns
+
+remove stepper/private/lazy-highlighting.rkt
+
+in stepper/private/macro-unwind.rkt:
+- in fall-through, add lazy-proc to lazy #%app special case
+
+in stepper/private/model.rkt
+- in send step, dont use highlight-table, just match top called fn in mark-list
+  instead
+
+in tests/stepper/
+- add lazy stepper tests for filter and fold
+
+
+
+) fix stepper rendering of non constructor-style lists
+
+in stepper/private/reconstruct.rkt
+- in recon-value, list case, add quasiquote rendering when constructor-style
+  printing = #f
+
+
+
+
+-------------------------------------------------------------------------------
+----- 4/9/2011 LAPTOP
+-------------------------------------------------------------------------------
+ Note about trying to get variable dereferences to work in lazy stepper:
+
+- tracked problem down to annotation - top level vars are not getting annotated
+For the program:
+(define (f x) (+ x x))
+(f (+ 1 2))
+
+in annotate.rkt, in annotate/inner, in varref-abstraction, the f in the
+application is a toplevel var, so it is not getting a break-wrap. In all other
+cases (stepper test framework, beginner langs, using #lang lazy module
+langugage) f is not a toplevel var, so the dereferencing step shows up
+
+
+Solution: 
+1) in lazy.rkt, add 'lazy-op stepper-syntax-property to all ops in lazy #%app
+2) in annotate.rkt, in varref-abstraction, in top-level-varref-break-wrap,
+check for 'lazy-op property, but also make sure op is not part of racket/base
+3) if op has 'lazy-op property and is not in racket/base, then use
+varref-break-wrap instead of varref-no-break-wrap
+
+
+) fix toplevel variable dereferencing in lazy stepper
+
+in lazy/lazy.rkt
+- add 'lazy-op stepper-syntax-property to op in lazy #%app
+
+in stepper/private/annotate.rkt
+- in varref-abstraction, check for 'lazy-op operator for toplevel vars, and use
+  varref-break-wrap if property = #t
