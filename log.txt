@@ -2915,3 +2915,24 @@ in lazy/lazy.rkt
 in stepper/private/annotate.rkt
 - in varref-abstraction, check for 'lazy-op operator for toplevel vars, and use
   varref-break-wrap if property = #t
+
+-------------------------------------------------------------------------------
+----- 5/22/2011 DESKTOP
+-------------------------------------------------------------------------------
+
+- fix lazy stepper handling of cyclic lists
+- add seen-promises optional parameter to reconstruct.rkt:recon-value.rkt
+  - seen-promises is assoc list of promise-assignedname pairs
+
+TODO: 
+1) seen-promises is reset on every non-recursive call to recon-value, so if a
+promise doesnt have an assigned-name on this reconstruct, the stepper wont use
+one, even if the promise previously had an assigned-name
+- to fix this, i could add a global seen-promises, but the problem is that I
+  would need to populate it during reconstruct-completed, but
+  reconstruct-completed is not always called before recon-value
+- to better handle cyclic lists, make sure reconstruct-complete is always called
+  before reconstruct-left/right-side in model.rkt
+
+2) global var last-so-far is unused in reconstruct.rkt
+
